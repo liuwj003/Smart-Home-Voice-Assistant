@@ -54,8 +54,6 @@
             * `git commit -m "Docs: Update user authentication guide"`
             * `git commit -m "Refactor: Improve code structure for auth module"`
 
-    * **小步快跑，多次提交：** 鼓励将一个大功能拆分成多个逻辑上独立的小提交，而不是所有工作完成后一次性提交一个巨大的改动。这样更容易追踪历史和回溯。
-
 4.  **步骤 4：将你的分支推送到远程仓库**
     当成员A在本地分支上完成了一部分工作（或全部工作），并且进行了几次提交后，需要将这个新分支推送到远程仓库，这样其他成员才能看到并进行后续的审查。
 
