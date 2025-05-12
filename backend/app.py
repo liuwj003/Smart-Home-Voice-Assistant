@@ -1,5 +1,6 @@
 import sys
 import os
+import traceback
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -7,6 +8,12 @@ from voice_module.src import create_voice_processor, create_audio_processor
 import tempfile
 import wave
 import json
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)  # 启用CORS支持
@@ -72,6 +79,104 @@ def process_audio():
             "message": str(e)
         }), 500
 
+@app.route('/api/voice/command', methods=['POST'])
+def voice_command():
+    """处理前端发送的语音命令"""
+    try:
+        logger.info("接收到语音命令请求")
+        
+        # 检查请求数据
+        if 'audio' not in request.files:
+            logger.error("请求中没有音频文件")
+            return jsonify({
+                "status": "error",
+                "message": "No audio file provided",
+                "text": "未提供音频文件"
+            }), 400
+        
+        audio_file = request.files['audio']
+        content_type = audio_file.content_type
+        filename = audio_file.filename
+        logger.info(f"收到的音频文件类型: {content_type}, 文件名: {filename}")
+        
+        # 临时简化处理: 返回一个硬编码的响应以测试前端功能
+        logger.info("返回模拟响应进行前端测试")
+        return jsonify({
+            "text": "已接收到您的语音命令",
+            "intent": "test_intent",
+            "entities": {"device": "测试设备"},
+            "confidence": 0.95
+        })
+        
+        # 以下代码暂时忽略，稍后完善音频处理
+        """
+        # 保存音频数据到临时文件
+        try:
+            with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+                logger.info(f"创建临时文件: {temp_file.name}")
+                audio_file.save(temp_file.name)
+                logger.info(f"音频数据已保存到临时文件")
+                
+                # 转换音频格式从WebM到WAV
+                wav_temp_file = temp_file.name + ".wav"
+                try:
+                    # 这里需要添加WebM到WAV的转换代码
+                    # TODO: 完善此部分
+                    
+                    # 读取转换后的WAV文件
+                    with wave.open(wav_temp_file, 'rb') as wav_file:
+                        logger.info(f"成功打开WAV文件，通道数: {wav_file.getnchannels()}, 采样率: {wav_file.getframerate()}")
+                        audio_data = wav_file.readframes(wav_file.getnframes())
+                        logger.info(f"读取到 {len(audio_data)} 字节的音频数据")
+                except Exception as wave_err:
+                    logger.error(f"音频处理失败: {wave_err}")
+                    return jsonify({
+                        "status": "error",
+                        "message": f"音频处理失败: {str(wave_err)}",
+                        "text": "音频格式不支持"
+                    }), 400
+            
+            # 处理语音命令
+            logger.info("开始处理语音命令")
+            result = voice_processor.process_voice_command(audio_data)
+            logger.info(f"处理结果: {result}")
+            
+            # 删除临时文件
+            try:
+                os.unlink(temp_file.name)
+                os.unlink(wav_temp_file) if os.path.exists(wav_temp_file) else None
+                logger.info("临时文件已删除")
+            except Exception as unlink_err:
+                logger.error(f"删除临时文件失败: {unlink_err}")
+            
+            # 返回结果
+            return jsonify({
+                "text": result.get("transcription", "无法识别语音"),
+                "intent": result.get("intent", "unknown"),
+                "entities": result.get("entities", {}),
+                "confidence": result.get("confidence", 0.0)
+            })
+        except Exception as file_err:
+            logger.error(f"处理临时文件时发生错误: {file_err}")
+            return jsonify({
+                "status": "error",
+                "message": f"处理音频文件时发生错误: {str(file_err)}",
+                "text": "处理语音时出现问题"
+            }), 500
+        """
+        
+    except Exception as e:
+        # 打印详细的异常堆栈跟踪
+        traceback_str = traceback.format_exc()
+        logger.error(f"语音命令处理失败: {e}")
+        logger.error(f"详细错误信息: {traceback_str}")
+        
+        return jsonify({
+            "status": "error",
+            "message": f"处理语音命令失败: {str(e)}",
+            "text": "服务器处理语音时出现问题，请稍后再试"
+        }), 500
+
 @app.route('/api/start_listening', methods=['POST'])
 def start_listening():
     """开始监听接口"""
@@ -129,6 +234,15 @@ def get_audio_buffer():
             "status": "error",
             "message": str(e)
         }), 500
+
+@app.route('/api/voice/status', methods=['GET'])
+def voice_status():
+    """获取语音识别状态"""
+    return jsonify({
+        "status": "success",
+        "is_listening": audio_processor.is_listening,
+        "has_data": len(audio_processor.audio_buffer) > 0
+    })
 
 @app.route('/api/devices', methods=['GET'])
 def get_devices():
@@ -188,10 +302,7 @@ def get_devices():
             "humidity": 50
         }
     ]
-    return jsonify({
-        "status": "success",
-        "devices": devices
-    })
+    return jsonify(devices)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) 

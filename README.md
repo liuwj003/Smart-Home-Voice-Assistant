@@ -168,6 +168,12 @@ SmartHomeVoiceAssistant/
 
 ## 6. 使用说明
 
+## 目前
+```bash
+在根目录下 python backend/app.py 启动后端服务
+在根目录下 cd frontend
+npm start 启动
+```
 1. 启动后端服务
 2. 在移动应用中配置API地址（默认为 http://localhost:5000/api）
 3. 使用语音按钮或设备控制界面控制设备

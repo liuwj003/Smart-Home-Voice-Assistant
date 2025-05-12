@@ -27,7 +27,13 @@ export const deviceApi = {
 // 语音控制 API
 export const voiceApi = {
     // 发送语音命令
-    sendVoiceCommand: (audioData) => api.post('/voice/command', audioData),
+    sendVoiceCommand: (formData) => {
+        return api.post('/voice/command', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
     
     // 获取语音识别状态
     getVoiceStatus: () => api.get('/voice/status')
