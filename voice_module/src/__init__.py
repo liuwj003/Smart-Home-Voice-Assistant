@@ -2,7 +2,7 @@
 
 from .base import SpeechToText, NLUProcessor, VoiceCommandProcessor
 from .stt import create_stt_engine, SimulatedSTT, WhisperSTT
-from .nlu import create_nlu_engine, RuleBasedNLU, MLBasedNLU
+from .nlu import create_nlu_engine, RuleBasedNLU
 from .config import Intent
 from .audio import AudioRecorder, AudioProcessor
 from .utils import (
@@ -24,7 +24,6 @@ __all__ = [
     # NLU实现
     'create_nlu_engine',
     'RuleBasedNLU',
-    'MLBasedNLU',
     
     # 音频处理
     'AudioRecorder',
@@ -59,7 +58,14 @@ def create_voice_processor(
         VoiceCommandProcessor: 语音命令处理器实例
     """
     stt_engine = create_stt_engine(stt_engine_type, **kwargs.get('stt_kwargs', {}))
-    nlu_engine = create_nlu_engine(nlu_engine_type, **kwargs.get('nlu_kwargs', {}))
+    # 兼容 nlu_engine_type 的不同命名
+    nlu_engine_type_map = {
+        'rule_based': 'rule',
+        'rule': 'rule',
+        'transformer': 'transformer'
+    }
+    nlu_type = nlu_engine_type_map.get(nlu_engine_type, nlu_engine_type)
+    nlu_engine = create_nlu_engine(nlu_type, **kwargs.get('nlu_kwargs', {}))
     return VoiceCommandProcessor(stt_engine, nlu_engine)
 
 def create_audio_processor(

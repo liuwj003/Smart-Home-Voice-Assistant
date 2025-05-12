@@ -1,4 +1,6 @@
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from voice_module.src import create_voice_processor, create_audio_processor
@@ -11,7 +13,8 @@ CORS(app)  # 启用CORS支持
 
 # 创建语音处理器
 voice_processor = create_voice_processor(
-    stt_engine_type="whisper",
+    # stt_engine_type="whisper", 会从hugging face上下载6G多的大模型
+    stt_engine_type="simulated",
     nlu_engine_type="rule_based"
 )
 
@@ -126,6 +129,69 @@ def get_audio_buffer():
             "status": "error",
             "message": str(e)
         }), 500
+
+@app.route('/api/devices', methods=['GET'])
+def get_devices():
+    """获取虚拟设备列表接口"""
+    devices = [
+        {
+            "id": "light_1",
+            "name": "客厅灯",
+            "type": "light",
+            "status": "on",
+            "brightness": 80,
+            "color": "warm_white"
+        },
+        {
+            "id": "ac_1",
+            "name": "卧室空调",
+            "type": "ac",
+            "status": "off",
+            "temperature": 26,
+            "mode": "cool",
+            "fan_speed": "medium"
+        },
+        {
+            "id": "curtain_1",
+            "name": "阳台窗帘",
+            "type": "curtain",
+            "status": "closed",
+            "position": 0
+        },
+        {
+            "id": "tv_1",
+            "name": "客厅电视",
+            "type": "tv",
+            "status": "on",
+            "volume": 15,
+            "channel": 5
+        },
+        {
+            "id": "humidifier_1",
+            "name": "加湿器",
+            "type": "humidifier",
+            "status": "on",
+            "humidity": 45
+        },
+        {
+            "id": "fan_1",
+            "name": "风扇",
+            "type": "fan",
+            "status": "off",
+            "speed": "low"
+        },
+        {
+            "id": "sensor_1",
+            "name": "温湿度传感器",
+            "type": "sensor",
+            "temperature": 24.5,
+            "humidity": 50
+        }
+    ]
+    return jsonify({
+        "status": "success",
+        "devices": devices
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) 
