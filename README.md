@@ -1,10 +1,14 @@
-# 智能家居语音交互助手系统
+# 智能家居语音助手
 
-### 1. 项目描述
+这是一个基于语音控制的智能家居控制系统，包含语音识别、自然语言理解和设备控制功能。系统由后端API服务和移动应用前端组成。
+
+## 1. 项目描述
 * 一个智能家居语音交互助手系统，目的是提高家居生活的便捷性和智能化程度。
 * 能够识别用户的语音指令，并与家居设备进行交互，实现语音控制家电开关、调节设备参数、查询天气信息等功能
 
-### 2. 目前已实现的功能
+
+
+## 2. 目前已实现的功能
 - [ ] 多种语音、方言的指令识别
 - [ ] 理解用户的意图和需求
 - [ ] 语音控制家居设备
@@ -13,7 +17,78 @@
 - [ ] 语音提醒
 - [ ] 与多种家居设备兼容，并保证良好的响应速度
 
-### 3. 项目组织架构说明
+
+## 功能特点
+
+- 实时语音识别和控制
+- 支持多种设备类型（灯光、空调、电视、窗帘等）
+- 基于规则的意图识别
+- 设备状态实时显示和控制
+- 美观的移动应用界面
+- 可配置的系统设置
+
+## 3. 系统要求
+
+### 后端服务
+- Python 3.8+
+- PyAudio
+- OpenAI Whisper
+- Flask
+- 其他依赖见 `requirements.txt`
+
+### 移动应用
+- Node.js 14+
+- React Native 0.72+
+- Android Studio / Xcode
+- 其他依赖见 `mobile/package.json`
+
+## 4. 安装说明
+
+### 后端服务
+
+1. 创建并激活虚拟环境（推荐）：
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+```
+
+2. 安装依赖：
+```bash
+pip install -r requirements.txt
+```
+
+3. 启动后端服务：
+```bash
+cd backend
+python app.py
+```
+
+服务将在 http://localhost:5000 运行。
+
+### 移动应用
+
+1. 安装依赖：
+```bash
+cd mobile
+npm install
+```
+
+2. 启动开发服务器：
+```bash
+npm start
+```
+
+3. 运行应用：
+```bash
+# Android
+npm run android
+
+# iOS
+npm run ios
+```
+
+## 5. 项目结构
 
 ```
 SmartHomeVoiceAssistant/
@@ -23,8 +98,8 @@ SmartHomeVoiceAssistant/
 │   │   ├── components/            # 控件组件（开关、温控、显示卡片等）
 │   │   ├── pages/                 # 主界面（首页/天气/设置）
 │   │   ├── services/              # 与后端交互的API
-│   ├── package.json
-│   └── README.md
+│   │   ├── package.json
+│   │   └── README.md
 
 ├── backend/                       # 后端服务（API接口 + 仿真设备状态管理）
 │   ├── src/
@@ -36,26 +111,44 @@ SmartHomeVoiceAssistant/
 │   ├── requirements.txt
 │   └── README.md
 
-├── voice_module/                  # 语音处理模块（本地语音识别 + 指令映射）
+├── voice_module/                  # 语音处理模块
 │   ├── src/
-│   │   ├── recognizer.py          # 识别语音输入
-│   │   ├── nlp/                   # 自然语言处理
-│   │   ├── models/                # 语音识别模型（如Whisper）
-│   │   └── mock_microphone.py     # 模拟麦克风输入（如直接读音频文件）
+│   │   ├── __init__.py
+│   │   ├── base.py            # 基础类和接口
+│   │   ├── config.py          # 配置文件
+│   │   ├── recognizer.py      # 语音识别器
+│   │   ├── stt.py            # 语音转文本实现
+│   │   ├── nlu.py            # 自然语言理解实现
+│   │   ├── tts.py            # 文本转语音实现
+│   │   └── utils.py          # 工具函数
+│   ├── data/
+│   │   ├── dict/
+│   │   │   └── zh_dict.txt   # 中文词典
+│   │   └── rules/
+│   │       └── nlu_rules.json # NLU规则
+│   ├── examples/
+│   │   └── voice_assistant_demo.py  # 语音助手演示
+│   ├── tests/
+│   │   ├── __init__.py
+│   │   ├── test_recognizer.py
+│   │   ├── test_stt.py
+│   │   ├── test_nlu.py
+│   │   └── test_tts.py
+│   ├── requirements.txt
 │   └── README.md
 
-├── tests/                         # 测试代码与用例
-│   ├── unit/                      # 单元测试（如设备状态转换）
-│   ├── integration/               # 接口集成测试
-│   └── test_report.md             # 测试用例与结果说明
-
-├── docs/                          # 文档
+├── device_module/           # 设备控制模块（待实现）
+├── docs/                   # 项目文档
 │   ├── img/                       # 用在文档里的各种图片（如UML图）
 │   ├── requirement.md             # 需求分析文档
 │   ├── design.md                  # 软件设计文档
 │   ├── test_plan.md               # 测试计划
 │   ├── project_plan.md            # 项目计划与进度
 │   └── member_summary.md          # 成员分工与个人总结
+
+├── tests/                  # 集成测试
+│   ├── integration/               # 接口集成测试
+│   └── test_report.md             # 测试用例与结果说明
 
 ├── demo/                          # 运行截图或演示视频
 │   ├── video/
@@ -64,35 +157,131 @@ SmartHomeVoiceAssistant/
 ├── scripts/                       # 脚本（部署、启动、初始化模拟数据）
 │   └── start_all.sh
 
-├── .gitignore
+├── requirements.txt        # 项目依赖
 ├── INSTALL_CN.md                  # 中文安装说明
 ├── INSTALL_EN.md                  # 英文安装说明
 ├── LICENSE.md                     # 许可证
 ├── CHANGELOG.md                   # 项目更新日志
-└── README.md                      # 项目总览
+└── README.md              # 项目说明文档
 
 ```
 
-### 4. 技术栈说明
+## 6. 使用说明
 
+1. 启动后端服务
+2. 在移动应用中配置API地址（默认为 http://localhost:5000/api）
+3. 使用语音按钮或设备控制界面控制设备
 
-### 5. 开发环境要求
+### 支持的语音命令
 
+- 设备控制：
+  - "打开/关闭[设备名称]"
+  - "把[设备名称]打开/关闭"
 
-### 6. 快速开始
+- 参数设置：
+  - "把[设备名称]的[参数]调到[数值]"
+  - "设置[设备名称]的[参数]为[数值]"
 
-详细的安装和运行说明请参考：
-- [中文安装说明](INSTALL_CN.md)
-- [English Installation Guide](INSTALL_EN.md)
+- 参数调节：
+  - "把[设备名称]的[参数]调高/调低"
+  - "增加/减少[设备名称]的[参数]"
 
-### 7. 贡献指南
+- 天气查询：
+  - "[城市]天气怎么样"
+  - "查询[城市]的天气"
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
+## 7. 开发说明
 
-### 8. 许可证
+### 添加新设备
 
-本项目采用 MIT 许可证 - 详见 [LICENSE.md](LICENSE.md) 文件
+1. 在 `voice_module/src/config.py` 中添加设备映射
+2. 在移动应用的设备列表中添加新设备类型
+3. 实现相应的控制界面
+
+### 添加新命令
+
+1. 在 `voice_module/src/config.py` 中添加新的意图和关键词
+2. 在 `voice_module/src/nlu.py` 中实现新的意图识别逻辑
+3. 在移动应用中添加相应的处理逻辑
+
+## 8. 测试
+
+运行测试：
+```bash
+# 后端测试
+cd voice_module
+python -m pytest tests/
+
+# 移动应用测试
+cd mobile
+npm test
+```
+
+## 9. 贡献指南
+
+1. Fork 项目
+2. 创建特性分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
+
+## 10. 许可证
+
+MIT License
+
+## 语音模块功能
+
+### 语音识别 (STT)
+- 支持多种语音识别引擎：
+  - Google Speech Recognition
+  - OpenAI Whisper
+  - 模拟STT（用于测试）
+- 支持麦克风输入和音频文件输入
+- 支持实时语音识别
+
+### 自然语言理解 (NLU)
+- 支持多种语言和方言：
+  - 简体中文
+  - 繁体中文
+  - 英语
+  - 日语
+  - 韩语
+- 提供两种NLU实现：
+  - 基于规则的NLU（快速、可定制）
+  - 基于Transformer的NLU（高准确度、支持多语言）
+- 自动语言检测
+- 意图识别和实体提取
+- 支持自定义规则和模型
+
+### 文本转语音 (TTS)
+- 支持多种TTS引擎：
+  - pyttsx3（离线、轻量级）
+  - Microsoft Edge TTS（在线、高质量）
+- 支持多种语言和声音
+- 支持语速和音量调节
+- 支持保存语音到文件
+- 设备状态语音报告
+
+### 示例用法
+
+```python
+from voice_module.src.recognizer import VoiceRecognizer
+from voice_module.src.nlu import create_nlu_engine
+from voice_module.src.tts import create_tts_engine, DeviceStatusReporter
+
+# 初始化组件
+recognizer = VoiceRecognizer()
+nlu_engine = create_nlu_engine("transformer")  # 使用基于Transformer的NLU
+tts_engine = create_tts_engine("edge")  # 使用Edge TTS
+status_reporter = DeviceStatusReporter(tts_engine)
+
+# 语音识别
+text = recognizer.recognize_from_microphone()
+
+# 自然语言理解
+intent = nlu_engine.understand(text)
+
+# 语音播报
+tts_engine.speak("设备状态已更新")
+status_reporter.report_single_device(device_info)
+```

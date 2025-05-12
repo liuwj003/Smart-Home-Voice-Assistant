@@ -1,0 +1,6 @@
+pyttsx3>=2.90
+edge-tts>=6.1.9
+langdetect>=1.0.9
+jieba>=0.42.1
+transformers>=4.30.0
+torch>=2.0.0 
