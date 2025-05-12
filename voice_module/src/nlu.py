@@ -59,9 +59,6 @@ class LanguageDetector:
             lang = langdetect.detect(text)
             # 将检测结果映射到支持的语言
             if lang.startswith('zh'):
-                # 使用简单的启发式方法区分简体中文和繁体中文
-                if any(char in text for char in '臺灣國'):
-                    return 'zh-tw'
                 return 'zh-cn'
             return lang
         except:
