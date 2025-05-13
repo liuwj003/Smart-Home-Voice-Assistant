@@ -2,7 +2,7 @@
 ---
 ## 5.12
 * 实现了基本的前后端连接、语音输入
-![alt text](imgs/image.png)
+![alt text](imgs/image_1.png)
 ![alt text](imgs/image_2.png)
 ```
 Prefix dict has been built successfully.
@@ -35,3 +35,11 @@ Prefix dict has been built successfully.
 2025-05-12 17:18:58,040 - werkzeug - INFO - 127.0.0.1 - - [12/May/2025 
 17:18:58] "POST /api/voice/command HTTP/1.1" 200 -
 ```
+
+## 5.13
+把后端重构成了spring-boot框架，实现正常的前后端连接，有了一个手机端视图，更好看了一点。-liuwj003
+
+![alt text](imgs/image_3.png)
+* 点击 移动视图，可以看到暂时的APP结果：
+![alt text](imgs/image_4.png)
+![alt text](imgs/image_5.png)

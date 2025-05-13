@@ -17,11 +17,11 @@ export const deviceApi = {
     // 获取单个设备状态
     getDevice: (deviceId) => api.get(`/devices/${deviceId}`),
     
-    // 控制设备开关
-    controlDevice: (deviceId, action) => api.post(`/devices/${deviceId}/control`, { action }),
-    
-    // 调整设备参数
-    adjustDevice: (deviceId, parameter, value) => api.post(`/devices/${deviceId}/adjust`, { parameter, value })
+    // 控制设备
+    controlDevice: (deviceId, action, params) => api.post(`/devices/${deviceId}/control`, { 
+        action, 
+        params 
+    })
 };
 
 // 语音控制 API
@@ -35,8 +35,19 @@ export const voiceApi = {
         });
     },
     
+    // 开始语音监听
+    startListening: () => api.post('/voice/start'),
+    
+    // 停止语音监听
+    stopListening: () => api.post('/voice/stop'),
+    
     // 获取语音识别状态
     getVoiceStatus: () => api.get('/voice/status')
+};
+
+// 修改 baseURL 的辅助函数
+export const setApiBaseUrl = (url) => {
+    api.defaults.baseURL = url;
 };
 
 // 天气 API
