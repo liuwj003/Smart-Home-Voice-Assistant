@@ -61,32 +61,19 @@ pip install -r requirements.txt
 3. 启动后端服务：
 ```bash
 cd backend
-python app.py
+mvn spring-boot:run
+```
+
+4. 启动前端：
+```bash
+cd frontend
+npm install
+npm start
 ```
 
 服务将在 http://localhost:5000 运行。
 
-### 移动应用
 
-1. 安装依赖：
-```bash
-cd mobile
-npm install
-```
-
-2. 启动开发服务器：
-```bash
-npm start
-```
-
-3. 运行应用：
-```bash
-# Android
-npm run android
-
-# iOS
-npm run ios
-```
 
 ## 5. 项目结构
 
