@@ -33,14 +33,13 @@
 - Python 3.8+
 - PyAudio
 - OpenAI Whisper
-- Flask
+- Springboot
 - 其他依赖见 `requirements.txt`
 
 ### 移动应用
 - Node.js 14+
 - React Native 0.72+
-- Android Studio / Xcode
-- 其他依赖见 `mobile/package.json`
+- 其他依赖见 `backend/package.json`
 
 ## 4. 安装说明
 
@@ -51,6 +50,12 @@
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
+```
+或者
+```bash
+conda create -n voice-app
+conda activate voice-app
+conda install ...
 ```
 
 2. 安装依赖：
@@ -124,7 +129,7 @@ SmartHomeVoiceAssistant/
 │   ├── requirements.txt
 │   └── README.md
 
-├── device_module/           # 设备控制模块（待实现）
+├── device_module/           # 设备控制模块（Optional？）
 ├── docs/                   # 项目文档
 │   ├── img/                       # 用在文档里的各种图片（如UML图）
 │   ├── requirement.md             # 需求分析文档
@@ -157,9 +162,16 @@ SmartHomeVoiceAssistant/
 
 ## 目前
 ```bash
-在根目录下 python backend/app.py 启动后端服务
-在根目录下 cd frontend
-npm start 启动
+在根目录下
+cd backend
+mvn spring-boot:run
+启动后端服务
+
+在根目录下
+cd frontend
+npm install
+npm start
+启动前端
 ```
 1. 启动后端服务
 2. 在移动应用中配置API地址（默认为 http://localhost:5000/api）
