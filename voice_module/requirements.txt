@@ -12,10 +12,13 @@ numpy==2.0.2
 PyAudio==0.2.14
 pydantic==2.11.4
 pyttsx3==2.98
-torch==2.7.0
-torchaudio==2.7.0
-torchvision==0.22.0
+torch==2.3.1
+torchaudio==2.3.1
+torchvision==0.18.1
 transformers==4.51.3
 uvicorn==0.34.2
 Werkzeug==2.0.3
 dataoceanai-dolphin
+openai-whisper
+ffmpeg
+setuptools-rust

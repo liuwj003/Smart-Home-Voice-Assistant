@@ -1,6 +1,7 @@
 from voice_module.interfaces.stt_interface import SpeechToText, STTError
 from typing import Dict, Any, List
 import dolphin
+import torch
 
 class DolphinSTT(SpeechToText):
     """
@@ -12,7 +13,8 @@ class DolphinSTT(SpeechToText):
         """
         super().__init__(config)
         self.model_size = self.config.get("model_size", "small")
-        self.device = self.config.get("device", "cpu")
+        self.device_name = self.config.get("device", "cpu")
+        self.device = torch.device(self.device_name)
 
     def transcribe(self, audio_data: bytes) -> Dict[str, Any]:
         """
@@ -29,9 +31,7 @@ class DolphinSTT(SpeechToText):
         
         try:
             waveform = dolphin.load_audio(audio_data)
-            if self.model_size == "base":
-                model = dolphin.load_model("base", "/data/models/dolphin", "cpu")
-            model = dolphin.load_model("small", "/data/models/dolphin", "cpu")
+            model = dolphin.load_model(self.model_size, "/data/models/dolphin", self.device)
             result = model(waveform)
             return result
         
