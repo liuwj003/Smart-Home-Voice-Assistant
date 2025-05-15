@@ -18,3 +18,4 @@ torchvision==0.22.0
 transformers==4.51.3
 uvicorn==0.34.2
 Werkzeug==2.0.3
+dataoceanai-dolphin
