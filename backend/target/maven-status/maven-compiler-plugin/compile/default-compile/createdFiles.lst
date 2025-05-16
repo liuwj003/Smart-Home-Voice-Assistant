@@ -1,13 +1,9 @@
 com\smarthome\assistant\dto\ApiResponse$ApiResponseBuilder.class
-com\smarthome\assistant\service\impl\SimulatedVoiceProcessorService.class
 com\smarthome\assistant\entity\Result.class
 com\smarthome\assistant\model\VoiceCommand$VoiceCommandBuilder.class
 com\smarthome\assistant\service\VoiceProcessorService.class
 com\smarthome\assistant\dto\ApiResponse.class
 com\smarthome\assistant\dto\VoiceResponse.class
-com\smarthome\assistant\service\impl\RealVoiceProcessorService.class
-com\smarthome\assistant\controller\VoiceController.class
-com\smarthome\assistant\service\impl\VoiceToTextServiceImpl.class
 com\smarthome\assistant\exception\GlobalExceptionHandler.class
 com\smarthome\assistant\service\VoiceToTextService.class
 com\smarthome\assistant\SmartHomeApplication.class

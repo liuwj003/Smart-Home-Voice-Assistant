@@ -35,7 +35,7 @@ if %errorlevel% neq 0 (
     pip install pydantic==2.11.4
     pip install pyyaml==6.0.2
     pip install requests==2.30.0
-    pip install numpy>=1.21.6,<1.28.0
+    pip install numpy
     pip install python-dotenv==1.0.0
 
     echo.

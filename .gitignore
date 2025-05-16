@@ -1,2 +1,3 @@
 frontend/node_modules/
 __pycache__/
+fine_tuned_nlu_bert/

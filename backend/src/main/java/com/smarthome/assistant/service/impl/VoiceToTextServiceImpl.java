@@ -1,60 +1,56 @@
 package com.smarthome.assistant.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smarthome.assistant.service.NlpServiceClient;
 import com.smarthome.assistant.service.VoiceToTextService;
-import okhttp3.*;
-import com.smarthome.assistant.util.GetFileContentAsBase64;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
+/**
+ * 语音转文本服务实现
+ */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class VoiceToTextServiceImpl implements VoiceToTextService {
-    public static final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder().readTimeout(300, TimeUnit.SECONDS).build();
+
+    private final NlpServiceClient nlpServiceClient;
+    private final ObjectMapper objectMapper;
 
     @Override
     public String vtot(MultipartFile audioFile) throws IOException {
-        MediaType mediaType = MediaType.parse("application/json");
-        byte[] b = audioFile.getBytes();
-        String base64Speech = GetFileContentAsBase64.getFileContentAsBase64(audioFile, false);
-        int length = b.length;
-
-
-        JSONObject json = new JSONObject();
-        json.put("format", "m4a");
-        json.put("rate", 16000);
-        json.put("channel", 1);
-        json.put("cuid", "rpNoeczyXQe5V58AJrb1JDHTET2j2SMo");
-        json.put("token", "24.65cf31fc5b393d7962446d49df4beeaa.2592000.1749823571.282335-118878215");
-        json.put("speech", base64Speech);
-        json.put("len", length);
-
-//        MediaType mediaType = MediaType.parse("application/json");
-        RequestBody body = RequestBody.create(mediaType, json.toString());
-
-           Request request = new Request.Builder()
-                .url("https://vop.baidu.com/server_api")
-                .method("POST", body)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .addHeader("Authorization", "Bearer ")
-                .build();
-        Response response = HTTP_CLIENT.newCall(request).execute();
-
-        String result = response.body().string();
-        Map<String, Object> map = JSONObject.parseObject(result);
-        if(map.containsKey("result")) {
-            result = map.get("result").toString();
+        try {
+            // 准备处理设置
+            Map<String, Object> settings = new HashMap<>();
+            settings.put("language", "zh-CN");
+            settings.put("engine", "google");
+            
+            // 调用NLP服务处理音频
+            Map<String, Object> result = nlpServiceClient.callProcessAudio(audioFile, settings);
+            
+            // 检查是否有错误
+            if (result.containsKey("error") && (Boolean)result.get("error")) {
+                log.error("语音转文本失败: {}", result.get("errorMessage"));
+                return "语音识别失败: " + result.get("errorMessage");
+            }
+            
+            // 提取文本结果
+            String text = (String) result.getOrDefault("sttText", "");
+            
+            if (text.isEmpty()) {
+                return "未能识别出语音内容";
+            }
+            
+            return text;
+        } catch (Exception e) {
+            log.error("语音转文本处理异常", e);
+            return "处理出错: " + e.getMessage();
         }
-        else
-        {
-            result = map.get("err_msg").toString();
-        }
-
-        return result;
     }
-
-}
+} 

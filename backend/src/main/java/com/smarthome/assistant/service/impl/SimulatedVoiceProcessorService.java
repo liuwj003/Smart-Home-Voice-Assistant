@@ -3,69 +3,61 @@ package com.smarthome.assistant.service.impl;
 import com.smarthome.assistant.model.VoiceCommand;
 import com.smarthome.assistant.service.VoiceProcessorService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
+/**
+ * 模拟的语音处理器服务
+ * 用于测试和开发环境
+ */
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "voice.processor.type", havingValue = "simulated", matchIfMissing = true)
 public class SimulatedVoiceProcessorService implements VoiceProcessorService {
 
-    @Value("${voice.stt.engine-type}")
-    private String sttEngineType;
-    
-    @Value("${voice.nlu.engine-type}")
-    private String nluEngineType;
-    
     private boolean listening = false;
-    private final Random random = new Random();
     
     @Override
     public VoiceCommand processVoiceCommand(MultipartFile audioFile) {
-        log.info("处理语音命令，文件名：{}", audioFile.getOriginalFilename());
+        log.info("使用模拟处理器处理语音命令，文件名：{}", audioFile.getOriginalFilename());
         
-        // 模拟语音处理 - 通常这里会调用真实的STT和NLU引擎
-        // 在实际应用中，需要读取音频数据，转换格式，然后调用STT和NLU服务
-        
-        // 为演示目的，返回模拟的命令结果
-        String[] intents = {"turn_on", "turn_off", "set_temperature", "set_volume", "open_curtain", "close_curtain"};
-        String[] devices = {"客厅灯", "卧室空调", "阳台窗帘", "客厅电视", "加湿器", "风扇"};
-        
-        String simulatedText = "打开" + devices[random.nextInt(devices.length)];
-        String intent = intents[random.nextInt(intents.length)];
-        
+        // 创建模拟命令结果
+        VoiceCommand result = new VoiceCommand();
+        result.setText("这是一个模拟识别的文本");
+        result.setIntent("turn_on");
+
+        // 创建模拟实体
         Map<String, Object> entities = new HashMap<>();
-        entities.put("device", devices[random.nextInt(devices.length)]);
+        entities.put("device_type", "light");
+        entities.put("location", "living_room");
+        entities.put("parameter", "brightness:80%");
+        result.setEntities(entities);
         
-        if (intent.equals("set_temperature")) {
-            entities.put("temperature", 20 + random.nextInt(10));
-        } else if (intent.equals("set_volume")) {
-            entities.put("volume", 5 + random.nextInt(15));
+        result.setConfidence(0.95);
+        
+        // 模拟处理延迟
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
         
-        VoiceCommand command = new VoiceCommand();
-        command.setText(simulatedText);
-        command.setIntent(intent);
-        command.setEntities(entities);
-        command.setConfidence(0.85 + random.nextDouble() * 0.15);
-        return command;
+        return result;
     }
     
     @Override
     public void startListening() {
-        log.info("开始语音监听");
+        log.info("开始模拟语音监听");
         this.listening = true;
     }
     
     @Override
     public void stopListening() {
-        log.info("停止语音监听");
+        log.info("停止模拟语音监听");
         this.listening = false;
     }
     
