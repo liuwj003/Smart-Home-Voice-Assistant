@@ -29,4 +29,14 @@ public interface DeviceService {
      * @return 更新后的设备
      */
     Device controlDevice(String id, String action, Object params);
+    
+    /**
+     * 根据NLU结果更新设备状态
+     * 
+     * @param entityType 实体类型（如light, fan等）
+     * @param location 位置（如bedroom, living_room等）
+     * @param action 动作（如TURN_ON, TURN_OFF等）
+     * @return 操作结果描述
+     */
+    String updateDeviceState(String entityType, String location, String action);
 } 

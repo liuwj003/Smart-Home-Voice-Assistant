@@ -1,9 +1,0 @@
-active_stt_engine: "dolphin"
-active_nlp_processor: 
-active_tts_engine:
-active_device_mapper: "smart_home_v1"
-
-stt_engines:
-  dolphin:
-    model_size: "small"
-    device: "cpu"

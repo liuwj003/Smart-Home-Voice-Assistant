@@ -14,6 +14,7 @@ public class Device {
     private String name;
     private String type;
     private String status;
+    private String location;
     
     // 灯光特有属性
     private Integer brightness;

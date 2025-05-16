@@ -13,7 +13,9 @@ import {
   Divider,
   Grid,
   Slider,
-  Switch
+  Switch,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MicIcon from '@mui/icons-material/Mic';
@@ -30,6 +32,7 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 import TvIcon from '@mui/icons-material/Tv';
 import WindPowerIcon from '@mui/icons-material/WindPower';
 import BlindIcon from '@mui/icons-material/Blinds';
+import SendIcon from '@mui/icons-material/Send';
 import '../MobileApp.css';  // 引入移动样式
 
 // 房间分类和映射
@@ -192,6 +195,69 @@ const PhoneView = () => {
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'info' });
   const [useMockData, setUseMockData] = useState(false);
   const [language, setLanguage] = useState('zh');
+  const [textCommand, setTextCommand] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSendTextCommand = async () => {
+    if (!textCommand.trim() || isProcessing) return;
+    
+    try {
+      setIsProcessing(true);
+      setAlert({
+        open: true,
+        message: language === 'zh' ? '正在处理命令...' : 'Processing command...',
+        severity: 'info'
+      });
+      
+      const response = await voiceApi.sendTextCommand(textCommand);
+      
+      // 调试日志
+      console.log('文本命令响应:', response);
+      
+      // 处理响应
+      if (response.data && Object.keys(response.data).length > 0) {
+        // 显示成功信息
+        const nluResult = response.data.nluResult || {};
+        const message = language === 'zh' ?
+          `命令处理成功: ${textCommand} (${nluResult.action || ''} ${nluResult.entity || ''})` :
+          `Command processed: ${textCommand} (${nluResult.action || ''} ${nluResult.entity || ''})`;
+          
+        setAlert({
+          open: true,
+          message: message,
+          severity: 'success'
+        });
+        
+        // 如果返回了TTS音频，尝试播放
+        if (response.data.ttsOutputReference) {
+          playTTSAudio(response.data.ttsOutputReference);
+        }
+        
+        // 刷新设备列表以显示最新状态
+        fetchDevices();
+      } else {
+        setAlert({
+          open: true,
+          message: language === 'zh' ? 
+            '命令处理失败' : 
+            'Failed to process command',
+          severity: 'warning'
+        });
+      }
+    } catch (err) {
+      console.error('发送文本命令失败:', err);
+      setAlert({
+        open: true,
+        message: language === 'zh' ? 
+          '处理文本命令失败' : 
+          'Failed to process text command',
+        severity: 'error'
+      });
+    } finally {
+      setIsProcessing(false);
+      setTextCommand(''); // 清空输入框
+    }
+  };
 
   useEffect(() => {
     fetchDevices();
@@ -264,23 +330,177 @@ const PhoneView = () => {
     setRoomData(newRoomData);
   };
 
-  const handleVoiceCommand = () => {
-    setAlert({
-      open: true,
-      message: language === 'zh' ? '开始录音，请说出你的命令...' : 'Recording, please say your command...',
-      severity: 'info'
-    });
-    
-    // 模拟命令识别
-    setTimeout(() => {
+  const handleVoiceCommand = async () => {
+    try {
+      setIsListening(true);
+      setError(null);
+      
+      setAlert({
+        open: true,
+        message: language === 'zh' ? '正在请求麦克风权限...' : 'Requesting microphone permission...',
+        severity: 'info'
+      });
+      
+      // 请求麦克风权限
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          channelCount: 1,
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true,
+        } 
+      });
+      
+      setAlert({
+        open: true,
+        message: language === 'zh' ? '正在录音，请说话...' : 'Recording, please speak...',
+        severity: 'info'
+      });
+      
+      // 创建媒体录制器
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      
+      const audioChunks = [];
+      
+      // 数据可用时的处理
+      mediaRecorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      });
+      
+      // 录制停止时的处理
+      mediaRecorder.addEventListener('stop', async () => {
+        if (audioChunks.length === 0) {
+          setError('没有录制到任何音频');
+          setIsListening(false);
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        
+        setAlert({
+          open: true,
+          message: language === 'zh' ? '正在处理语音...' : 'Processing audio...',
+          severity: 'info'
+        });
+        
+        // 创建音频 Blob
+        const audioBlob = new Blob(audioChunks, { 
+          type: 'audio/webm' 
+        });
+        
+        // 检查 Blob 大小
+        if (audioBlob.size < 100) {
+          setError('录制的音频太短或为空');
+          setIsListening(false);
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        
+        // 创建表单数据
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+        formData.append('settingsJson', JSON.stringify({
+          ttsEnabled: true
+        }));
+        
+        try {
+          // 发送到服务器
+          const response = await voiceApi.sendVoiceCommand(formData);
+          
+          // 调试日志
+          console.log('语音命令响应:', response);
+          
+          // 处理响应
+          if (response.data && response.data.error === true) {
+            setAlert({
+              open: true,
+              message: language === 'zh' ? 
+                '没有识别到语音，请重新尝试' : 
+                'No speech detected, please try again',
+              severity: 'warning'
+            });
+          } else {
+            // 显示成功信息
+            const nluResult = response.data.nluResult || {};
+            const message = language === 'zh' ?
+              `命令识别成功: ${response.data.sttText || ''} (${nluResult.action || ''} ${nluResult.entity || ''})` :
+              `Command recognized: ${response.data.sttText || ''} (${nluResult.action || ''} ${nluResult.entity || ''})`;
+              
+            setAlert({
+              open: true,
+              message: message,
+              severity: 'success'
+            });
+            
+            // 如果返回了TTS音频，尝试播放
+            if (response.data.ttsOutputReference) {
+              playTTSAudio(response.data.ttsOutputReference);
+            }
+            
+            // 刷新设备列表以显示最新状态
+            fetchDevices();
+          }
+        } catch (err) {
+          console.error('发送语音命令失败:', err);
+          setAlert({
+            open: true,
+            message: language === 'zh' ? 
+              '处理语音命令失败' : 
+              'Failed to process voice command',
+            severity: 'error'
+          });
+        } finally {
+          setIsListening(false);
+          stream.getTracks().forEach(track => track.stop());
+        }
+      });
+      
+      // 开始录制
+      mediaRecorder.start();
+      
+      // 5秒后自动停止录音
+      setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, 5000);
+      
+    } catch (err) {
+      setError(`无法访问麦克风: ${err.message}`);
+      setIsListening(false);
       setAlert({
         open: true,
         message: language === 'zh' ? 
-          '命令识别成功: 打开客厅灯光 (置信度: 92%)' : 
-          'Command recognized: Turn on living room light (Confidence: 92%)',
-        severity: 'success'
+          `无法访问麦克风: ${err.message}` : 
+          `Cannot access microphone: ${err.message}`,
+        severity: 'error'
       });
-    }, 1500);
+    }
+  };
+  
+  // TTS音频播放函数
+  const playTTSAudio = async (audioReference) => {
+    try {
+      // 判断audioReference是URL还是Base64
+      const audio = new Audio();
+      if (audioReference.startsWith('data:audio')) {
+        // Base64格式
+        audio.src = audioReference;
+      } else if (audioReference.startsWith('http')) {
+        // URL格式
+        audio.src = audioReference;
+      } else {
+        // 假设是文件路径
+        audio.src = audioReference;
+      }
+      
+      await audio.play();
+    } catch (err) {
+      console.error('播放TTS音频失败:', err);
+    }
   };
 
   const getStatusLabel = (status, type) => {
@@ -546,6 +766,39 @@ const PhoneView = () => {
 
       {/* 设备列表 */}
       <div className="mobile-content">
+        {/* Text Input for Commands */}
+        <Box sx={{ mb: 3, px: 2 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder={language === 'zh' ? "输入文本命令..." : "Enter text command..."}
+            value={textCommand}
+            onChange={(e) => setTextCommand(e.target.value)}
+            disabled={isProcessing}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !isProcessing) {
+                handleSendTextCommand();
+              }
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    color="primary"
+                    disabled={isProcessing || !textCommand.trim()}
+                    onClick={handleSendTextCommand}
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: 'background.paper' }}
+            size="small"
+          />
+        </Box>
+        
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
@@ -583,37 +836,55 @@ const PhoneView = () => {
           </Box>
           
           {/* 能源内容 */}
-          <Box sx={{ 
-            height: 120, 
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'rgba(0,0,0,0.03)',
-            borderRadius: 2
-          }}>
-            <Typography color="text.secondary">
-              {language === 'zh' ? '能源统计功能开发中...' : 'Energy statistics coming soon...'}
-            </Typography>
-          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
+            {language === 'zh' ? '今日用电: 4.8 kWh' : 'Today\'s usage: 4.8 kWh'}
+          </Typography>
         </Box>
       </div>
-
-      {/* 底部语音按钮 */}
-      <div className="mic-button">
-        <Button
-          variant="contained"
+      
+      {/* 底部导航栏 */}
+      <div className="bottom-bar">
+        <Button 
+          variant="contained" 
           color={isListening ? "secondary" : "primary"}
-          size="large"
-          startIcon={<MicIcon />}
+          disabled={isListening && !isProcessing}
           onClick={handleVoiceCommand}
-          className="voice-command-button"
-          sx={{
+          startIcon={isListening ? null : <MicIcon />}
+          sx={{ 
+            borderRadius: '24px', 
             px: 3,
-            py: 1.5,
-            borderRadius: 28
+            py: 1.2,
+            boxShadow: 3,
+            position: 'relative',
+            overflow: 'hidden',
+            '&::after': isListening ? {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '120%',
+              height: '120%',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%',
+              animation: 'ripple 1.5s infinite',
+            } : {},
+            '@keyframes ripple': {
+              '0%': {
+                transform: 'translate(-50%, -50%) scale(0.8)',
+                opacity: 1,
+              },
+              '100%': {
+                transform: 'translate(-50%, -50%) scale(1.4)',
+                opacity: 0,
+              },
+            },
           }}
         >
-          {language === 'zh' ? '语音命令' : 'Voice Command'}
+          {isListening ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            language === 'zh' ? '语音命令' : 'Voice Command'
+          )}
         </Button>
       </div>
 

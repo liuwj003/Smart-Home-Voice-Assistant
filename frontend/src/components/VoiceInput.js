@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Button, Typography, Box, CircularProgress, Alert, Snackbar } from '@mui/material';
+import { Mic, MicOff } from '@mui/icons-material';
 import { voiceApi } from '../services/api';
 
-const VoiceInput = () => {
+const VoiceInput = ({ onCommandResult }) => {
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState(null);
   const [response, setResponse] = useState(null);
@@ -75,6 +76,9 @@ const VoiceInput = () => {
         // 创建表单数据
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.webm');
+        formData.append('settingsJson', JSON.stringify({
+          ttsEnabled: true
+        }));
         
         try {
           // 发送到服务器
@@ -82,9 +86,24 @@ const VoiceInput = () => {
           setResponse(response.data);
           
           // 如果服务器返回的文本表示没有识别到语音，显示错误
-          if (response.data.text === "没有检测到语音，请重新尝试" || 
-              response.data.text === "无法识别语音") {
+          if (response.data.transcribedText === "" || 
+              response.data.error === true) {
             setError('没有识别到语音，请重新尝试');
+          } else {
+            // 通知父组件处理结果
+            if (onCommandResult) {
+              onCommandResult({
+                sttText: response.data.transcribedText,
+                nluResult: response.data.nluResult,
+                deviceActionFeedback: response.data.deviceActionFeedback,
+                ttsOutputReference: response.data.ttsOutputReference
+              });
+              
+              // 如果返回了TTS音频，尝试播放
+              if (response.data.ttsOutputReference) {
+                playTTSAudio(response.data.ttsOutputReference);
+              }
+            }
           }
         } catch (err) {
           console.error('发送语音命令失败:', err);
@@ -98,6 +117,14 @@ const VoiceInput = () => {
           } else {
             // 设置请求时发生错误
             setError(`请求错误: ${err.message}`);
+          }
+          
+          // 通知父组件出错
+          if (onCommandResult) {
+            onCommandResult({
+              error: true,
+              errorMessage: err.response?.data?.message || '语音命令处理失败'
+            });
           }
         } finally {
           setIsListening(false);
@@ -120,6 +147,14 @@ const VoiceInput = () => {
       setError(`无法访问麦克风: ${err.message}`);
       setIsListening(false);
       setSnackbarOpen(false);
+      
+      // 通知父组件出错
+      if (onCommandResult) {
+        onCommandResult({
+          error: true,
+          errorMessage: `无法访问麦克风: ${err.message}`
+        });
+      }
     }
   };
 
@@ -132,45 +167,87 @@ const VoiceInput = () => {
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
+  
+  const playTTSAudio = async (audioReference) => {
+    try {
+      // 判断audioReference是URL还是Base64
+      const audio = new Audio();
+      if (audioReference.startsWith('data:audio')) {
+        // Base64格式
+        audio.src = audioReference;
+      } else if (audioReference.startsWith('http')) {
+        // URL格式
+        audio.src = audioReference;
+      } else {
+        // 假设是文件路径
+        audio.src = audioReference;
+      }
+      
+      await audio.play();
+    } catch (err) {
+      console.error('播放TTS音频失败:', err);
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
       <Button 
         variant="contained" 
-        color="primary" 
+        color={isListening ? "secondary" : "primary"}
         size="large"
-        disabled={isListening}
-        onClick={handleStartListening}
+        disabled={isListening && !mediaRecorderRef.current}
+        onClick={isListening ? handleStopListening : handleStartListening}
         sx={{ 
-          width: 100, 
-          height: 100, 
+          width: 80, 
+          height: 80, 
           borderRadius: '50%',
-          mb: 2
+          mb: 2,
+          boxShadow: isListening ? '0 0 15px rgba(211, 47, 47, 0.5)' : 'none',
+          animation: isListening ? 'pulse 1.5s infinite' : 'none',
+          '@keyframes pulse': {
+            '0%': {
+              boxShadow: '0 0 0 0 rgba(211, 47, 47, 0.4)',
+            },
+            '70%': {
+              boxShadow: '0 0 0 15px rgba(211, 47, 47, 0)',
+            },
+            '100%': {
+              boxShadow: '0 0 0 0 rgba(211, 47, 47, 0)',
+            },
+          },
         }}
       >
-        {isListening ? <CircularProgress size={24} color="inherit" /> : '语音输入'}
+        {isListening ? (
+          mediaRecorderRef.current ? <MicOff /> : <CircularProgress size={24} color="inherit" />
+        ) : (
+          <Mic />
+        )}
       </Button>
       
-      {isListening && (
-        <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-          Listening...
-        </Typography>
-      )}
+      <Typography 
+        variant="button" 
+        color={isListening ? "secondary" : "primary"} 
+        sx={{ fontWeight: 'bold' }}
+      >
+        {isListening ? "点击停止" : "语音命令"}
+      </Typography>
       
-      {error && (
+      {error && !onCommandResult && (
         <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
           {error}
         </Alert>
       )}
       
-      {response && !error && (
+      {response && !error && !onCommandResult && (
         <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, width: '100%' }}>
           <Typography variant="subtitle1" fontWeight="bold">识别结果:</Typography>
-          <Typography variant="body1">{response.text}</Typography>
-          {response.intent !== "unknown" && (
+          <Typography variant="body1">{response.transcribedText}</Typography>
+          {response.nluResult && (
             <>
               <Typography variant="subtitle2" sx={{ mt: 1 }}>意图:</Typography>
-              <Typography variant="body2">{response.intent}</Typography>
+              <Typography variant="body2">
+                {`${response.nluResult.action || "未知"} / ${response.nluResult.entity || "未知"}`}
+              </Typography>
             </>
           )}
         </Box>

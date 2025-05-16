@@ -12,7 +12,9 @@ import {
   Box,
   Slider,
   Chip,
-  CircularProgress
+  CircularProgress,
+  TextField,
+  Button
 } from '@mui/material';
 import { 
   Lightbulb, 
@@ -23,10 +25,11 @@ import {
   AirOutlined,
   DeviceThermostat, 
   Settings as SettingsIcon,
-  ChevronRight
+  ChevronRight,
+  Send
 } from '@mui/icons-material';
 import VoiceInput from '../components/VoiceInput';
-import { deviceApi } from '../services/api';
+import { deviceApi, voiceApi } from '../services/api';
 import { Link } from 'react-router-dom';
 
 // Define room categories
@@ -64,6 +67,9 @@ const Home = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomDevices, setRoomDevices] = useState({});
+  const [textCommand, setTextCommand] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [commandResult, setCommandResult] = useState(null);
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -106,7 +112,7 @@ const Home = () => {
     };
 
     fetchDevices();
-  }, []);
+  }, [commandResult]); // Refresh devices when command results change
 
   const getDeviceStatusColor = (device) => {
     if (device.status === 'on') {
@@ -133,6 +139,31 @@ const Home = () => {
     };
     
     return statusMap[device.status] || device.status;
+  };
+
+  const handleSendTextCommand = async () => {
+    if (!textCommand.trim()) return;
+    
+    setIsProcessing(true);
+    setCommandResult(null);
+    
+    try {
+      const response = await voiceApi.sendTextCommand(textCommand);
+      setCommandResult(response.data);
+    } catch (error) {
+      console.error('发送文本命令失败:', error);
+      setCommandResult({
+        error: true,
+        errorMessage: error.response?.data?.message || '发送命令失败，请重试'
+      });
+    } finally {
+      setIsProcessing(false);
+      setTextCommand('');
+    }
+  };
+
+  const handleVoiceCommandResult = (result) => {
+    setCommandResult(result);
   };
 
   const renderDeviceCard = (device) => {
@@ -256,59 +287,106 @@ const Home = () => {
     );
   };
 
+  const renderCommandResult = () => {
+    if (!commandResult) return null;
+    
+    return (
+      <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 2 }}>
+        <Typography variant="h6" gutterBottom>命令处理结果</Typography>
+        
+        {commandResult.error ? (
+          <Typography color="error">{commandResult.errorMessage}</Typography>
+        ) : (
+          <>
+            {commandResult.sttText && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">语音识别结果:</Typography>
+                <Typography>{commandResult.sttText}</Typography>
+              </Box>
+            )}
+            
+            {commandResult.nluResult && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">理解结果:</Typography>
+                <Typography>
+                  动作: {commandResult.nluResult.action || '未知'} | 
+                  设备: {commandResult.nluResult.entity || '未知'} | 
+                  位置: {commandResult.nluResult.location || '未知'}
+                </Typography>
+              </Box>
+            )}
+            
+            {commandResult.deviceActionFeedback && (
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">设备状态:</Typography>
+                <Typography>{commandResult.deviceActionFeedback}</Typography>
+              </Box>
+            )}
+          </>
+        )}
+      </Box>
+    );
+  };
+
   return (
     <div>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 3 
-      }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          智能家居控制面板
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          家庭助手
         </Typography>
-        <IconButton 
-          component={Link} 
-          to="/settings" 
-          sx={{ 
-            width: 48, 
-            height: 48, 
-            backgroundColor: 'rgba(0,0,0,0.05)',
-            '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.1)'
-            }
-          }}
-        >
-          <SettingsIcon />
-        </IconButton>
+        <Link to="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <IconButton color="primary">
+            <SettingsIcon />
+          </IconButton>
+        </Link>
       </Box>
       
+      {/* Text Command Input */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <TextField
+            fullWidth
+            label="输入文本命令"
+            variant="outlined"
+            value={textCommand}
+            onChange={(e) => setTextCommand(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSendTextCommand();
+              }
+            }}
+            disabled={isProcessing}
+          />
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleSendTextCommand}
+            disabled={isProcessing || !textCommand.trim()}
+            endIcon={<Send />}
+          >
+            发送
+          </Button>
+        </Box>
+      </Box>
+      
+      {/* Voice Command Button */}
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
+        <VoiceInput onCommandResult={handleVoiceCommandResult} />
+      </Box>
+      
+      {/* Command Result Display */}
+      {renderCommandResult()}
+      
+      {/* Device Sections */}
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Box>
-          {Object.keys(ROOM_CATEGORIES).map(roomKey => 
-            renderRoomSection(roomKey)
-          )}
+          {Object.keys(ROOM_CATEGORIES).map(roomKey => renderRoomSection(roomKey))}
         </Box>
       )}
-      
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 3, 
-          mt: 3, 
-          borderRadius: '16px',
-          backgroundColor: '#f5f7fa'
-        }}
-      >
-        <Typography variant="h6" gutterBottom fontWeight="medium">
-          语音控制
-        </Typography>
-        <VoiceInput />
-      </Paper>
     </div>
   );
 };

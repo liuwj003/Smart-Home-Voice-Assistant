@@ -47,3 +47,10 @@ Prefix dict has been built successfully.
 ## 5.14-5.16
 * 连不上后端服务器，应该是要使用虚拟数据
 ![alt text](imgs/image_6.png)
+* 重新梳理了语音服务逻辑，修改为nlp_service模块，tts与stt都应是可选的
+* 目前的效果：
+![alt text](imgs/image_7.png)
+![alt text](imgs/image_8.png)
+![alt text](imgs/image_9.png)
+![alt text](imgs/image_10.png)
+![alt text](imgs/image_11.png)

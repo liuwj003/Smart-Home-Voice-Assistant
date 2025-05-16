@@ -1,0 +1,16 @@
+# NLP服务配置文件
+
+# STT引擎配置
+stt:
+  engine: placeholder
+  # 更多STT配置...
+
+# NLU引擎配置
+nlu:
+  engine: placeholder
+  # 更多NLU配置...
+
+# TTS引擎配置
+tts:
+  engine: placeholder
+  # 更多TTS配置... 

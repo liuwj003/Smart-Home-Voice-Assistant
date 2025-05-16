@@ -92,15 +92,35 @@ export const voiceApi = {
     // 发送语音命令
     sendVoiceCommand: async (formData) => {
         try {
-            return await api.post('/voice/command', formData, {
+            return await api.post('/command/audio', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
         } catch (err) {
             if (err.code === 'ECONNREFUSED' || err.message.includes('Network Error')) {
                 // 尝试其他端口
                 await checkServerAvailability();
-                return api.post('/voice/command', formData, {
+                return api.post('/command/audio', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
+            throw err;
+        }
+    },
+    
+    // 发送文本命令
+    sendTextCommand: async (text) => {
+        try {
+            return await api.post('/command/text', { 
+                textInput: text,
+                settings: { ttsEnabled: true }
+            });
+        } catch (err) {
+            if (err.code === 'ECONNREFUSED' || err.message.includes('Network Error')) {
+                // 尝试其他端口
+                await checkServerAvailability();
+                return api.post('/command/text', { 
+                    textInput: text,
+                    settings: { ttsEnabled: true } 
                 });
             }
             throw err;
