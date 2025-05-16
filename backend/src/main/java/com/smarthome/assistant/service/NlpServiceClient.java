@@ -62,20 +62,26 @@ public class NlpServiceClient {
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
             String url = nlpServiceBaseUrl + "/process_audio";
             
-            log.info("发送音频处理请求到: {}", url);
+            log.info("发送音频处理请求到: {}, 文件大小: {} bytes, 内容类型: {}", 
+                   url, audioFile.getSize(), audioFile.getContentType());
+                   
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                log.info("NLP服务成功处理音频请求");
                 return response.getBody();
             } else {
                 log.error("NLP服务音频处理失败，状态码: {}", response.getStatusCode());
                 throw new Exception("NLP服务音频处理失败");
             }
         } catch (Exception e) {
-            log.error("调用NLP服务音频处理API失败", e);
+            log.error("调用NLP服务音频处理API失败: {}", e.getMessage(), e);
+            // 创建一个更详细的错误结果
             Map<String, Object> errorResult = new HashMap<>();
             errorResult.put("error", true);
             errorResult.put("errorMessage", "调用NLP服务失败: " + e.getMessage());
+            errorResult.put("sttText", "");
+            errorResult.put("nluResult", createEmptyNluResult());
             return errorResult;
         }
     }
@@ -108,11 +114,42 @@ public class NlpServiceClient {
                 throw new Exception("NLP服务文本处理失败");
             }
         } catch (Exception e) {
-            log.error("调用NLP服务文本处理API失败", e);
+            log.error("调用NLP服务文本处理API失败: {}", e.getMessage(), e);
+            // 创建一个更详细的错误结果
             Map<String, Object> errorResult = new HashMap<>();
             errorResult.put("error", true);
             errorResult.put("errorMessage", "调用NLP服务失败: " + e.getMessage());
+            errorResult.put("sttText", textInput);
+            errorResult.put("nluResult", createEmptyNluResult());
             return errorResult;
+        }
+    }
+    
+    /**
+     * 创建空的NLU结果对象
+     * 用于错误处理时提供默认结构
+     */
+    private Map<String, Object> createEmptyNluResult() {
+        Map<String, Object> nluResult = new HashMap<>();
+        nluResult.put("action", "");
+        nluResult.put("entity", "");
+        nluResult.put("location", "");
+        nluResult.put("confidence", 0.0);
+        return nluResult;
+    }
+    
+    /**
+     * 健康检查方法
+     * 检查NLP服务是否可达
+     */
+    public boolean isNlpServiceHealthy() {
+        try {
+            String url = nlpServiceBaseUrl + "/health";
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            log.error("NLP服务健康检查失败: {}", e.getMessage());
+            return false;
         }
     }
 } 

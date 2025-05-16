@@ -1,7 +1,7 @@
 # CHANGELOG
 ---
 ## 5.12
-* 实现了基本的前后端连接、语音输入
+* 实现了基本的前后端连接、语音输入 - liuwj003
 ![alt text](imgs/image_1.png)
 ![alt text](imgs/image_2.png)
 ```
@@ -44,13 +44,14 @@ Prefix dict has been built successfully.
 ![alt text](imgs/image_4.png)
 ![alt text](imgs/image_5.png)
 
-## 5.14-5.16
-* 连不上后端服务器，应该是要使用虚拟数据
-![alt text](imgs/image_6.png)
-* 重新梳理了语音服务逻辑，修改为nlp_service模块，tts与stt都应是可选的
-* 目前的效果：
-![alt text](imgs/image_7.png)
-![alt text](imgs/image_8.png)
-![alt text](imgs/image_9.png)
+## 5.14-5.16 
+* 重新梳理了语音服务逻辑，修改为nlp_service模块，tts与stt都应是可选的 - liuwj003 
+目前的效果：
 ![alt text](imgs/image_10.png)
 ![alt text](imgs/image_11.png)
+能成功保存设置了：
+![alt text](imgs/image_save_setting.png)
+进一步确认了前后端的服务调用、连接，确保能调用提供的nlp_service：
+![alt text](imgs/main_page_test.png)
+![alt text](imgs/phone_page_text_test.png)
+![alt text](imgs/phone_page_voice_test.png)

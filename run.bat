@@ -1,4 +1,6 @@
 @echo off
+REM 设置控制台编码为UTF-8
+chcp 65001
 echo Smart Home Voice Assistant Setup and Launch
 
 REM Check for requirements.txt file
@@ -49,6 +51,14 @@ echo ======================================
 REM Create a marker flag to track whether we got to the program launching stage
 echo 1 > startup_flag.txt
 
+REM Start NLP Service
+echo Starting NLP Service...
+start "NLP Service" cmd /k "cd %~dp0nlp_service && python start_service.py"
+
+REM Wait a few seconds for the NLP service to start
+echo Waiting for NLP service to initialize...
+timeout /t 5
+
 REM Start Java Maven backend
 echo Starting Java backend...
 start "Backend" cmd /k "cd %~dp0backend && mvn spring-boot:run"
@@ -63,6 +73,7 @@ start "Frontend" cmd /k "cd %~dp0frontend && npm install && npm start"
 
 echo ======================================
 echo Application started successfully!
+echo NLP Service will run on http://localhost:8000
 echo Backend API will run on http://localhost:8080/api
 echo Frontend will run on http://localhost:3000
 echo ======================================

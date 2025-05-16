@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8080
   servlet:
     context-path: /api
   
@@ -11,6 +11,11 @@ logging:
   level:
     com.smarthome: INFO
     org.springframework: INFO
+    
+# NLP服务配置
+nlp:
+  service:
+    baseurl: http://localhost:8000
     
 # 音频处理配置
 voice:

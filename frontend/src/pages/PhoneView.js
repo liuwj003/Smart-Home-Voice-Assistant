@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { deviceApi, voiceApi, settingsApi } from '../services/api';
+import api, { checkServerAvailability } from '../services/api';
 import { 
   Box, 
   Typography, 
@@ -209,6 +210,10 @@ const PhoneView = () => {
         severity: 'info'
       });
       
+      // 调试信息
+      console.log('发送文本命令:', textCommand);
+      console.log('当前API baseURL:', api.defaults.baseURL);
+      
       const response = await voiceApi.sendTextCommand(textCommand);
       
       // 调试日志
@@ -246,11 +251,24 @@ const PhoneView = () => {
       }
     } catch (err) {
       console.error('发送文本命令失败:', err);
+      console.error('错误详情:', err.response ? err.response.data : '无响应数据');
+      
+      // 尝试自动重连
+      try {
+        if (err.message.includes('Network Error') || err.code === 'ECONNREFUSED') {
+          console.log('尝试重新连接到服务器...');
+          await checkServerAvailability();
+          console.log('重新连接后的API baseURL:', api.defaults.baseURL);
+        }
+      } catch (reconnectErr) {
+        console.error('重连失败:', reconnectErr);
+      }
+      
       setAlert({
         open: true,
         message: language === 'zh' ? 
-          '处理文本命令失败' : 
-          'Failed to process text command',
+          `处理文本命令失败: ${err.message}` : 
+          `Failed to process text command: ${err.message}`,
         severity: 'error'
       });
     } finally {
@@ -401,10 +419,15 @@ const PhoneView = () => {
         
         // 创建表单数据
         const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
+        formData.append('audio_file', audioBlob, 'recording.webm');
         formData.append('settingsJson', JSON.stringify({
           ttsEnabled: true
         }));
+        
+        // 调试信息
+        console.log('准备发送音频, 大小:', audioBlob.size, 'bytes');
+        console.log('当前API baseURL:', api.defaults.baseURL);
+        console.log('FormData包含字段:', Array.from(formData.keys()));
         
         try {
           // 发送到服务器
@@ -444,12 +467,24 @@ const PhoneView = () => {
             fetchDevices();
           }
         } catch (err) {
+          const errorDetails = err.response ? `(${err.response.status}: ${JSON.stringify(err.response.data)})` : err.message;
           console.error('发送语音命令失败:', err);
+          console.error('错误详情:', errorDetails);
+          
+          // 尝试重新连接
+          if (err.message.includes('Network Error') || err.code === 'ECONNREFUSED') {
+            try {
+              await checkServerAvailability();
+            } catch (reconnectErr) {
+              console.error('重连失败:', reconnectErr);
+            }
+          }
+          
           setAlert({
             open: true,
             message: language === 'zh' ? 
-              '处理语音命令失败' : 
-              'Failed to process voice command',
+              `处理语音命令失败: ${err.message}` : 
+              `Failed to process voice command: ${err.message}`,
             severity: 'error'
           });
         } finally {

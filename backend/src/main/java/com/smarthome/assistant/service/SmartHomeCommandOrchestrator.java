@@ -32,11 +32,42 @@ public class SmartHomeCommandOrchestrator {
      */
     public FrontendResponseDto orchestrateAudioCommand(MultipartFile audioFile, String settingsJson) {
         try {
+            // 首先检查NLP服务是否健康
+            if (!nlpServiceClient.isNlpServiceHealthy()) {
+                log.error("NLP服务不可用，无法处理音频命令");
+                return FrontendResponseDto.builder()
+                        .commandSuccess(false)
+                        .errorMessage("NLP服务不可用，请确保NLP服务已启动")
+                        .build();
+            }
+            
             // 解析设置
             Map<String, Object> settings = objectMapper.readValue(settingsJson, Map.class);
             
             // 调用NLP服务进行音频处理
             Map<String, Object> nlpResponse = nlpServiceClient.callProcessAudio(audioFile, settings);
+            
+            // 如果响应包含错误标志，则返回错误信息
+            if (nlpResponse.containsKey("error") && (Boolean)nlpResponse.get("error")) {
+                String errorMsg = nlpResponse.containsKey("errorMessage") ? 
+                        (String)nlpResponse.get("errorMessage") : "处理音频时出错";
+                
+                log.error("NLP服务返回错误: {}", errorMsg);
+                
+                // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
+                if (nlpResponse.containsKey("nluResult")) {
+                    // 构建带有错误信息的响应，但包含NLU结果
+                    FrontendResponseDto response = processNlpResponse(nlpResponse);
+                    response.setCommandSuccess(false);
+                    response.setErrorMessage(errorMsg);
+                    return response;
+                }
+                
+                return FrontendResponseDto.builder()
+                        .commandSuccess(false)
+                        .errorMessage(errorMsg)
+                        .build();
+            }
             
             return processNlpResponse(nlpResponse);
         } catch (Exception e) {
@@ -57,8 +88,39 @@ public class SmartHomeCommandOrchestrator {
      */
     public FrontendResponseDto orchestrateTextCommand(String textInput, Map<String, Object> settings) {
         try {
+            // 首先检查NLP服务是否健康
+            if (!nlpServiceClient.isNlpServiceHealthy()) {
+                log.error("NLP服务不可用，无法处理文本命令");
+                return FrontendResponseDto.builder()
+                        .commandSuccess(false)
+                        .errorMessage("NLP服务不可用，请确保NLP服务已启动")
+                        .build();
+            }
+            
             // 调用NLP服务进行文本处理
             Map<String, Object> nlpResponse = nlpServiceClient.callProcessText(textInput, settings);
+            
+            // 如果响应包含错误标志，则返回错误信息
+            if (nlpResponse.containsKey("error") && (Boolean)nlpResponse.get("error")) {
+                String errorMsg = nlpResponse.containsKey("errorMessage") ? 
+                        (String)nlpResponse.get("errorMessage") : "处理文本时出错";
+                
+                log.error("NLP服务返回错误: {}", errorMsg);
+                
+                // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
+                if (nlpResponse.containsKey("nluResult")) {
+                    // 构建带有错误信息的响应，但包含NLU结果
+                    FrontendResponseDto response = processNlpResponse(nlpResponse);
+                    response.setCommandSuccess(false);
+                    response.setErrorMessage(errorMsg);
+                    return response;
+                }
+                
+                return FrontendResponseDto.builder()
+                        .commandSuccess(false)
+                        .errorMessage(errorMsg)
+                        .build();
+            }
             
             return processNlpResponse(nlpResponse);
         } catch (Exception e) {
@@ -66,6 +128,7 @@ public class SmartHomeCommandOrchestrator {
             return FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理文本命令时出错: " + e.getMessage())
+                    .sttText(textInput) // 至少返回用户输入的文本
                     .build();
         }
     }
@@ -102,14 +165,21 @@ public class SmartHomeCommandOrchestrator {
                     .confidence(confidence)
                     .build();
             
-            // 更新设备状态
-            String deviceFeedback = deviceService.updateDeviceState(entity, location, action);
+            // 只有当我们有实际的action和entity时才更新设备状态
+            String deviceFeedback = null;
+            if (action != null && !action.isEmpty() && entity != null && !entity.isEmpty()) {
+                // 更新设备状态
+                deviceFeedback = deviceService.updateDeviceState(entity, location, action);
+            } else {
+                deviceFeedback = "无法识别设备控制命令";
+            }
             
             // 构建响应
             return FrontendResponseDto.builder()
                     .commandSuccess(true)
                     .sttText(nlpResponse.containsKey("transcribedText") ? 
-                            (String) nlpResponse.get("transcribedText") : null)
+                            (String) nlpResponse.get("transcribedText") : 
+                            (nlpResponse.containsKey("sttText") ? (String) nlpResponse.get("sttText") : null))
                     .nluResult(nluDisplayDto)
                     .deviceActionFeedback(deviceFeedback)
                     .ttsOutputReference(nlpResponse.containsKey("ttsOutputReference") ? 

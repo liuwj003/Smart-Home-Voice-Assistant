@@ -2,6 +2,7 @@ E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\a
 E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\controller\VoiceCommandController.java
 E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\dto\NluResultDisplayDto.java
 E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\dto\VoiceResponse.java
+E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\controller\SettingsController.java
 E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\model\VoiceCommand.java
 E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\SmartHomeApplication.java
 E:\2024-2\Software\SmartHomeVoiceAssistant\backend\src\main\java\com\smarthome\assistant\service\impl\MockDeviceService.java

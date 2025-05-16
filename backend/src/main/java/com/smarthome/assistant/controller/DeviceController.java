@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/devices")
+@RequestMapping("/devices")
 @RequiredArgsConstructor
 @CrossOrigin
 public class DeviceController {

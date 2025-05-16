@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/command")
+@RequestMapping("/command")
 @RequiredArgsConstructor
 @CrossOrigin
 public class VoiceCommandController {
@@ -29,18 +29,44 @@ public class VoiceCommandController {
      */
     @PostMapping("/audio")
     public ResponseEntity<FrontendResponseDto> processAudioCommand(
-            @RequestParam("audio") MultipartFile audioFile,
+            @RequestParam(value = "audio_file", required = false) MultipartFile audioFile,
+            @RequestParam(value = "audio", required = false) MultipartFile audioFallback,
             @RequestParam(value = "settingsJson", defaultValue = "{}") String settingsJson) {
         
-        log.info("接收到音频命令请求，文件名: {}, 大小: {} bytes", 
-                audioFile.getOriginalFilename(), audioFile.getSize());
+        // 支持两种参数名，优先使用audio_file
+        MultipartFile actualAudioFile = audioFile != null ? audioFile : audioFallback;
+        
+        if (actualAudioFile == null) {
+            log.error("未提供音频文件 (audio_file 或 audio 参数)");
+            return ResponseEntity.badRequest().body(
+                FrontendResponseDto.builder()
+                    .commandSuccess(false)
+                    .errorMessage("未提供音频文件")
+                    .build()
+            );
+        }
+        
+        log.info("接收到音频命令请求，文件名: {}, 大小: {} bytes, 内容类型: {}", 
+                actualAudioFile.getOriginalFilename(), actualAudioFile.getSize(), actualAudioFile.getContentType());
         
         try {
+            // 检查文件是否为空
+            if (actualAudioFile.isEmpty()) {
+                log.error("上传的音频文件为空");
+                return ResponseEntity.badRequest().body(
+                    FrontendResponseDto.builder()
+                        .commandSuccess(false)
+                        .errorMessage("上传的音频文件为空")
+                        .build()
+                );
+            }
+            
             // 处理音频命令
-            FrontendResponseDto response = orchestrator.orchestrateAudioCommand(audioFile, settingsJson);
+            FrontendResponseDto response = orchestrator.orchestrateAudioCommand(actualAudioFile, settingsJson);
+            log.info("音频命令处理成功: {}", response);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("处理音频命令失败", e);
+            log.error("处理音频命令失败: {}", e.getMessage(), e);
             FrontendResponseDto errorResponse = FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理音频命令时出错: " + e.getMessage())
