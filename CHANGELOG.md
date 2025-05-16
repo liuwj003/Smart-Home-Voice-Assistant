@@ -55,3 +55,5 @@ Prefix dict has been built successfully.
 ![alt text](imgs/main_page_test.png)
 ![alt text](imgs/phone_page_text_test.png)
 ![alt text](imgs/phone_page_voice_test.png)
+微调了一个BERT-chinese，然后用微调好的模型实现了基本的NLU：
+![alt text](imgs/bert_zh_v1.png)

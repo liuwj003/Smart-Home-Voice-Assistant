@@ -18,7 +18,7 @@
 3. 确保已安装Node.js和npm
 4. 确保已安装Python 3.8+，并安装了所需依赖：
    ```bash
-   pip install -r voice_module/requirements.txt
+   pip install requirements.txt
    ```
 
 ### 启动项目
@@ -32,20 +32,9 @@ run.bat
 或者手动启动各组件：
 
 ```bash
-# 启动Java后端
-cd backend
-mvn spring-boot:run
 
-# 启动React前端
-cd frontend
-npm install
-npm start
 ```
 
-### 访问应用
-
-- 后端API：http://localhost:8080/api
-- 前端：http://localhost:3000
 
 ## 配置
 
