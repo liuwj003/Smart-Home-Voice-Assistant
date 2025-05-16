@@ -1,6 +1,71 @@
 # 智能家居语音助手
 
-这是一个基于语音控制的智能家居控制系统，包含语音识别、自然语言理解和设备控制功能。系统由后端API服务和移动应用前端组成。
+这是一个使用Maven Java后端和React前端的智能家居语音助手项目。Python语音模块作为service被Java后端调用。
+
+## 项目结构
+
+- `frontend/`: React前端代码
+- `backend/`: Java Maven后端代码
+- `voice_module/`: Python语音处理模块
+
+## 运行项目
+
+### 准备工作
+
+1. 确保已安装Java JDK 17+
+2. 确保已安装Maven
+3. 确保已安装Node.js和npm
+4. 确保已安装Python 3.8+，并安装了所需依赖：
+   ```bash
+   pip install -r voice_module/requirements.txt
+   ```
+
+### 启动项目
+
+使用提供的批处理文件启动项目：
+
+```bash
+run.bat
+```
+
+或者手动启动各组件：
+
+```bash
+# 启动Java后端
+cd backend
+mvn spring-boot:run
+
+# 启动React前端
+cd frontend
+npm install
+npm start
+```
+
+### 访问应用
+
+- 后端API：http://localhost:8080/api
+- 前端：http://localhost:3000
+
+## 配置
+
+在 `backend/src/main/resources/application.yml` 中可以配置语音处理模块：
+
+```yaml
+voice:
+  # 选择处理器类型: simulated(模拟) 或 real(实际Python模块)
+  processor:
+    type: simulated  # 或 'real'
+  module:
+    path: ./voice_module  # Python模块路径
+  stt:
+    engine-type: simulated  # STT引擎类型
+  nlu:
+    engine-type: rule_based  # NLU引擎类型
+```
+
+## 语音模块接口
+
+语音模块通过Python子进程方式被Java后端调用，处理语音命令并返回结构化数据。
 
 ## 1. 项目描述
 * 一个智能家居语音交互助手系统，目的是提高家居生活的便捷性和智能化程度。
@@ -159,7 +224,7 @@ SmartHomeVoiceAssistant/
 ```
 
 ## 6. 使用说明
-
+(可以直接在根目录下`run.bat`)
 ## 目前
 ```bash
 在根目录下
@@ -211,16 +276,6 @@ npm start
 
 ## 8. 测试
 
-运行测试：
-```bash
-# 后端测试
-cd voice_module
-python -m pytest tests/
-
-# 移动应用测试
-cd mobile
-npm test
-```
 
 ## 9. 贡献指南
 

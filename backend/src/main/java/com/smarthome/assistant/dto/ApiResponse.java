@@ -15,14 +15,24 @@ public class ApiResponse<T> {
     private T data;
     
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<T>("success", null, data);
+        return ApiResponse.<T>builder()
+                .status("success")
+                .data(data)
+                .build();
     }
     
     public static <T> ApiResponse<T> success(String message, T data) {
-        return new ApiResponse<T>("success", message, data);
+        return ApiResponse.<T>builder()
+                .status("success")
+                .message(message)
+                .data(data)
+                .build();
     }
     
     public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<T>("error", message, null);
+        return ApiResponse.<T>builder()
+                .status("error")
+                .message(message)
+                .build();
     }
 } 

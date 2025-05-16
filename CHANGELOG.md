@@ -43,3 +43,7 @@ Prefix dict has been built successfully.
 * 点击 移动视图，可以看到暂时的APP结果：
 ![alt text](imgs/image_4.png)
 ![alt text](imgs/image_5.png)
+
+## 5.14-5.16
+* 连不上后端服务器，应该是要使用虚拟数据
+![alt text](imgs/image_6.png)

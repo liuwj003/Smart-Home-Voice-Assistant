@@ -300,9 +300,86 @@ def get_devices():
             "type": "sensor",
             "temperature": 24.5,
             "humidity": 50
+        },
+        {
+            "id": "kitchen_light_1",
+            "name": "厨房灯",
+            "type": "light",
+            "status": "off",
+            "brightness": 70,
+            "color": "cool_white"
+        },
+        {
+            "id": "kitchen_fan_1",
+            "name": "厨房排气扇",
+            "type": "fan",
+            "status": "off",
+            "speed": "medium"
+        },
+        {
+            "id": "bathroom_light_1",
+            "name": "浴室灯",
+            "type": "light",
+            "status": "off",
+            "brightness": 80,
+            "color": "daylight"
         }
     ]
     return jsonify(devices)
+
+@app.route('/api/voice/settings', methods=['GET', 'POST'])
+def voice_settings():
+    """语音设置接口"""
+    # 获取当前设置
+    if request.method == 'GET':
+        settings = {
+            "language": voice_processor.language if hasattr(voice_processor, 'language') else "zh",
+            "stt_engine": voice_processor.stt_engine_type if hasattr(voice_processor, 'stt_engine_type') else "simulated",
+            "voice_feedback": voice_processor.voice_feedback if hasattr(voice_processor, 'voice_feedback') else True,
+        }
+        return jsonify(settings)
+    
+    # 更新设置
+    elif request.method == 'POST':
+        try:
+            logger.info("接收到语音设置更新请求")
+            data = request.get_json()
+            
+            if not data:
+                logger.error("请求中没有JSON数据")
+                return jsonify({
+                    "status": "error",
+                    "message": "No JSON data in request"
+                }), 400
+            
+            # 验证数据
+            if 'language' in data:
+                voice_processor.language = data['language']
+                logger.info(f"已设置语言: {data['language']}")
+            
+            if 'stt_engine' in data:
+                # 暂存当前设置，后续可能用于实际更改STT引擎
+                voice_processor.stt_engine_type = data['stt_engine']
+                logger.info(f"已设置STT引擎: {data['stt_engine']}")
+            
+            if 'voice_feedback' in data:
+                voice_processor.voice_feedback = data['voice_feedback']
+                logger.info(f"已设置语音反馈: {data['voice_feedback']}")
+            
+            return jsonify({
+                "status": "success",
+                "message": "Settings updated successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"更新语音设置失败: {e}")
+            traceback_str = traceback.format_exc()
+            logger.error(f"详细错误信息: {traceback_str}")
+            
+            return jsonify({
+                "status": "error",
+                "message": f"Failed to update settings: {str(e)}"
+            }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) 

@@ -4,6 +4,7 @@ import com.smarthome.assistant.model.VoiceCommand;
 import com.smarthome.assistant.service.VoiceProcessorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +14,7 @@ import java.util.Random;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "voice.processor.type", havingValue = "simulated", matchIfMissing = true)
 public class SimulatedVoiceProcessorService implements VoiceProcessorService {
 
     @Value("${voice.stt.engine-type}")

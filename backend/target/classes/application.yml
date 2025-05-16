@@ -1,5 +1,7 @@
 server:
-  port: 5000
+  port: 8081
+  servlet:
+    context-path: /api
   
 spring:
   application:
@@ -12,6 +14,11 @@ logging:
     
 # 音频处理配置
 voice:
+  # 选择处理器类型: simulated(模拟) 或 real(实际Python模块)
+  processor:
+    type: simulated
+  module:
+    path: ./voice_module
   audio:
     silence-threshold: 0.01
     silence-duration: 1.0
