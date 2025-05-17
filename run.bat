@@ -60,6 +60,15 @@ echo Waiting for NLP service to initialize...
 timeout /t 5
 
 REM Start Java Maven backend
+echo Checking Maven dependencies for backend...
+cd %~dp0backend
+
+if not exist target (
+    echo Maven target directory not found, installing dependencies...
+    call mvn clean install -U
+) else (
+    echo Maven dependencies already installed, skipping install.
+)
 echo Starting Java backend...
 start "Backend" cmd /k "cd %~dp0backend && mvn spring-boot:run"
 
