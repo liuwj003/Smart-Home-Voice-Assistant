@@ -1,6 +1,7 @@
 # UPDATELOG
 
 * 实时分工调整在`docs/member_summary.md`下记录
+* 可以把整个项目克隆下来，然后`run.bat`试试效果。
   
 ## 5.17 （Version 0）
 * 写文档、画图的同学可以根据这些实时进度来理解代码结构：
