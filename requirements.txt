@@ -16,8 +16,8 @@ torch
 torchaudio
 transformers
 openai-whisper==20240930
-soundfile==0.12.1
-PyAudio==0.2.14
+soundfile
+PyAudio
 dataoceanai-dolphin==20250507  # Dolphin STT引擎依赖
 
 # NLU依赖
@@ -28,6 +28,10 @@ pandas
 numpy
 datasets
 transformers
+sentence-transformers
+langchain_community
+langchain
+chromadb
 
 # TTS依赖
 edge-tts==7.0.2

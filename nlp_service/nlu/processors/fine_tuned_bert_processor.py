@@ -6,6 +6,7 @@ import torch
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 import re
+from huggingface_hub import snapshot_download
 
 # --- NLUInterface Definition (if not properly imported) ---
 logger = logging.getLogger(__name__)
@@ -35,21 +36,82 @@ class BertNLUProcessor(NLUInterface):
     CH_ORDINAL_PREFIX = "第"
     CH_ID_SUFFIXES = ["号", "个"]
 
+    DEFAULT_MODEL_HUB_ID = "LIUWJ/fine-tuned-home-bert"
+
     def __init__(self, config: Dict):
+        """
+        初始化BertNLUProcessor
+
+        Args:
+            config: 处理器配置，应包含:
+                local_model_target_dir (str): 希望模型文件存放的本地目录路径.
+                                            例如: "nlu/model/fine_tuned_nlu_bert"
+                model_hub_id (str, optional): 您在Hugging Face Hub上的模型ID。
+                                             如果未提供，则使用类中定义的 DEFAULT_MODEL_HUB_ID。
+                tokenizer_hub_id (str, optional): Tokenizer在Hub上的ID，如果与model_hub_id不同。
+                                                 通常使用 model_hub_id 即可。
+                device (str, optional): "cuda" 或 "cpu". 默认自动检测.
+                force_download (bool, optional): 是否强制重新下载模型，即使本地已存在。默认为 False.
+        """
         self.config = config
-        model_path_str = config.get("model_path")
-        if not model_path_str:
-            logger.error("配置中未提供 'model_path'。")
-            raise ValueError("配置中必须提供 'model_path'，指向微调后的模型目录。")
 
-        self.model_path = Path(model_path_str).resolve()
-        self.tokenizer_path = str(Path(config.get("tokenizer_name_or_path", self.model_path)).resolve())
+        local_model_target_dir_str = config.get("local_model_target_dir")
+        if not local_model_target_dir_str:
+            logger.error("配置中未提供 'local_model_target_dir'。")
+            raise ValueError("配置中必须提供 'local_model_target_dir'，用于存放或加载模型文件。")
+        
+        self.local_model_path = Path(local_model_target_dir_str).resolve()
+        # 确保目标目录存在，如果不存在则创建
+        self.local_model_path.mkdir(parents=True, exist_ok=True)
 
-        if not self.model_path.exists() or not self.model_path.is_dir():
-            logger.error(f"模型路径不存在或不是一个目录: {self.model_path}")
-            raise FileNotFoundError(f"模型路径不存在或不是一个目录: {self.model_path}")
+        model_hub_id_to_download = config.get("model_hub_id", self.DEFAULT_MODEL_HUB_ID)
+        tokenizer_hub_id_to_download = config.get("tokenizer_hub_id", model_hub_id_to_download)
+        force_download = config.get("force_download", False)
 
-        logger.info(f"正在从 '{self.model_path}' 加载模型和tokenizer...")
+        # --- 模型下载和加载逻辑 ---
+        # 检查本地目标目录是否已包含必要的模型文件
+        # 我们可以通过检查 config.json 和权重文件（pytorch_model.bin 或 model.safetensors）来判断
+        config_file = self.local_model_path / "config.json"
+        weights_file_bin = self.local_model_path / "pytorch_model.bin"
+        weights_file_safetensors = self.local_model_path / "model.safetensors"
+        tokenizer_config_file = self.local_model_path / "tokenizer_config.json"
+
+
+        model_exists_locally = config_file.exists() and \
+                               (weights_file_bin.exists() or weights_file_safetensors.exists()) and \
+                               tokenizer_config_file.exists()
+
+        model_load_path_str = str(self.local_model_path) # 默认从这个路径加载
+
+        if not model_exists_locally or force_download:
+            if force_download:
+                logger.info(f"强制重新下载模型 '{model_hub_id_to_download}' 到 '{self.local_model_path}'...")
+            else:
+                logger.info(f"本地模型 '{self.local_model_path}' 不完整或未找到，尝试从 Hugging Face Hub '{model_hub_id_to_download}' 下载...")
+            
+            try:
+                # 使用 snapshot_download 下载整个模型仓库到指定本地目录
+                # ignore_patterns 可以排除不需要的文件，例如 .gitattributes, README.md (如果Hub上有)
+                # local_dir_use_symlinks=False 会实际复制文件，而不是创建符号链接
+                downloaded_path_str = snapshot_download(
+                    repo_id=model_hub_id_to_download,
+                    local_dir=model_load_path_str, # 直接下载到目标路径
+                    local_dir_use_symlinks=False, 
+                    # revision="main", # 可以指定分支、标签或commit hash
+                    # token=True, # 如果是私有模型，确保已登录或传入token
+                    ignore_patterns=["*.md", ".gitattributes"] # 示例：忽略md文件和git属性文件
+                )
+                logger.info(f"模型文件已成功下载/更新到: {downloaded_path_str}")
+            except Exception as e:
+                logger.error(f"从 Hub 下载模型 '{model_hub_id_to_download}' 到 '{self.local_model_path}' 失败: {e}", exc_info=True)
+                logger.error("请检查网络连接、模型ID是否正确，以及您是否有权访问该模型（如果是私有模型）。")
+                # 如果下载失败，但本地仍有部分文件，加载可能会出错。可以考虑清空目录或抛出更严重的错误。
+                # 为简单起见，这里我们继续尝试加载，但很可能会失败。
+                if not model_exists_locally: # 如果之前本地根本没有，现在下载又失败，则无法继续
+                     raise FileNotFoundError(f"模型下载失败且本地 '{self.local_model_path}' 无有效模型。") from e
+        else:
+            logger.info(f"在本地路径 '{self.local_model_path}' 找到现有模型文件，将直接使用。")
+    
         
         self.device = config.get("device")
         if self.device:
@@ -59,8 +121,10 @@ class BertNLUProcessor(NLUInterface):
         logger.info(f"使用设备: {self.device}")
 
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_path)
-            self.model = AutoModelForTokenClassification.from_pretrained(self.model_path)
+            # 始终从 model_load_path_str (即 self.local_model_path) 加载
+            self.tokenizer = AutoTokenizer.from_pretrained(model_load_path_str)
+            self.model = AutoModelForTokenClassification.from_pretrained(model_load_path_str)
+
             self.model.to(self.device)
             self.model.eval()
 
@@ -84,7 +148,7 @@ class BertNLUProcessor(NLUInterface):
         except Exception as e:
             logger.error(f"加载模型或tokenizer失败: {e}", exc_info=True)
             raise
-        logger.info("BertNLUProcessor 已成功初始化")
+        logger.info(f"BertNLUProcessor 已成功初始化 (模型来源: '{model_load_path_str}')")
 
     def _convert_chinese_int_segment(self, cn_int_str: str) -> Optional[int]:
         """转换常见的中文整数片段 (万以下简单版)"""
@@ -187,26 +251,37 @@ class BertNLUProcessor(NLUInterface):
         param_str = str(param_str_orig).strip()
         if not param_str: return None
         
-        # 尝试移除常见单位以提取核心数值
-        cleaned_num_part = param_str.replace("度", "").replace("档", "").replace("格", "").strip()
-        
-        # 处理百分数，如 "百分之五十", "50%", "百分之六点五"
+        # 先判断是否是百分比，并提取数字部分
         is_percent = False
-        if "%" in cleaned_num_part:
-            cleaned_num_part = cleaned_num_part.replace("%", "")
+        numeric_part_for_conversion = param_str # 默认用原始清理过的字符串进行数字转换
+
+        if "%" in param_str:
+            numeric_part_for_conversion = param_str.replace("%", "").strip()
             is_percent = True
-        elif param_str.startswith("百分之"): # 保留原始param_str的百分之用于判断
-            cleaned_num_part = cleaned_num_part.replace("百分之", "")
+        elif param_str.startswith("百分之"):
+            numeric_part_for_conversion = param_str.replace("百分之", "").strip()
             is_percent = True
         
+        # 移除数字部分中可能仍然存在的单位（如果它们紧跟数字）
+        # 这一步要在判断百分比之后，以防 "百分之五十度" 这样的情况
+        if not is_percent: # 只有非百分比数才移除这些单位，避免 "百分之五十度" 错误处理
+             numeric_part_for_conversion = numeric_part_for_conversion.replace("度", "").replace("档", "").replace("格", "").strip()
+
+        if not numeric_part_for_conversion: # 如果移除后为空 (例如参数就是 "度")
+            logger.debug(f"参数 '{param_str_orig}' 清理后为空，返回原始字符串。")
+            return param_str_orig
+
+
         # 尝试直接转float或中文转float
-        num_val = self._chinese_num_to_arabic_internal(cleaned_num_part)
+        num_val = self._chinese_num_to_arabic_internal(numeric_part_for_conversion)
 
         if num_val is not None:
             return num_val / 100.0 if is_percent else num_val
         
+        # 如果经过上述处理，num_val 仍为 None，说明无法转为数值
+        # 此时，我们应该返回原始未经修改的参数文本，因为它可能是状态词等
         logger.debug(f"参数 '{param_str_orig}' 未能标准化为数值，将返回原始字符串。")
-        return param_str_orig # 如果都失败，返回原始字符串
+        return param_str_orig
 
     def _normalize_device_id(self, device_id_str_list: Optional[List[str]]) -> str:
         if not device_id_str_list: return "0" 
@@ -283,7 +358,6 @@ class BertNLUProcessor(NLUInterface):
             logger.warning("输入文本为空。")
             return {"DEVICE_TYPE": None, "DEVICE_ID": "0", "LOCATION": None, "ACTION": None, "PARAMETER": None}
 
-        # --- Tokenization and Model Prediction (与之前版本相同) ---
         inputs = self.tokenizer(
             text, return_tensors="pt", truncation=True,
             max_length=self.config.get("max_seq_length", 128),
@@ -325,102 +399,115 @@ class BertNLUProcessor(NLUInterface):
         location = "".join(extracted_raw_entities.get("LOCATION", [])) or None
         
         action_text_list = extracted_raw_entities.get("ACTION", [])
-        action_text = "".join(action_text_list) if action_text_list else None # 例如 "调高", "降低", "设置"
+        action_text_raw = "".join(action_text_list) if action_text_list else None 
         
         parameter_text_list = extracted_raw_entities.get("PARAMETER", [])
-        raw_param_text = "".join(parameter_text_list) if parameter_text_list else None # 例如 "两度", "百分之五十", "一点"
+        raw_param_text = "".join(parameter_text_list) if parameter_text_list else None
 
         # --- 标准化 ACTION, PARAMETER, DEVICE_ID ---
         final_action_english: Optional[str] = None
         final_parameter: Any = None
         
-        final_device_id = self._normalize_device_id(device_id_str_list) # ID标准化
+        final_device_id = self._normalize_device_id(device_id_str_list)
+        
+        normalized_param_from_slot = self._normalize_parameter(raw_param_text) # 参数槽的标准化值
 
-        # 1. 标准化参数文本为数值（如果可能）
-        # _normalize_parameter 会返回 float 或原始字符串
-        normalized_param_value = self._normalize_parameter(raw_param_text) 
+        # 整合 action_text_raw 和 raw_param_text 来判断方向
+        combined_text_for_direction = (action_text_raw or "") + (raw_param_text or "")
+        
+        is_negative_direction = "低" in combined_text_for_direction or \
+                                "冷" in combined_text_for_direction or \
+                                "暗" in combined_text_for_direction or \
+                                "小" in combined_text_for_direction or \
+                                "减" in combined_text_for_direction 
+                                
+        is_positive_direction = "高" in combined_text_for_direction or \
+                                "热" in combined_text_for_direction or \
+                                "亮" in combined_text_for_direction or \
+                                "大" in combined_text_for_direction or \
+                                "增" in combined_text_for_direction or \
+                                "加" in combined_text_for_direction # "加"也可能表示增加
 
-        # 2. 根据 action_text 和初步标准化的参数来决定最终的 action 和 parameter
-        if action_text:
-            cleaned_action_text = "".join(action_text.split()) # 清理空格，例如 "调 高" -> "调高"
-
-            # 英文动作映射 (基于核心单字包含)
-            if "增" in cleaned_action_text or "添" in cleaned_action_text or "加" in cleaned_action_text or "装" in cleaned_action_text or "安" in cleaned_action_text:
+        if action_text_raw:
+            cleaned_action_text = "".join(action_text_raw.split())
+            
+            # 优先处理非modify动作
+            if "增" in cleaned_action_text or "添" in cleaned_action_text or ("加" in cleaned_action_text and not is_positive_direction) or "装" in cleaned_action_text or "安" in cleaned_action_text: # "加"如果不是表示增加数值
                 final_action_english = "add"
-                final_parameter = raw_param_text # 添加设备的名称作为参数
-            elif "删" in cleaned_action_text or "移除" in cleaned_action_text or "我不要" in cleaned_action_text or "解除" in cleaned_action_text :
+                final_parameter = raw_param_text 
+            elif "删" in cleaned_action_text or "移" in cleaned_action_text or "不要" in cleaned_action_text or "除" in cleaned_action_text :
                 final_action_english = "delete"
-                # 删除操作的参数可能是设备名或ID，这里如果PARAMETER槽有值，就用它
-                final_parameter = raw_param_text if raw_param_text else None 
-            elif "开" in cleaned_action_text or "启" in cleaned_action_text or "点亮" in cleaned_action_text:
+                final_parameter = raw_param_text 
+            elif "开" in cleaned_action_text or "启" in cleaned_action_text or "亮" in cleaned_action_text:
                 final_action_english = "turn_on"
-                final_parameter = 0.0 # 开关默认参数
+                final_parameter = 0.0 
             elif "关" in cleaned_action_text or "闭" in cleaned_action_text or "熄" in cleaned_action_text:
                 final_action_english = "turn_off"
-                final_parameter = 0.0 # 开关默认参数
-            elif "查询" in cleaned_action_text or "查看" in cleaned_action_text or "状态" in cleaned_action_text or "情况" in cleaned_action_text or "是多少" in cleaned_action_text:
+                final_parameter = 0.0 
+            elif "查" in cleaned_action_text or "询" in cleaned_action_text or "状态" in cleaned_action_text or "情况" in cleaned_action_text or "多少" in cleaned_action_text or "看" in cleaned_action_text or "问" in cleaned_action_text:
                 final_action_english = "query"
-                final_parameter = raw_param_text # 查询的参数可能是具体想查询的属性
-            elif "拉上" in cleaned_action_text or "合上" in cleaned_action_text:
+                final_parameter = raw_param_text 
+            elif "上" in cleaned_action_text or "合" in cleaned_action_text or "关" in cleaned_action_text:
                 final_action_english = "close_curtain" 
-                final_parameter = normalized_param_value if isinstance(normalized_param_value, float) else (1.0 if normalized_param_value is None else raw_param_text) # 1.0 代表完全关闭
-            elif "拉开" in cleaned_action_text:
+                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (1.0 if raw_param_text is None else raw_param_text)
+            elif "开" in cleaned_action_text:
                 final_action_english = "open_curtain"
-                final_parameter = normalized_param_value if isinstance(normalized_param_value, float) else (1.0 if normalized_param_value is None else raw_param_text) # 1.0 代表完全打开
+                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (1.0 if raw_param_text is None else raw_param_text)
             
-            # 重点处理 modify 类动作
-            elif "调" in cleaned_action_text or "变" in cleaned_action_text or "设" in cleaned_action_text or "整" in cleaned_action_text or "到" in cleaned_action_text:
-                final_action_english = "modify"
+            # 处理 modify 类动作
+            # (如果上面的条件都不满足，但包含调节类核心词，则认为是modify)
+            # 或者，如果参数槽有值，且没有明确的其他动作，也认为是modify
+            elif "调" in cleaned_action_text or "变" in cleaned_action_text or \
+                 "设" in cleaned_action_text or "整" in cleaned_action_text or \
+                 "到" in cleaned_action_text or is_negative_direction or is_positive_direction or \
+                 (raw_param_text and not final_action_english): # 如果有参数但前面没匹配到动作
                 
-            # 默认使用已经标准化过的参数值
-            final_parameter = normalized_param_value
-
-            # 检查动作文本中是否有方向性词汇，并据此调整参数符号
-            is_value_negative = False
-            if "低" in cleaned_action_text or "冷" in cleaned_action_text or "暗" in cleaned_action_text or "小" in cleaned_action_text or "减" in cleaned_action_text:
                 final_action_english = "modify"
-                is_value_negative = True
-                
-            is_value_positive = False
-            if "高" in cleaned_action_text or "热" in cleaned_action_text or "亮" in cleaned_action_text or "大" in cleaned_action_text or "增" in cleaned_action_text: # 注意 "增加" 可能和 add 冲突，这里的规则顺序很重要
-                final_action_english = "modify"
-                is_value_positive = True
+                final_parameter = normalized_param_from_slot # 默认使用参数槽的值
 
-
-            if isinstance(normalized_param_value, float): # 如果参数本身是数值
-                if is_value_negative:
-                    final_parameter = -abs(normalized_param_value) # 例如 "调低两度" -> -2.0
-                    # 如果动作中有"高"但参数是"两度"，则保持为2.0，因为"高"是方向，"两度"是幅度
-                    # 只有在参数本身没有明确数值，且动作有方向时，才用"+1" "-1"
+                if isinstance(final_parameter, float): # 如果参数是数值
+                    if is_negative_direction and final_parameter > 0: # 例如 "调低2度", param=2.0 -> -2.0
+                        final_parameter = -final_parameter
+                    elif is_positive_direction and final_parameter < 0: # 例如 "调高-2度", param=-2.0 -> 2.0
+                        final_parameter = abs(final_parameter) 
+                    # 如果方向和参数符号一致，则不处理，例如 "调高2度" (param=2.0)
                 
                 elif raw_param_text and raw_param_text in ["一点", "一些", "一点点"]: # 参数是相对词
-                    if is_value_positive:
-                        final_parameter = "+0.1" # 示例：小的正向调整标记
-                    elif is_value_negative:
-                        final_parameter = "-0.1" # 示例：小的负向调整标记
-                    else: # 没有明确方向，但参数是“一点”
-                        final_parameter = raw_param_text # 保留 "一点"
+                    if is_positive_direction: final_parameter = "+0.1" 
+                    elif is_negative_direction: final_parameter = "-0.1"
+                    else: final_parameter = raw_param_text # 保留 "一点" 如果没有明确方向
+                
                 elif raw_param_text: # 参数是其他文本，如 "制冷模式"
-                    final_parameter = raw_param_text
-            elif final_action_english == "modify": # 参数槽为空，但动作是调节类
-                if is_value_positive:
-                    final_parameter = "+1" 
-                elif is_value_negative:
-                    final_parameter = "-1"
-                else:
-                    logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
-                    final_parameter = None
-            else:
-                if not final_action_english:
+                    final_parameter = raw_param_text # 已经被 normalized_param_from_slot 赋值，这里是确保
+                
+                else: # 参数槽为空，但动作是调节类（例如，只说了 "调高"）
+                    if is_positive_direction: final_parameter = "+1" 
+                    elif is_negative_direction: final_parameter = "-1"
+                    # 可以像下面这样有特殊的动作指定添加
+                    # elif "加热" in cleaned_action_text: final_parameter = "heat_on" # 特殊动作词
+                    else:
+                        logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
+                        final_parameter = None 
+            else: # 如果经过以上所有判断都没有匹配到标准动作
+                if not final_action_english: 
                     logger.warning(f"未知的中文动作实体 (最终判断): '{cleaned_action_text}'，无法映射。")
-        else: # 如果模型没有提取出ACTION实体
-            # 这里可以根据PARAMETER槽是否有值进行一些推断
-            # 例如，如果text="温度25度"，ACTION为空，PARAMETER为25.0，可以推断为modify
-            if isinstance(normalized_param_value, float) and device_type: # 有设备类型和数值参数，但无动作
-                final_action_english = "modify" # 默认为修改参数
-                final_parameter = normalized_param_value
-                logger.info(f"无显式ACTION，但有设备和数值参数，推断为modify: {text}")
+                    final_parameter = normalized_param_from_slot # 即使动作未知，参数也标准化一下
+        
+        # 如果没有提取出ACTION实体，但有设备和参数
+        elif not final_action_english and device_type and raw_param_text:
+            final_action_english = "modify" # 默认为修改参数
+            final_parameter = normalized_param_from_slot # 使用已标准化的参数
+            # 如果 normalized_param_from_slot 不是数值，且 combined_text_for_direction 有方向
+            if not isinstance(final_parameter, float):
+                if is_positive_direction: final_parameter = "+1"
+                elif is_negative_direction: final_parameter = "-1"
+                # 否则保留文本参数，如 "空调红色" -> ACTION:modify, PARAM:红色
+            logger.info(f"无显式ACTION，但有设备和参数，推断为modify: {text}")
 
+
+        # 再次检查开关动作的默认参数
+        if final_action_english in ["turn_on", "turn_off"] and final_parameter is None:
+            final_parameter = 0.0
 
         final_result = {
             "DEVICE_TYPE": device_type,
@@ -431,7 +518,7 @@ class BertNLUProcessor(NLUInterface):
         }
         logger.info(f"NLU 理解结果 for '{text}': {final_result}")
         return final_result
-
+        
 # --- 主程序/测试部分 ---
 if __name__ == '__main__':
     import asyncio
@@ -441,16 +528,14 @@ if __name__ == '__main__':
 
     current_file_dir = Path(__file__).resolve().parent
     nlu_dir = current_file_dir.parent 
-    fine_tuned_model_path = nlu_dir / "model" / "fine_tuned_nlu_bert"
+    target_local_model_directory = nlu_dir / "model" / "fine_tuned_nlu_bert"
 
     config_for_testing = {
-        "model_path": str(fine_tuned_model_path),
-        "device": "cpu" 
+        "local_model_target_dir": str(target_local_model_directory), # <--- 指定本地目标目录
+        "model_hub_id": "LIUWJ/fine-tuned-home-bert", # <--- 你的Hub模型ID
+        "device": "cpu",
+        # "force_download": True # <--- 如果你想强制重新下载，取消这行注释
     }
-    
-    if not fine_tuned_model_path.exists() or not fine_tuned_model_path.is_dir():
-        logger.error(f"错误：指定的模型路径 '{fine_tuned_model_path}' 不存在或不是一个目录。")
-        sys.exit(1)
 
     async def main_test():
         try:
@@ -477,7 +562,8 @@ if __name__ == '__main__':
             "湿度降低百分之十",         # ACTION: modify, PARAMETER: -0.1
             "把灯亮度调暗一点点",        # ACTION: modify, PARAMETER: "-0.1"
             "空调低2度",
-            "加热烤箱"
+            "加热烤箱",
+            "热一下烤箱"
         ]
 
         for text_case in test_cases:

@@ -1,0 +1,12 @@
+{"text": "把卧室的加湿器开一下", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "O"]}
+{"text": "客厅那个加湿器湿度调到百分之五十", "labels": ["B-LOCATION", "I-LOCATION", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
+{"text": "打开客厅的电视", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "我想看电视，客厅那个", "labels": ["O", "O", "B-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "B-LOCATION", "I-LOCATION", "O", "O"]}
+{"text": "把客厅的灯都打开", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "B-ACTION", "I-ACTION"]}
+{"text": "书房灯太亮了，关掉点", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "O", "O", "O", "O", "B-ACTION", "I-ACTION", "O"]}
+{"text": "请拉上主卧的窗帘", "labels": ["O", "B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "窗帘拉开一半，我是说客厅的", "labels": ["B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "O", "O", "O", "O", "B-LOCATION", "I-LOCATION", "O"]}
+{"text": "帮我关一下空调好吗", "labels": ["O", "O", "B-ACTION", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O"]}
+{"text": "空调温度调高两度，就是客厅那个老的", "labels": ["B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "O", "O", "O", "O", "B-LOCATION", "I-LOCATION", "O", "O", "O"]}
+{"text": "将客厅里第二个空调的温度设置到二十三度", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_ID", "I-DEVICE_ID", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "I-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
+{"text": "把那个厨房的灯给我关了", "labels": ["O", "O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "O", "B-ACTION", "O"]}
