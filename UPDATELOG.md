@@ -1,6 +1,33 @@
 # UPDATELOG
 
 ## 5.17
+* 写文档、画图的同学可以根据这些实时进度来理解代码结构：
+
+#### 数据流
+```
+[前端]
+   |
+   | 语音/文本输入
+   v
+[Spring Boot 后端 Controller]
+   |
+   | 通过 HTTP 调用
+   v
+[nlp_service FastAPI 服务]
+   |
+   | 返回结构化结果（transcribed_text, nlu_result, tts_output_reference, ...）
+   v
+[Spring Boot 后端 Service]
+   |
+   | 设备控制/业务逻辑
+   v
+[前端]
+   |
+   | 显示结果/反馈
+   v
+[用户]
+```
+
 * 目前已完成的 - liuwj003：
 #### NLP服务
 * **STT**（speech_to_text）：能接受语音输入，使用whisper和dolphin两个引擎进行 **语音转文本** 的功能，**还未测试python代码的实际效果**，需要添加一些音频文件来测试
