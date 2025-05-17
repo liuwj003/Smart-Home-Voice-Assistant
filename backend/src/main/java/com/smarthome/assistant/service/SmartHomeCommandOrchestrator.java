@@ -143,49 +143,36 @@ public class SmartHomeCommandOrchestrator {
     private FrontendResponseDto processNlpResponse(Map<String, Object> nlpResponse) {
         try {
             // 提取NLU结果
-            Map<String, Object> nluResult = (Map<String, Object>) nlpResponse.get("nluResult");
+            Map<String, Object> nluResult = (Map<String, Object>) nlpResponse.get("nlu_result");
             if (nluResult == null) {
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage("未能获取NLU结果")
                         .build();
             }
-            
-            // 构建NLU显示DTO
+            // 解析四个字段
             String action = (String) nluResult.get("action");
             String entity = (String) nluResult.get("entity");
             String location = (String) nluResult.get("location");
+            Object parameter = nluResult.get("parameter");
             Double confidence = nluResult.containsKey("confidence") ? 
                     ((Number) nluResult.get("confidence")).doubleValue() : 0.0;
-            
             NluResultDisplayDto nluDisplayDto = NluResultDisplayDto.builder()
                     .action(action)
                     .entity(entity)
                     .location(location)
                     .confidence(confidence)
                     .build();
-            
-            // 只有当我们有实际的action和entity时才更新设备状态
-            String deviceFeedback = null;
-            if (action != null && !action.isEmpty() && entity != null && !entity.isEmpty()) {
-                // 更新设备状态
-                deviceFeedback = deviceService.updateDeviceState(entity, location, action);
-            } else {
-                deviceFeedback = "无法识别设备控制命令";
-            }
-            
+            // 设备控制，传递parameter
+            String deviceFeedback = deviceService.updateDeviceState(entity, location, action, parameter);
             // 构建响应
             return FrontendResponseDto.builder()
                     .commandSuccess(true)
-                    .sttText(nlpResponse.containsKey("transcribedText") ? 
-                            (String) nlpResponse.get("transcribedText") : 
-                            (nlpResponse.containsKey("sttText") ? (String) nlpResponse.get("sttText") : null))
+                    .sttText((String) nlpResponse.getOrDefault("transcribed_text", null))
                     .nluResult(nluDisplayDto)
                     .deviceActionFeedback(deviceFeedback)
-                    .ttsOutputReference(nlpResponse.containsKey("ttsOutputReference") ? 
-                            (String) nlpResponse.get("ttsOutputReference") : null)
+                    .ttsOutputReference((String) nlpResponse.getOrDefault("tts_output_reference", null))
                     .build();
-            
         } catch (Exception e) {
             log.error("处理NLP服务响应时出错", e);
             return FrontendResponseDto.builder()
