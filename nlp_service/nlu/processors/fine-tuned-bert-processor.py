@@ -5,65 +5,45 @@ from pathlib import Path
 import torch
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForTokenClassification
+import re
 
-# 将项目根目录添加到系统路径 (如果您的 NLUInterface 在其他地方)
-# 如果 NLUInterface 和这个文件在同一个包或可直接导入，这可能不是必需的
-# 假设 NLUInterface 在 nlu/ 目录的 interfaces 子目录
-# CURRENT_FILE_DIR = Path(__file__).resolve().parent # .../nlu/processors
-# PROJECT_ROOT_NLU = CURRENT_FILE_DIR.parent # .../nlu
-# sys.path.append(str(PROJECT_ROOT_NLU.parent)) # 添加 SmartHomeVoiceAssistant 根目录 (如果需要)
-# sys.path.append(str(PROJECT_ROOT_NLU)) # 添加 nlu 目录 (如果 interfaces 在 nlu/interfaces)
-
-# 为了让代码可独立运行和测试，如果 NLUInterface 未找到，则定义一个简单的
+# --- NLUInterface Definition (if not properly imported) ---
+logger = logging.getLogger(__name__)
 try:
     from interfaces.nlu_interface import NLUInterface
 except ImportError:
-    logger = logging.getLogger(__name__) # 需要先定义logger
     logger.warning("NLUInterface not found from 'interfaces.nlu_interface'. Using a dummy interface for testing.")
     class NLUInterface: # type: ignore
         async def understand(self, text: str) -> Dict:
             raise NotImplementedError
-
-# 配置日志
-logger = logging.getLogger(__name__) # 确保logger在使用前定义
+# -----------------------------------------------------------
 
 class BertNLUProcessor(NLUInterface):
     """
-    Pretrained Bert, then fine-tuned for slot filling on a small dataset.
-    Extracts: DEVICE_TYPE, DEVICE_CURR_ID, LOCATION, ACTION, PARAMETER.
+    Pretrained Bert, then fine-tuned for slot filling.
+    Extracts: DEVICE_TYPE, DEVICE_ID, LOCATION, ACTION, PARAMETER.
+    Applies complex normalization for DEVICE_ID and PARAMETER.
+    Outputs ACTION as a standardized English string.
     """
 
-    def __init__(self, config: Dict):
-        """
-        初始化BertNLUProcessor
+    CH_NUM_MAP = {
+        '零': 0, '一': 1, '二': 2, '两': 2, '三': 3, '四': 4,
+        '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+        # '百': 100, '千': 1000, # Simplified _convert_chinese_int_segment handles this
+        '点': '.'
+    }
+    CH_ORDINAL_PREFIX = "第"
+    CH_ID_SUFFIXES = ["号", "个"]
 
-        Args:
-            config: 处理器配置，应包含:
-                model_path (str): 微调后模型的**相对或绝对路径**.
-                                  例如，如果此文件在 'nlu/processors/'，模型在 'nlu/model/fine_tuned_nlu_bert/',
-                                  则相对路径可以是 '../model/fine_tuned_nlu_bert'
-                tokenizer_name_or_path (str, optional): Tokenizer的路径，如果与model_path不同. 默认使用model_path.
-                device (str, optional): "cuda" 或 "cpu". 默认自动检测.
-        """
+    def __init__(self, config: Dict):
         self.config = config
-        
-        # model_path 现在应该由调用者通过 config 传入一个指向实际微调模型的有效路径
         model_path_str = config.get("model_path")
         if not model_path_str:
             logger.error("配置中未提供 'model_path'。")
             raise ValueError("配置中必须提供 'model_path'，指向微调后的模型目录。")
 
-        # 解析model_path，可以是相对路径也可以是绝对路径
-        # 如果是从当前文件所在目录开始的相对路径
-        self.model_path = (Path(__file__).parent / model_path_str).resolve()
-        # 如果传入的是期望的绝对路径或相对于工作目录的路径，可以直接用 Path(model_path_str).resolve()
-        # 为了更通用，我们假设传入的model_path是相对于项目结构中某个基点的，
-        # 或者调用者会传入正确的绝对路径。
-        # 简单起见，我们直接使用传入的路径，并期望它是正确的。
         self.model_path = Path(model_path_str).resolve()
-
-
-        self.tokenizer_path = str(Path(config.get("tokenizer_name_or_path", self.model_path)).resolve()) # Tokenizer通常和模型一起保存
+        self.tokenizer_path = str(Path(config.get("tokenizer_name_or_path", self.model_path)).resolve())
 
         if not self.model_path.exists() or not self.model_path.is_dir():
             logger.error(f"模型路径不存在或不是一个目录: {self.model_path}")
@@ -76,7 +56,6 @@ class BertNLUProcessor(NLUInterface):
             self.device = torch.device(self.device)
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
         logger.info(f"使用设备: {self.device}")
 
         try:
@@ -88,127 +67,227 @@ class BertNLUProcessor(NLUInterface):
             if hasattr(self.model.config, 'id2label'):
                 self.id2slot = {int(k): v for k, v in self.model.config.id2label.items()}
                 logger.info(f"从模型配置加载id2label映射: 共 {len(self.id2slot)} 个标签")
-                # 你可能还需要 slot2id，可以从 id2slot 反向生成或从 model.config.label2id 获取
                 if hasattr(self.model.config, 'label2id'):
                     self.slot2id = {k: int(v) for k, v in self.model.config.label2id.items()}
-                else: # Fallback if label2id not present
+                else: 
                     self.slot2id = {v: k for k,v in self.id2slot.items()}
-
             else:
-                logger.error("模型配置中未找到id2label。无法进行标签映射。")
-                # 你之前定义的 slot_labels_list 可以作为回退，但最好模型配置是完整的
+                logger.error("模型配置中未找到id2label。无法进行标签映射。将使用预定义列表。")
                 slot_labels_list_fallback = [
-                    "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-DEVICE_ID", "I-DEVICE_ID", # 注意这里之前是DEVICE_CURR_ID
+                    "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-DEVICE_ID", "I-DEVICE_ID",
                     "B-LOCATION", "I-LOCATION", "B-ACTION", "I-ACTION",
                     "B-PARAMETER", "I-PARAMETER",
                 ]
                 logger.warning(f"将使用预定义的 slot_labels_list_fallback 进行标签映射: {slot_labels_list_fallback}")
                 self.id2slot = {i: label for i, label in enumerate(slot_labels_list_fallback)}
                 self.slot2id = {label: i for i, label in enumerate(slot_labels_list_fallback)}
-                # raise ValueError("无法确定标签映射 (id2slot)。") # 或者直接报错
-
         except Exception as e:
             logger.error(f"加载模型或tokenizer失败: {e}", exc_info=True)
             raise
-
         logger.info("BertNLUProcessor 已成功初始化")
+
+    def _convert_chinese_int_segment(self, cn_int_str: str) -> Optional[int]:
+        """转换常见的中文整数片段 (万以下简单版)"""
+        if not cn_int_str: return 0
+        try: return int(cn_int_str) # 如果已经是阿拉伯数字
+        except ValueError: pass
+
+        if cn_int_str == "零": return 0
+        
+        num_map = self.CH_NUM_MAP
+        # 单位处理
+        units = {'十': 10, '百': 100, '千': 1000}
+        # 移除不参与数值计算的单位词，例如温度的“度”或序数的“号”
+        cleaned_str = cn_int_str.replace("度", "").replace("号","").replace("个","")
+
+        if not cleaned_str: return None
+
+        if cleaned_str == "十": return 10 # "十"本身
+
+        total_value = 0
+        current_section_value = 0 # 处理如 "一百零五" 中的 "一百" 和 "五"
+        current_digit_value = 0 # 当前数字的值，如 "二" (在 "二百" 中)
+        
+        # 简单从左到右解析，处理 “二百三十五”, “二十三”, “十三”, “一百零五” 这种结构
+        # 对于更复杂的 "一千二百三十四万五千六百七十八" 需要完整算法
+        # 这里主要处理日常参数中常见的数字表达
+
+        # 特殊处理 "十" 开头，如 "十三"
+        if cleaned_str.startswith('十'):
+            total_value = 10
+            if len(cleaned_str) > 1:
+                digit_after_shi = num_map.get(cleaned_str[1])
+                if digit_after_shi is not None and digit_after_shi < 10:
+                    total_value += digit_after_shi
+                else: # "十" 后面不是1-9的数字
+                    logger.debug(f"中文整数转换：'十'后字符 '{cleaned_str[1]}' 无法解析为个位数。")
+                    return None 
+            return total_value
+
+        # 处理其他情况，如 "二十三", "二百三十五", "一百零五", "五"
+        # 这个实现依然是简化的，依赖于数字和单位的交替出现
+        temp_num = 0 # 用于累积数字，如 二 (in 二百)
+        for char_cn in cleaned_str:
+            digit = num_map.get(char_cn)
+            if digit is not None:
+                if digit >= 0 and digit <= 9: # 0-9
+                    temp_num = temp_num * 10 + digit if temp_num > 0 and char_cn != '零' else digit # 处理连续数字或单个数字
+                                                                                                # "二三" -> 23, "零五" -> 5
+                                                                                                # "二百三" -> 二(temp_num=2) 百(total=200, temp_num=0) 三(temp_num=3)
+                elif digit in [10, 100, 1000]: # 十, 百, 千
+                    if temp_num == 0: temp_num = 1 # 处理 "百", "千", "十" 前面没有显式数字的情况
+                    total_value += temp_num * digit
+                    temp_num = 0 # 单位处理完后，temp_num清零
+                else: # '点' 不应出现在整数段
+                    logger.warning(f"中文整数转换：整数部分遇到非单位或非0-9数字 '{char_cn}'")
+                    return None
+            else:
+                logger.warning(f"中文整数转换：遇到未知字符 '{char_cn}'")
+                return None
+        total_value += temp_num # 加上最后可能剩余的个位数或几十位数（如"二十"）
+        
+        return total_value if total_value > 0 or cleaned_str == "零" else (None if cleaned_str else 0)
+
+
+    def _chinese_num_to_arabic_internal(self, cn_num_part: str) -> Optional[float]:
+        """内部辅助函数，处理核心中文数字到阿拉伯数字的转换（整数和小数）"""
+        if not cn_num_part: return None
+        try: return float(cn_num_part)
+        except ValueError: pass
+
+        if '点' in cn_num_part:
+            parts = cn_num_part.split('点', 1)
+            if len(parts) == 2:
+                integer_part_str = parts[0]
+                decimal_part_str = parts[1]
+                integer_val = self._convert_chinese_int_segment(integer_part_str) if integer_part_str and integer_part_str != '零' else 0
+                if integer_val is None: return None
+
+                decimal_val_str = ""
+                if not decimal_part_str: # 处理 "三点" 这种情况
+                    return float(integer_val)
+
+                for char_code in decimal_part_str:
+                    digit = self.CH_NUM_MAP.get(char_code)
+                    if digit is not None and digit < 10:
+                        decimal_val_str += str(digit)
+                    else:
+                        logger.warning(f"中文小数转换：小数部分存在非法字符 '{char_code}' in '{cn_num_part}'")
+                        return None
+                return float(str(integer_val) + "." + decimal_val_str) if decimal_val_str else float(integer_val)
+            else:
+                logger.warning(f"中文数字转换：'{cn_num_part}' 格式不规范的点号用法。")
+                return None
+        
+        res_int = self._convert_chinese_int_segment(cn_num_part)
+        return float(res_int) if res_int is not None else None
+
+    def _normalize_parameter(self, param_str_orig: Optional[str]) -> Any:
+        if param_str_orig is None: return None
+        param_str = str(param_str_orig).strip()
+        if not param_str: return None
+        
+        # 尝试移除常见单位以提取核心数值
+        cleaned_num_part = param_str.replace("度", "").replace("档", "").replace("格", "").strip()
+        
+        # 处理百分数，如 "百分之五十", "50%", "百分之六点五"
+        is_percent = False
+        if "%" in cleaned_num_part:
+            cleaned_num_part = cleaned_num_part.replace("%", "")
+            is_percent = True
+        elif param_str.startswith("百分之"): # 保留原始param_str的百分之用于判断
+            cleaned_num_part = cleaned_num_part.replace("百分之", "")
+            is_percent = True
+        
+        # 尝试直接转float或中文转float
+        num_val = self._chinese_num_to_arabic_internal(cleaned_num_part)
+
+        if num_val is not None:
+            return num_val / 100.0 if is_percent else num_val
+        
+        logger.debug(f"参数 '{param_str_orig}' 未能标准化为数值，将返回原始字符串。")
+        return param_str_orig # 如果都失败，返回原始字符串
+
+    def _normalize_device_id(self, device_id_str_list: Optional[List[str]]) -> str:
+        if not device_id_str_list: return "0" 
+        id_text_joined = "".join(device_id_str_list)
+        
+        try: return str(int(id_text_joined)) # 已经是纯数字
+        except ValueError: pass
+
+        cleaned_id_text = id_text_joined
+        for suffix in self.CH_ID_SUFFIXES:
+            if cleaned_id_text.endswith(suffix):
+                cleaned_id_text = cleaned_id_text[:-len(suffix)]
+        
+        is_ordinal = False
+        if cleaned_id_text.startswith(self.CH_ORDINAL_PREFIX):
+            cleaned_id_text = cleaned_id_text[len(self.CH_ORDINAL_PREFIX):]
+            is_ordinal = True
+        
+        if not cleaned_id_text: 
+            logger.warning(f"无法从 '{id_text_joined}' 解析出有效的DEVICE_ID核心数字。")
+            return id_text_joined 
+
+        arabic_num = self._chinese_num_to_arabic_internal(cleaned_id_text)
+
+        if arabic_num is not None:
+            arabic_num_int = int(arabic_num) # 中文数字转换后通常是整数
+            if is_ordinal and arabic_num_int > 0:
+                return str(arabic_num_int - 1) 
+            return str(arabic_num_int)
+            
+        logger.debug(f"DEVICE_ID '{id_text_joined}' 未能完全标准化为数字，返回原始拼接值。")
+        return id_text_joined
 
     def _extract_entities_from_bio(self, tokens: List[str], bio_tags: List[str]) -> Dict[str, List[str]]:
         entities: Dict[str, List[str]] = {
-            "DEVICE_TYPE": [], "DEVICE_ID": [], "LOCATION": [], # 修改 DEVICE_CURR_ID 为 DEVICE_ID
+            "DEVICE_TYPE": [], "DEVICE_ID": [], "LOCATION": [],
             "ACTION": [], "PARAMETER": []
         }
-        current_entity_text = ""
-        current_entity_type = None
+        current_entity_text_list: List[str] = []
+        current_entity_type: Optional[str] = None
 
         if len(tokens) != len(bio_tags):
             logger.warning(f"Token数量 ({len(tokens)}) 与BIO标签数量 ({len(bio_tags)}) 不匹配。跳过实体提取。")
             return entities
             
         for i in range(len(tokens)):
-            token = tokens[i]
+            token = tokens[i].replace("##", "")
             tag = bio_tags[i]
-
-            # 修正实体类型名称，确保与 entities 字典中的键一致
-            # 例如，如果标签是 "B-DEVICE_CURR_ID"，我们希望映射到 "DEVICE_ID"
-            entity_type_from_tag = tag[2:]
-            if entity_type_from_tag == "DEVICE_CURR_ID": # 如果你的标签仍然是DEVICE_CURR_ID
-                 entity_type_from_tag = "DEVICE_ID"
-
+            entity_type_from_tag = tag[2:] if len(tag) > 2 else None
 
             if tag.startswith("B-"):
-                if current_entity_text and current_entity_type:
-                    if current_entity_type in entities: # current_entity_type 应该是纯类型名
-                        entities[current_entity_type].append(current_entity_text)
-                    else:
-                        logger.warning(f"未知的实体类型 '{current_entity_type}' 来自标签的B-部分。")
-                current_entity_text = token.replace("##", "")
-                current_entity_type = entity_type_from_tag # 使用处理后的 entity_type_from_tag
-            elif tag.startswith("I-") and current_entity_type == entity_type_from_tag:
-                current_entity_text += token.replace("##", "")
-            else: 
-                if current_entity_text and current_entity_type:
+                if current_entity_text_list and current_entity_type:
                     if current_entity_type in entities:
-                        entities[current_entity_type].append(current_entity_text)
-                    else:
-                        logger.warning(f"未知的实体类型 '{current_entity_type}' (前一个实体)。")
-                current_entity_text = ""
+                        entities[current_entity_type].append("".join(current_entity_text_list))
+                current_entity_text_list = [token]
+                current_entity_type = entity_type_from_tag
+            elif tag.startswith("I-") and current_entity_type == entity_type_from_tag:
+                current_entity_text_list.append(token)
+            else: 
+                if current_entity_text_list and current_entity_type:
+                    if current_entity_type in entities:
+                        entities[current_entity_type].append("".join(current_entity_text_list))
+                current_entity_text_list = []
                 current_entity_type = None
                 
-        if current_entity_text and current_entity_type: 
+        if current_entity_text_list and current_entity_type: 
             if current_entity_type in entities:
-                entities[current_entity_type].append(current_entity_text)
-            else:
-                logger.warning(f"未知的实体类型 '{current_entity_type}' (最后一个实体)。")
+                entities[current_entity_type].append("".join(current_entity_text_list))
         return entities
-
-    def _normalize_parameter(self, param_str: Optional[str]) -> Any:
-        if param_str is None:
-            return None
-        param_str = str(param_str).strip()
-        if not param_str:
-            return None
-            
-        if "%" in param_str:
-            try:
-                return float(param_str.replace("%", "").strip()) / 100.0
-            except ValueError:
-                logger.warning(f"无法将百分比参数 '{param_str}' 转换为浮点数。")
-                return param_str 
-        try:
-            # 尝试处理 "二十三度" -> 23.0, "两度" -> 2.0 这种 (需要更复杂的中文数字转换)
-            # 简单版本：直接尝试float转换
-            return float(param_str)
-        except ValueError:
-            # 这里可以加入中文数字到阿拉伯数字的转换逻辑
-            # 示例（非常基础，不完整）：
-            if "两" in param_str and "度" in param_str: param_str = param_str.replace("两", "2")
-            if "二十三" in param_str: param_str = param_str.replace("二十三", "23")
-            # ... 更多规则 ...
-            # 再次尝试转换
-            try:
-                return float(param_str.replace("度","").strip()) # 去掉"度"再尝试
-            except ValueError:
-                logger.debug(f"参数 '{param_str}' 不是标准浮点数，将返回原字符串。")
-                return param_str
-
 
     async def understand(self, text: str) -> Dict[str, Any]:
         logger.info(f"BertNLUProcessor.understand 接收到文本: '{text}'")
         if not text or not text.strip():
             logger.warning("输入文本为空。")
-            return {
-                "DEVICE_TYPE": None, "DEVICE_ID": "0", "LOCATION": None, # 修改 DEVICE_CURR_ID 为 DEVICE_ID
-                "ACTION": None, "PARAMETER": None
-            }
+            return {"DEVICE_TYPE": None, "DEVICE_ID": "0", "LOCATION": None, "ACTION": None, "PARAMETER": None}
 
+        # --- Tokenization and Model Prediction (与之前版本相同) ---
         inputs = self.tokenizer(
-            text,
-            return_tensors="pt",
-            truncation=True,
+            text, return_tensors="pt", truncation=True,
             max_length=self.config.get("max_seq_length", 128),
-            padding="max_length",
-            is_split_into_words=False
+            padding="max_length", is_split_into_words=False
         )
         input_ids_tensor = inputs["input_ids"].to(self.device)
         attention_mask_tensor = inputs["attention_mask"].to(self.device)
@@ -217,82 +296,138 @@ class BertNLUProcessor(NLUInterface):
             logits = self.model(input_ids=input_ids_tensor, attention_mask=attention_mask_tensor).logits
 
         predicted_ids_per_token = torch.argmax(logits, dim=2).squeeze().cpu().tolist()
-        
-        tokens = self.tokenizer.convert_ids_to_tokens(input_ids_tensor.squeeze().cpu().tolist())
+        raw_tokens = self.tokenizer.convert_ids_to_tokens(input_ids_tensor.squeeze().cpu().tolist())
         
         active_tokens: List[str] = []
         active_bio_tags: List[str] = []
-        
         word_ids = inputs.word_ids(batch_index=0) 
         previous_word_idx = None
 
         for i, token_prediction_id in enumerate(predicted_ids_per_token):
-            if i >= len(word_ids): 
-                break
+            if i >= len(word_ids): break
             current_word_idx = word_ids[i]
-            
-            if current_word_idx is None: 
-                continue
-            
+            if current_word_idx is None: continue
             if current_word_idx != previous_word_idx:
-                if tokens[i] not in [self.tokenizer.cls_token, self.tokenizer.sep_token, self.tokenizer.pad_token]:
-                    active_tokens.append(tokens[i].replace("##", "")) 
+                if raw_tokens[i] not in [self.tokenizer.cls_token, self.tokenizer.sep_token, self.tokenizer.pad_token]:
+                    active_tokens.append(raw_tokens[i])
                     active_bio_tags.append(self.id2slot.get(token_prediction_id, "O"))
             previous_word_idx = current_word_idx
-            
-            if len("".join(active_tokens)) > len(text) + 5 : 
-                logger.debug("提取的token长度似乎超过原始文本，提前停止。")
-                break
         
         logger.debug(f"原始文本 '{text}' 的 Active Tokens: {active_tokens}")
         logger.debug(f"对应的 Active BIO Tags: {active_bio_tags}")
 
         extracted_raw_entities = self._extract_entities_from_bio(active_tokens, active_bio_tags)
         logger.debug(f"从BIO标签提取的原始实体: {extracted_raw_entities}")
-
-        device_type = extracted_raw_entities.get("DEVICE_TYPE")[0] if extracted_raw_entities.get("DEVICE_TYPE") else None
-        device_id_list = extracted_raw_entities.get("DEVICE_ID") # 使用 DEVICE_ID
-        device_id = device_id_list[0] if device_id_list else "0" 
         
-        location = extracted_raw_entities.get("LOCATION")[0] if extracted_raw_entities.get("LOCATION") else None
+        # --- 获取初步提取的槽位值 ---
+        device_type = "".join(extracted_raw_entities.get("DEVICE_TYPE", [])) or None
+        device_id_str_list = extracted_raw_entities.get("DEVICE_ID")
+        location = "".join(extracted_raw_entities.get("LOCATION", [])) or None
         
-        action_list = extracted_raw_entities.get("ACTION")
-        action = action_list[0] if action_list else None
+        action_text_list = extracted_raw_entities.get("ACTION", [])
+        action_text = "".join(action_text_list) if action_text_list else None # 例如 "调高", "降低", "设置"
         
-        parameter_list = extracted_raw_entities.get("PARAMETER")
-        raw_param = parameter_list[0] if parameter_list else None
-        parameter = self._normalize_parameter(raw_param)
+        parameter_text_list = extracted_raw_entities.get("PARAMETER", [])
+        raw_param_text = "".join(parameter_text_list) if parameter_text_list else None # 例如 "两度", "百分之五十", "一点"
 
-        if action:
-            action_lower = "".join(action.split()).lower() # 移除空格并转小写
-            if action_lower in ["开", "打开灯", "点亮", "开启"]:
-                action = "打开"
-            elif action_lower in ["关", "关灯", "熄灭", "关掉", "关闭掉"]:
-                action = "关闭"
-            elif action_lower in ["调到", "变成", "设为", "调整", "调", "设置", "调高", "调低"]:
-                action = "modify"
-            elif action_lower in ["增加", "添加", "新增", "装个", "安装一个"]:
-                action = "添加"
-            elif action_lower in ["删除掉", "移除掉", "删除", "移除", "我不要", "删了", "解除绑定"]:
-                action = "删除"
-            elif action_lower in ["查询", "状态是", "情况"]:
-                action = "查询"
-            elif action_lower in ["拉上", "拉开"]: # 窗帘动作
-                action = action_lower # 保留原样或归一化
-            # 可以添加更多规则
+        # --- 标准化 ACTION, PARAMETER, DEVICE_ID ---
+        final_action_english: Optional[str] = None
+        final_parameter: Any = None
+        
+        final_device_id = self._normalize_device_id(device_id_str_list) # ID标准化
 
-        if action in ["打开", "关闭"] and parameter is None: # 如果没有提取到参数，但动作是开关
-            parameter = 0.0
+        # 1. 标准化参数文本为数值（如果可能）
+        # _normalize_parameter 会返回 float 或原始字符串
+        normalized_param_value = self._normalize_parameter(raw_param_text) 
+
+        # 2. 根据 action_text 和初步标准化的参数来决定最终的 action 和 parameter
+        if action_text:
+            cleaned_action_text = "".join(action_text.split()) # 清理空格，例如 "调 高" -> "调高"
+
+            # 英文动作映射 (基于核心单字包含)
+            if "增" in cleaned_action_text or "添" in cleaned_action_text or "加" in cleaned_action_text or "装" in cleaned_action_text or "安" in cleaned_action_text:
+                final_action_english = "add"
+                final_parameter = raw_param_text # 添加设备的名称作为参数
+            elif "删" in cleaned_action_text or "移除" in cleaned_action_text or "我不要" in cleaned_action_text or "解除" in cleaned_action_text :
+                final_action_english = "delete"
+                # 删除操作的参数可能是设备名或ID，这里如果PARAMETER槽有值，就用它
+                final_parameter = raw_param_text if raw_param_text else None 
+            elif "开" in cleaned_action_text or "启" in cleaned_action_text or "点亮" in cleaned_action_text:
+                final_action_english = "turn_on"
+                final_parameter = 0.0 # 开关默认参数
+            elif "关" in cleaned_action_text or "闭" in cleaned_action_text or "熄" in cleaned_action_text:
+                final_action_english = "turn_off"
+                final_parameter = 0.0 # 开关默认参数
+            elif "查询" in cleaned_action_text or "查看" in cleaned_action_text or "状态" in cleaned_action_text or "情况" in cleaned_action_text or "是多少" in cleaned_action_text:
+                final_action_english = "query"
+                final_parameter = raw_param_text # 查询的参数可能是具体想查询的属性
+            elif "拉上" in cleaned_action_text or "合上" in cleaned_action_text:
+                final_action_english = "close_curtain" 
+                final_parameter = normalized_param_value if isinstance(normalized_param_value, float) else (1.0 if normalized_param_value is None else raw_param_text) # 1.0 代表完全关闭
+            elif "拉开" in cleaned_action_text:
+                final_action_english = "open_curtain"
+                final_parameter = normalized_param_value if isinstance(normalized_param_value, float) else (1.0 if normalized_param_value is None else raw_param_text) # 1.0 代表完全打开
             
-        if action == "modify" and parameter is None:
-            logger.warning(f"动作是 '{action}' 但未提取到参数，文本: '{text}'")
+            # 重点处理 modify 类动作
+            elif "调" in cleaned_action_text or "变" in cleaned_action_text or "设" in cleaned_action_text or "整" in cleaned_action_text or "到" in cleaned_action_text:
+                final_action_english = "modify"
+                
+            # 默认使用已经标准化过的参数值
+            final_parameter = normalized_param_value
+
+            # 检查动作文本中是否有方向性词汇，并据此调整参数符号
+            is_value_negative = False
+            if "低" in cleaned_action_text or "冷" in cleaned_action_text or "暗" in cleaned_action_text or "小" in cleaned_action_text or "减" in cleaned_action_text:
+                final_action_english = "modify"
+                is_value_negative = True
+                
+            is_value_positive = False
+            if "高" in cleaned_action_text or "热" in cleaned_action_text or "亮" in cleaned_action_text or "大" in cleaned_action_text or "增" in cleaned_action_text: # 注意 "增加" 可能和 add 冲突，这里的规则顺序很重要
+                final_action_english = "modify"
+                is_value_positive = True
+
+
+            if isinstance(normalized_param_value, float): # 如果参数本身是数值
+                if is_value_negative:
+                    final_parameter = -abs(normalized_param_value) # 例如 "调低两度" -> -2.0
+                    # 如果动作中有"高"但参数是"两度"，则保持为2.0，因为"高"是方向，"两度"是幅度
+                    # 只有在参数本身没有明确数值，且动作有方向时，才用"+1" "-1"
+                
+                elif raw_param_text and raw_param_text in ["一点", "一些", "一点点"]: # 参数是相对词
+                    if is_value_positive:
+                        final_parameter = "+0.1" # 示例：小的正向调整标记
+                    elif is_value_negative:
+                        final_parameter = "-0.1" # 示例：小的负向调整标记
+                    else: # 没有明确方向，但参数是“一点”
+                        final_parameter = raw_param_text # 保留 "一点"
+                elif raw_param_text: # 参数是其他文本，如 "制冷模式"
+                    final_parameter = raw_param_text
+                else: # 参数槽为空，但动作是调节类
+                    if is_value_positive:
+                        final_parameter = "+1" 
+                    elif is_value_negative:
+                        final_parameter = "-1"
+                    else:
+                        logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
+                        final_parameter = None
+            else:
+                if not final_action_english:
+                    logger.warning(f"未知的中文动作实体 (最终判断): '{cleaned_action_text}'，无法映射。")
+        else: # 如果模型没有提取出ACTION实体
+            # 这里可以根据PARAMETER槽是否有值进行一些推断
+            # 例如，如果text="温度25度"，ACTION为空，PARAMETER为25.0，可以推断为modify
+            if isinstance(normalized_param_value, float) and device_type: # 有设备类型和数值参数，但无动作
+                final_action_english = "modify" # 默认为修改参数
+                final_parameter = normalized_param_value
+                logger.info(f"无显式ACTION，但有设备和数值参数，推断为modify: {text}")
+
 
         final_result = {
             "DEVICE_TYPE": device_type,
-            "DEVICE_ID": device_id, # 修改 DEVICE_CURR_ID 为 DEVICE_ID
+            "DEVICE_ID": final_device_id,
             "LOCATION": location,
-            "ACTION": action,
-            "PARAMETER": parameter
+            "ACTION": final_action_english,
+            "PARAMETER": final_parameter
         }
         logger.info(f"NLU 理解结果 for '{text}': {final_result}")
         return final_result
@@ -300,57 +435,49 @@ class BertNLUProcessor(NLUInterface):
 # --- 主程序/测试部分 ---
 if __name__ == '__main__':
     import asyncio
-    # 配置日志以便在控制台看到输出
-    if not logger.hasHandlers(): # 避免重复添加处理器
-        logging.basicConfig(level=logging.INFO,
+    if not logger.hasHandlers():
+        logging.basicConfig(level=logging.DEBUG,
                             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    # !! 重要: 修改这里的 model_path 指向你实际微调好的模型文件夹 !!
-    # 假设这个脚本 (BertNLUProcessor.py) 位于 nlu/processors/
-    # 并且微调模型位于 nlu/model/fine_tuned_nlu_bert/
-    # 因此，相对路径是 '../model/fine_tuned_nlu_bert'
-    
-    # 获取当前文件 (BertNLUProcessor.py) 所在的目录
-    current_file_dir = Path(__file__).resolve().parent # .../nlu/processors
-    # 获取 nlu 目录
-    nlu_dir = current_file_dir.parent # .../nlu
-    # 构建到微调模型的路径
+    current_file_dir = Path(__file__).resolve().parent
+    nlu_dir = current_file_dir.parent 
     fine_tuned_model_path = nlu_dir / "model" / "fine_tuned_nlu_bert"
 
-
     config_for_testing = {
-        "model_path": str(fine_tuned_model_path), # 使用计算出的路径
-        "device": "cpu" # 测试时可以强制CPU，避免GPU问题
+        "model_path": str(fine_tuned_model_path),
+        "device": "cpu" 
     }
     
-    # 检查模型路径是否存在，如果不存在，则不尝试创建虚拟模型，而是报错退出
     if not fine_tuned_model_path.exists() or not fine_tuned_model_path.is_dir():
         logger.error(f"错误：指定的模型路径 '{fine_tuned_model_path}' 不存在或不是一个目录。")
-        logger.error("请确保您已经训练了模型，并将其保存在正确的路径，或者正确配置了 'model_path'。")
-        logger.error("测试部分将不会运行。")
-        sys.exit(1) # 直接退出，因为没有模型无法测试
+        sys.exit(1)
 
     async def main_test():
         try:
-            processor = BertNLUProcessor(config_for_testing) # 使用修正后的配置名
+            processor = BertNLUProcessor(config_for_testing)
             logger.info("BertNLUProcessor 初始化成功，准备测试。")
         except Exception as e:
             logger.error(f"初始化 BertNLUProcessor 失败: {e}", exc_info=True)
             return
 
         test_cases = [
-            "开客厅灯",
-            "开一下那个客厅灯",
-            "客厅灯开",
-            "卧室加湿器1湿度调到50%",
-            "把卧室里的加湿器1湿度变成0.5",
-            "关闭空调2号",
-            "请将书房的灯亮度设为百分之七十",
-            "在客厅添加一个叫客厅氛围灯的新灯",
-            "删除厨房那个咖啡机",
-            "空调温度调低一点",
-            "什么也不做",
-            ""
+            "空调温度调低两度",         # Expected ACTION: modify, PARAMETER: -2.0
+            "把卧室灯的亮度调高一些",   # Expected ACTION: modify, PARAMETER: "+0.1" (或 "+1")
+            "帮我加热一下微波炉",       # Expected ACTION: modify
+            "客厅空调，温度二十二",     # Expected ACTION: modify, PARAMETER: 22.0
+            "将风扇风速设为三档",       # ACTION: modify, PARAMETER: 3.0
+            "把灯光调成红色",           # ACTION: modify, PARAMETER: "红色"
+            "音量增大",                 # ACTION: modify, PARAMETER: "+1"
+            "移除第二个摄像头",         # ACTION: delete, DEVICE_ID: "1"
+            "添加一个叫书房夜灯的新灯到书房", # ACTION: add, PARAMETER: "书房夜灯"
+            "将客厅的空调温度调低两度",   # ACTION: modify, PARAMETER: -2.0
+            "客厅灯调到百分之五",        # ACTION: modify, PARAMETER: 0.05
+            "打开三号卧室的灯",           # ACTION: turn_on, DEVICE_ID: "3"
+            "温度调高",                 # ACTION: modify, PARAMETER: "+1"
+            "湿度降低百分之十",         # ACTION: modify, PARAMETER: -0.1
+            "把灯亮度调暗一点点",        # ACTION: modify, PARAMETER: "-0.1"
+            "空调低2度",
+            "加热烤箱"
         ]
 
         for text_case in test_cases:
