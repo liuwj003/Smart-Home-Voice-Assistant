@@ -5,16 +5,10 @@
 ## 功能
 
 - 虚拟设备管理API
-- 语音命令处理
-- 语音转文本 (Speech-to-Text)
-- 自然语言理解 (NLU)
+- NLP服务调用
 
 ## 技术栈
 
-- Java 17
-- Spring Boot 3.1
-- Lombok
-- RESTful API
 
 ## 开发
 
@@ -22,19 +16,11 @@
 
 - Java JDK 17+
 - Maven 3.6+
-- IDE (推荐使用IntelliJ IDEA或Spring Tool Suite)
 
 ### 构建和运行
 
 **方法一：使用Maven**
 
-```bash
-# 构建项目
-mvn clean package
-
-# 运行应用
-java -jar target/voice-assistant-0.0.1-SNAPSHOT.jar
-```
 
 **方法二：使用Maven Spring Boot插件**
 
@@ -42,9 +28,9 @@ java -jar target/voice-assistant-0.0.1-SNAPSHOT.jar
 mvn spring-boot:run
 ```
 
-应用默认在端口5000上运行，可以通过`application.yml`文件修改。
 
 ### API文档
+* 参考示例，有待实际开发。
 
 #### 设备API
 
@@ -67,23 +53,10 @@ mvn spring-boot:run
 server:
   port: 5000  # 可以修改服务端口
 
-voice:
-  audio:
-    silence-threshold: 0.01
-    silence-duration: 1.0
-    min-speech-duration: 0.5
-  stt:
-    engine-type: simulated
-  nlu:
-    engine-type: rule_based
 ```
 
 ## 数据流
 
-1. 客户端发送语音数据到服务器
-2. 服务器使用语音识别引擎转换为文本
-3. 自然语言理解组件识别意图和实体
-4. 返回识别结果给客户端
 
 ## 架构
 

@@ -1,5 +1,88 @@
 # UPDATELOG
 
+## 5.17
+* 目前已完成的 - liuwj003：
+#### 数据流架构设想
+```
+[前端]
+   |
+   | 语音/文本输入
+   v
+[Spring Boot 后端 Controller]
+   |
+   | 通过 HTTP 调用
+   v
+[nlp_service FastAPI 服务]
+   |
+   | 返回结构化结果（transcribed_text, nlu_result, tts_output_reference, ...）
+   v
+[Spring Boot 后端 Service]
+   |
+   | 设备控制/业务逻辑
+   v
+[前端]
+```
+
+#### NLP服务
+* **STT**（speech_to_text）：能接受语音输入，使用whisper和dolphin两个引擎进行 **语音转文本** 的功能，**还未测试python代码的实际效果**，需要添加一些音频文件来测试
+* 暂时打算：
+  - 建议中文用户用dolphin引擎（考虑到更多的中文方言支持）
+  - 建议英文用户用whisper引擎
+* **NLU**（natural_language_understanding）：能**接受文本输入**，然后用一个被几十条**家居场景数据**微调过后的中文BERT模型进行意图识别，然后返回**识别出来的五个字段**（家居类型，家居编号（用户说的，比如客厅里的第2个灯的"2"），地点，动作，动作参数）
+  - 可能考虑去掉"家居编号"这个字段，因为需要对"家具编号"和"动作参数"做区别，比较麻烦，优先级暂时没那么高，可能在后续的迭代加上
+  - 用来微调的数据集（在`nlp_service/nlu/model/dataset/`）还不够好，我后续再改一下；微调模型的代码在`nlp_service/nlu/model/train/`目录下
+  - 这个微调好的模型参数（放在`nlp_service/nlu/model/fine_tuned_nlu_bert/`目录下）由于有几百MB，所以不直接放在git上，我考虑后续放在hugging face上，这样用户第一次使用时就能从hugging face上下载这个模型
+  - 意图识别还不够完善，目前只能识别很常见的动作、家居，我后续再改一下数据集和代码逻辑
+* **TTS**（text_to_speech）：能接受文本输入，返回语音（女声男声可选），还没找，pyttsx3。
+* 除了NLU模块是必要的，STT和TTS模块都是可选的，**用户可以选择不使用这两个模块（直接文本输入，不需要语音转文本的STT模块；不需要语音播报反馈，就不需要TTS模块）**
+* 目前给前后端提供调用的都是placeholder引擎/处理器，仅供测试，后续会替换成实际的引擎/处理器（**等这个NLP服务模块内部测试完善后**）。
+
+#### 前端
+* 目前有一个大的网页界面，网页界面里可以看到手机端视图
+<img src="imgs/frontend_v1.png" alt="alt text" width="90%"/>
+
+#### 后端
+
+目前后端包含 Python（Flask/FastAPI）和 Java（Spring Boot）两套服务，结构如下：
+
+```
+backend/
+├── app.py                # Flask语音API服务（本地语音处理/测试用）
+├── pom.xml               # Java后端Maven配置
+├── src/
+│   ├── main/
+│   │   ├── resources/
+│   │   │   └── application.yml   # Spring Boot 配置
+│   │   └── java/
+│   │       └── com/smarthome/assistant/
+│   │           ├── controller/   # 控制器（接口入口）
+│   │           │   ├── DeviceController.java
+│   │           │   ├── SettingsController.java
+│   │           │   ├── VoiceCommandController.java
+│   │           │   └── VoiceController.java
+│   │           ├── service/      # 业务逻辑
+│   │           │   ├── NlpServiceClient.java
+│   │           │   ├── SmartHomeCommandOrchestrator.java
+│   │           │   ├── DeviceService.java
+│   │           │   ├── VoiceToTextService.java
+│   │           │   └── VoiceProcessorService.java
+│   │           ├── model/        # 数据模型
+│   │           │   ├── Device.java
+│   │           │   └── VoiceCommand.java
+│   │           ├── dto/          # 数据传输对象
+│   │           ├── entity/       # 实体类
+│   │           ├── config/       # 配置类
+│   │           ├── exception/    # 全局异常处理
+│   │           └── util/         # 工具类
+│   └── test/                 # 单元测试
+│       └── java/com/smarthome/assistant/
+│           └── MyTest.java
+```
+
+- Python 主要用于本地语音处理和API测试。
+- Java Spring Boot 负责主业务逻辑、接口、设备管理、意图识别等。
+- 结构清晰分层：controller（接口）→ service（业务）→ model/dto/entity（数据）→ config/exception/util（配置/异常/工具）。
+- 未来可根据实际需求选择继续完善现有结构或重构。
 
 ---
 
