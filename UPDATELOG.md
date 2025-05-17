@@ -2,34 +2,13 @@
 
 ## 5.17
 * 目前已完成的 - liuwj003：
-#### 数据流架构设想
-```
-[前端]
-   |
-   | 语音/文本输入
-   v
-[Spring Boot 后端 Controller]
-   |
-   | 通过 HTTP 调用
-   v
-[nlp_service FastAPI 服务]
-   |
-   | 返回结构化结果（transcribed_text, nlu_result, tts_output_reference, ...）
-   v
-[Spring Boot 后端 Service]
-   |
-   | 设备控制/业务逻辑
-   v
-[前端]
-```
-
 #### NLP服务
 * **STT**（speech_to_text）：能接受语音输入，使用whisper和dolphin两个引擎进行 **语音转文本** 的功能，**还未测试python代码的实际效果**，需要添加一些音频文件来测试
 * 暂时打算：
   - 建议中文用户用dolphin引擎（考虑到更多的中文方言支持）
   - 建议英文用户用whisper引擎
 * **NLU**（natural_language_understanding）：能**接受文本输入**，然后用一个被几十条**家居场景数据**微调过后的中文BERT模型进行意图识别，然后返回**识别出来的五个字段**（家居类型，家居编号（用户说的，比如客厅里的第2个灯的"2"），地点，动作，动作参数）
-  - 可能考虑去掉"家居编号"这个字段，因为需要对"家具编号"和"动作参数"做区别，比较麻烦，优先级暂时没那么高，可能在后续的迭代加上
+  - 可能考虑去掉"家居编号”这个字段，因为需要对“家具编号”和“动作参数”做区别，比较麻烦，优先级暂时没那么高，可能在后续的迭代加上
   - 用来微调的数据集（在`nlp_service/nlu/model/dataset/`）还不够好，我后续再改一下；微调模型的代码在`nlp_service/nlu/model/train/`目录下
   - 这个微调好的模型参数（放在`nlp_service/nlu/model/fine_tuned_nlu_bert/`目录下）由于有几百MB，所以不直接放在git上，我考虑后续放在hugging face上，这样用户第一次使用时就能从hugging face上下载这个模型
   - 意图识别还不够完善，目前只能识别很常见的动作、家居，我后续再改一下数据集和代码逻辑
@@ -40,50 +19,44 @@
 #### 前端
 * 目前有一个大的网页界面，网页界面里可以看到手机端视图
 <img src="imgs/frontend_v1.png" alt="alt text" width="90%"/>
+<img src="imgs/phonepage_v0.1.png" alt="alt text" width="90%"/>
+
+* 但是，手机端只有这1个界面，还缺乏：
+  - 手机端的设置界面
+  - 适合老年人的大字设计界面
+  - ...
+* 大的网页界面也只有一些基本的组件，还需要后续设计与完善
+* 目前的代码组织如下，需要前端的同学继续完善：
+  - 主要在frontend/src下，完善各种网页组件、网页视图
+```
+frontend/
+├── node_modules/      # 第三方依赖库，自动生成
+├── public/            # 静态资源
+│   ├── index.html     # 应用入口 HTML
+│   └── manifest.json  # PWA 配置
+├── src/               # 应用源代码
+│   ├── components/    # 可复用 UI 组件
+│   │   ├── Layout.js        # 整体布局
+│   │   └── VoiceInput.js    # 语音输入核心
+│   ├── pages/         # 页面级组件
+│   │   ├── Home.js          # 主页
+│   │   ├── PhoneView.js     # 手机视图/控制
+│   │   ├── Settings.js      # 设置页
+│   │   ├── Weather.js       # 天气页
+│   │   └── 还需要手机设置页，手机天气页...等
+│   ├── services/      # API 调用与服务
+│   │   └── api.js         # 后端接口封装
+│   ├── App.js           # 根组件 (路由、全局配置)
+│   ├── index.css        # 全局样式
+│   ├── index.js         # React 应用入口
+│   └── MobileApp.css    # 移动端特定样式
+├── package-lock.json  # 依赖版本锁定
+├── package.json       # 项目配置与依赖
+└── README.md          # 项目说明
+```
 
 #### 后端
-
-目前后端包含 Python（Flask/FastAPI）和 Java（Spring Boot）两套服务，结构如下：
-
-```
-backend/
-├── app.py                # Flask语音API服务（本地语音处理/测试用）
-├── pom.xml               # Java后端Maven配置
-├── src/
-│   ├── main/
-│   │   ├── resources/
-│   │   │   └── application.yml   # Spring Boot 配置
-│   │   └── java/
-│   │       └── com/smarthome/assistant/
-│   │           ├── controller/   # 控制器（接口入口）
-│   │           │   ├── DeviceController.java
-│   │           │   ├── SettingsController.java
-│   │           │   ├── VoiceCommandController.java
-│   │           │   └── VoiceController.java
-│   │           ├── service/      # 业务逻辑
-│   │           │   ├── NlpServiceClient.java
-│   │           │   ├── SmartHomeCommandOrchestrator.java
-│   │           │   ├── DeviceService.java
-│   │           │   ├── VoiceToTextService.java
-│   │           │   └── VoiceProcessorService.java
-│   │           ├── model/        # 数据模型
-│   │           │   ├── Device.java
-│   │           │   └── VoiceCommand.java
-│   │           ├── dto/          # 数据传输对象
-│   │           ├── entity/       # 实体类
-│   │           ├── config/       # 配置类
-│   │           ├── exception/    # 全局异常处理
-│   │           └── util/         # 工具类
-│   └── test/                 # 单元测试
-│       └── java/com/smarthome/assistant/
-│           └── MyTest.java
-```
-
-- Python 主要用于本地语音处理和API测试。
-- Java Spring Boot 负责主业务逻辑、接口、设备管理、意图识别等。
-- 结构清晰分层：controller（接口）→ service（业务）→ model/dto/entity（数据）→ config/exception/util（配置/异常/工具）。
-- 未来可根据实际需求选择继续完善现有结构或重构。
-
+* 
 ---
 
 ## 5.14-5.16 
