@@ -402,14 +402,14 @@ class BertNLUProcessor(NLUInterface):
                         final_parameter = raw_param_text # 保留 "一点"
                 elif raw_param_text: # 参数是其他文本，如 "制冷模式"
                     final_parameter = raw_param_text
-                else: # 参数槽为空，但动作是调节类
-                    if is_value_positive:
-                        final_parameter = "+1" 
-                    elif is_value_negative:
-                        final_parameter = "-1"
-                    else:
-                        logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
-                        final_parameter = None
+            elif final_action_english == "modify": # 参数槽为空，但动作是调节类
+                if is_value_positive:
+                    final_parameter = "+1" 
+                elif is_value_negative:
+                    final_parameter = "-1"
+                else:
+                    logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
+                    final_parameter = None
             else:
                 if not final_action_english:
                     logger.warning(f"未知的中文动作实体 (最终判断): '{cleaned_action_text}'，无法映射。")
