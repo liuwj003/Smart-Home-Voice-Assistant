@@ -7,7 +7,7 @@
 
 - `frontend/`: React前端代码
 - `backend/`: Java Maven后端代码
-- `voice_module/`: Python语音处理模块
+- `nlp_service/`: 语音处理、自然语言理解服务模块
 
 ## 运行项目
 
