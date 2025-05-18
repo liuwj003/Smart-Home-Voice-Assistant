@@ -3,4 +3,5 @@ __pycache__/
 fine_tuned_nlu_bert/
 shibing624-text2vec-base-chinese/
 temp_audio/
+tmp_audio/
 backend/target/

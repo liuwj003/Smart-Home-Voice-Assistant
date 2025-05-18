@@ -13,10 +13,107 @@
 {"text": "调暗阳台的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
 {"text": "打开卧室的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关上客厅的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "调高书房空调的温度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
-{"text": "调低书房空调的温度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
-{"text": "调高客厅空调的温度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
-{"text": "降低客厅空调的温度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "调高书房空调的温度，现在太冷、好冷", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "调低书房空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "调高客厅空调的温度，现在太冷、好冷", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "降低客厅空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
 {"text": "打开餐厅的电视", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关上卧室的电视", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "启动客厅的风扇", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动车库的摄像头", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "加热厨房的电饭煲", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动餐厅的咖啡机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开浴室的热水器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "播放客厅的背景音乐", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉开阳台的电动窗户", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开车库的车库门", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "降低工作间灯的亮度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "O", "O"]}
+{"text": "打开客厅的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭卧室的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉上书房的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "暂停厨房的洗碗机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动浴室的浴霸", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "调亮衣帽间的镜前灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "调暗走廊的壁灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开庭院的草坪灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭花园的射灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动客厅的扫地机器人", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "净化卧室的空气", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "调高音响的音量", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O"]}
+{"text": "降低电视的音量", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O"]}
+{"text": "打开玄关的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开走廊的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开车库的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开浴室的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开客厅的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开卧室的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开餐厅的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开厨房的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开餐厅的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开阳台的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开玄关的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开浴室的洗衣机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开厨房的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开餐厅的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开客厅的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭玄关的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭车库的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭客厅的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭卧室的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭阳台的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭书房的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭厨房的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭餐厅的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭阳台的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭浴室的洗衣机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭厨房的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭餐厅的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "降低书房空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "降低卧室空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "降低阳台空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "降低玄关空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "打开厨房的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开书房的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开阳台的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开餐厅的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "打开书房的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开阳台的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开客厅的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开卧室的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开书房的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开走廊的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开阳台的洗衣机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开厨房的洗衣机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭卧室的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭厨房的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭书房的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭浴室的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭阳台的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭餐厅的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭走廊的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "关闭书房的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭餐厅的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭玄关的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭走廊的空调", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭厨房的洗衣机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭客厅的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "降低餐厅空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "降低走廊空调的温度，现在太热、好热", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "拉上客厅的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉上卧室的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉上书房的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉上餐厅的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉上阳台的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开客厅的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉开卧室的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "开书房的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开客厅的音响", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开卧室的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开书房的投影仪", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开卧室的风扇", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开书房的电视", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭卧室的音响", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭书房的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭客厅的投影仪", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭餐厅的风扇", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭客厅的电视", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}

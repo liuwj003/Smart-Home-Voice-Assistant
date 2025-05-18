@@ -3,7 +3,7 @@
 # STT引擎配置
 stt:
   engine: whisper  # 可选: whisper, dolphin, placeholder
-  model_size: medium     # whisper
+  model_size: base     # whisper
   device: cpu          # whisper
 
 # NLU引擎配置
