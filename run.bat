@@ -17,6 +17,9 @@ echo Installing project dependencies...
 echo This may take a few minutes depending on your internet connection...
 
 echo Attempting standard installation...
+pip install -U openai-whisper
+pip install -U dataoceanai-dolphin
+pip install -U huggingface_hub
 pip install -r requirements.txt
 
 if %errorlevel% neq 0 (
@@ -70,7 +73,7 @@ if not exist target (
     echo Maven dependencies already installed, skipping install.
 )
 echo Starting Java backend...
-start "Backend" cmd /k "cd %~dp0backend && mvn spring-boot:run"
+start "Backend" cmd /k "cd %~dp0backend && mvn spring-boot:run -Dspring-boot.run.jvmArguments=-Dfile.encoding=UTF-8"
 
 REM Wait a few seconds for the backend to start
 echo Waiting for backend to initialize...

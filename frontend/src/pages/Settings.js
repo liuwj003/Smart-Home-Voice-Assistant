@@ -38,32 +38,11 @@ import {
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { settingsApi } from '../services/api';
+import { useSettings } from '../contexts/SettingsContext';
 
 const Settings = () => {
-  const navigate = useNavigate();
-  const [settings, setSettings] = useState({
-    stt: {
-      engine: 'whisper',
-      language: 'zh-CN',
-      sensitivity: 0.5
-    },
-    nlu: {
-      engine: 'simulated',
-      confidence_threshold: 0.7
-    },
-    tts: {
-      enabled: true,
-      engine: 'simulated',
-      voice: 'female',
-      speed: 1.0,
-      pitch: 1.0
-    },
-    ui: {
-      theme: 'light',
-      showFeedback: true
-    }
-  });
-  
+  const { settings, setSettings, loading, refreshSettings } = useSettings();
+  const [localSettings, setLocalSettings] = useState(settings);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -71,31 +50,14 @@ const Settings = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
-    // 加载设置
-    const loadSettings = async () => {
-      try {
-        const response = await settingsApi.getVoiceSettings();
-        if (response.data) {
-          setSettings(current => ({
-            ...current,
-            ...response.data
-          }));
-        }
-      } catch (error) {
-        console.error('加载设置失败:', error);
-        setSnackbarMessage('加载设置失败，使用默认设置');
-        setSnackbarOpen(true);
-      }
-    };
-
-    loadSettings();
-  }, []);
+    setLocalSettings(settings);
+  }, [settings]);
 
   const handleSettingChange = (section, key, value) => {
-    setSettings(prevSettings => ({
-      ...prevSettings,
+    setLocalSettings(prev => ({
+      ...prev,
       [section]: {
-        ...prevSettings[section],
+        ...prev[section],
         [key]: value
       }
     }));
@@ -105,14 +67,12 @@ const Settings = () => {
     setIsSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
-
     try {
-      await settingsApi.updateVoiceSettings(settings);
+      await setSettings(localSettings);
       setSaveSuccess(true);
       setSnackbarMessage('设置已保存');
       setSnackbarOpen(true);
     } catch (error) {
-      console.error('保存设置失败:', error);
       setSaveError('保存设置失败，请重试');
       setSnackbarMessage('保存设置失败');
       setSnackbarOpen(true);
@@ -124,6 +84,8 @@ const Settings = () => {
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
+
+  if (loading || !localSettings) return <div>加载中...</div>;
 
   return (
     <Container maxWidth="md">
@@ -151,12 +113,13 @@ const Settings = () => {
               <FormControl fullWidth>
                 <InputLabel>STT引擎</InputLabel>
                 <Select
-                  value={settings.stt.engine}
+                  value={localSettings.stt.engine}
                   label="STT引擎"
                   onChange={(e) => handleSettingChange('stt', 'engine', e.target.value)}
                 >
                   <MenuItem value="whisper">OpenAI Whisper</MenuItem>
                   <MenuItem value="dolphin">Dolphin</MenuItem>
+                  <MenuItem value="placeholder">占位符引擎</MenuItem>
                   <MenuItem value="simulated">模拟引擎 (测试用)</MenuItem>
                 </Select>
               </FormControl>
@@ -165,7 +128,7 @@ const Settings = () => {
               <FormControl fullWidth>
                 <InputLabel>语言</InputLabel>
                 <Select
-                  value={settings.stt.language}
+                  value={localSettings.stt.language}
                   label="语言"
                   onChange={(e) => handleSettingChange('stt', 'language', e.target.value)}
                 >
@@ -176,10 +139,10 @@ const Settings = () => {
             </Grid>
             <Grid item xs={12}>
               <Typography id="sensitivity-slider" gutterBottom>
-                麦克风灵敏度: {settings.stt.sensitivity}
+                麦克风灵敏度: {localSettings.stt.sensitivity}
               </Typography>
               <Slider
-                value={settings.stt.sensitivity}
+                value={localSettings.stt.sensitivity}
                 min={0}
                 max={1}
                 step={0.1}
@@ -199,20 +162,23 @@ const Settings = () => {
               <FormControl fullWidth>
                 <InputLabel>NLU引擎</InputLabel>
                 <Select
-                  value={settings.nlu.engine}
+                  value={localSettings.nlu.engine}
                   label="NLU引擎"
                   onChange={(e) => handleSettingChange('nlu', 'engine', e.target.value)}
                 >
+                  <MenuItem value="fine_tuned_bert">Fine-tuned BERT</MenuItem>
+                  <MenuItem value="nlu_orchestrator">NLU Orchestrator</MenuItem>
+                  <MenuItem value="placeholder">占位符引擎</MenuItem>
                   <MenuItem value="simulated">模拟引擎 (测试用)</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <Typography id="confidence-slider" gutterBottom>
-                置信度阈值: {settings.nlu.confidence_threshold}
+                置信度阈值: {localSettings.nlu.confidence_threshold}
               </Typography>
               <Slider
-                value={settings.nlu.confidence_threshold}
+                value={localSettings.nlu.confidence_threshold}
                 min={0}
                 max={1}
                 step={0.1}
@@ -232,23 +198,24 @@ const Settings = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={settings.tts.enabled}
+                    checked={localSettings.tts.enabled}
                     onChange={(e) => handleSettingChange('tts', 'enabled', e.target.checked)}
                   />
                 }
                 label="启用语音反馈"
               />
             </Grid>
-            {settings.tts.enabled && (
+            {localSettings.tts.enabled && (
               <>
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth>
                     <InputLabel>TTS引擎</InputLabel>
                     <Select
-                      value={settings.tts.engine}
+                      value={localSettings.tts.engine}
                       label="TTS引擎"
                       onChange={(e) => handleSettingChange('tts', 'engine', e.target.value)}
                     >
+                      <MenuItem value="placeholder">占位符引擎</MenuItem>
                       <MenuItem value="simulated">模拟引擎 (测试用)</MenuItem>
                     </Select>
                   </FormControl>
@@ -257,7 +224,7 @@ const Settings = () => {
                   <FormControl fullWidth>
                     <InputLabel>语音</InputLabel>
                     <Select
-                      value={settings.tts.voice}
+                      value={localSettings.tts.voice}
                       label="语音"
                       onChange={(e) => handleSettingChange('tts', 'voice', e.target.value)}
                     >
@@ -268,10 +235,10 @@ const Settings = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Typography id="speed-slider" gutterBottom>
-                    语速: {settings.tts.speed}x
+                    语速: {localSettings.tts.speed}x
                   </Typography>
                   <Slider
-                    value={settings.tts.speed}
+                    value={localSettings.tts.speed}
                     min={0.5}
                     max={2}
                     step={0.1}
@@ -281,10 +248,10 @@ const Settings = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Typography id="pitch-slider" gutterBottom>
-                    音调: {settings.tts.pitch}
+                    音调: {localSettings.tts.pitch}
                   </Typography>
                   <Slider
-                    value={settings.tts.pitch}
+                    value={localSettings.tts.pitch}
                     min={0.5}
                     max={2}
                     step={0.1}
@@ -306,7 +273,7 @@ const Settings = () => {
               <FormControl fullWidth>
                 <InputLabel>主题</InputLabel>
                 <Select
-                  value={settings.ui.theme}
+                  value={localSettings.ui.theme}
                   label="主题"
                   onChange={(e) => handleSettingChange('ui', 'theme', e.target.value)}
                 >
@@ -320,7 +287,7 @@ const Settings = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={settings.ui.showFeedback}
+                    checked={localSettings.ui.showFeedback}
                     onChange={(e) => handleSettingChange('ui', 'showFeedback', e.target.checked)}
                   />
                 }

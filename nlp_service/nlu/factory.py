@@ -21,7 +21,9 @@ class NLUFactory:
     def __init__(self):
         # 注册可用的NLU引擎
         self.engines = {
-            "placeholder": "nlu.processors.placeholder_processor.PlaceholderNLUProcessor"
+            "placeholder": "nlu.processors.placeholder_processor.PlaceholderNLUProcessor",
+            "fine_tuned_bert": "nlu.processors.fine_tuned_bert_processor.BertNLUProcessor",
+            "nlu_orchestrator": "nlu.processors.nlu_orchestrator.SmartHomeNLUOrchestrator"
             # 可以在这里添加其他NLU引擎
         }
     
@@ -52,8 +54,17 @@ class NLUFactory:
             module = importlib.import_module(module_path)
             engine_class = getattr(module, class_name)
             
-            # 创建引擎实例
-            return engine_class(config)
+            # 针对 nlu_orchestrator 做参数解包
+            if engine_type == "nlu_orchestrator":
+                return engine_class(
+                    bert_nlu_config=config.get('bert_nlu_config', {}),
+                    rag_data_jsonl_path=config.get('rag_data_jsonl_path'),
+                    rag_embedding_config=config.get('rag_embedding_config', {}),
+                    rag_similarity_threshold=config.get('rag_similarity_threshold', 250)
+                )
+            else:
+                # 其他引擎保持原样
+                return engine_class(config)
         except (ImportError, AttributeError) as e:
             logger.error(f"加载NLU引擎 '{engine_type}' 失败: {str(e)}")
             # 如果加载失败，尝试加载placeholder引擎

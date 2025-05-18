@@ -1,16 +1,35 @@
-# NLP服务配置文件
+# NLP服务完整配置文件
 
 # STT引擎配置
 stt:
-  engine: placeholder
-  # 更多STT配置...
+  engine: whisper  # 可选: whisper, dolphin, placeholder
+  model_size: base     # whisper/dolphin专用
+  device: cpu          # whisper/dolphin专用
 
 # NLU引擎配置
 nlu:
-  engine: placeholder
-  # 更多NLU配置...
+  engine: nlu_orchestrator
+  local_model_target_dir: "nlp_service/nlu/model/fine_tuned_nlu_bert"
+
+# BertNLUProcessor专用配置
+bert_nlu_config:
+  local_model_target_dir: "nlp_service/nlu/model/fine_tuned_nlu_bert"
+  model_hub_id: "LIUWJ/fine-tuned-home-bert"
+  device: "cpu"
+
+# nlu_orchestrator专用配置
+rag_data_jsonl_path: "nlp_service/nlu/model/dataset/rag_knowledge.jsonl"
+rag_embedding_config:
+  local_embedding_target_dir: "nlp_service/nlu/model/shibing624-text2vec-base-chinese"
+  embedding_model_hub_id: "shibing624/text2vec-base-chinese"
+  device: "cpu"
+rag_similarity_threshold: 350
 
 # TTS引擎配置
 tts:
   engine: placeholder
-  # 更多TTS配置... 
+  enabled: true
+  voice: female        # 语音类型（如有）
+  speed: 1.0           # 语速
+  pitch: 1.0           # 音调
+  # 更多TTS参数可在此补充 

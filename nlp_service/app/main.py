@@ -49,7 +49,7 @@ async def startup_event():
 @app.post("/process_audio")
 async def process_audio(
     audio_file: UploadFile = File(...),
-    settings_json: str = Form("{}")
+    settings_json: str = Form(...)
 ):
     """
     处理上传的音频文件
@@ -64,6 +64,8 @@ async def process_audio(
     try:
         # 解析设置
         settings = json.loads(settings_json)
+        logger.info(f"收到 settings: {settings}")
+        print("收到 settings:", settings)
         
         # 读取音频文件内容
         audio_data = await audio_file.read()

@@ -110,6 +110,22 @@ export const deviceApi = {
 export const voiceApi = {
     // 发送语音命令
     sendVoiceCommand: async (formData) => {
+        // 读取本地 voice_settings
+        let settings = {};
+        try {
+            const localSettings = localStorage.getItem('voice_settings');
+            if (localSettings) {
+                const parsed = JSON.parse(localSettings);
+                settings = {
+                    stt_engine: parsed.stt?.engine,
+                    nlu_engine: parsed.nlu?.engine,
+                    tts_engine: parsed.tts?.engine,
+                    tts_enabled: parsed.tts?.enabled
+                };
+            }
+        } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
+        formData.append('settingsJson', JSON.stringify(settings));
+        
         try {
             // 确保FormData中音频文件的字段名为audio_file
             // 检查并重命名字段 - 这是兼容处理
@@ -161,15 +177,28 @@ export const voiceApi = {
     
     // 发送文本命令
     sendTextCommand: async (text) => {
+        let settings = {};
+        try {
+            const localSettings = localStorage.getItem('voice_settings');
+            if (localSettings) {
+                const parsed = JSON.parse(localSettings);
+                settings = {
+                    stt_engine: parsed.stt?.engine,
+                    nlu_engine: parsed.nlu?.engine,
+                    tts_engine: parsed.tts?.engine,
+                    tts_enabled: parsed.tts?.enabled
+                };
+            }
+        } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
+        const requestData = {
+            textInput: text,
+            settings
+        };
+        
         try {
             // 调试信息
             console.log('发送文本命令到:', `${api.defaults.baseURL}/command/text`);
             console.log('文本内容:', text);
-            
-            const requestData = { 
-                textInput: text,
-                settings: { ttsEnabled: true }
-            };
             
             const response = await api.post('/command/text', requestData, {
                 timeout: 10000 // 设置10秒超时

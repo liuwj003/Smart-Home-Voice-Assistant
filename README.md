@@ -16,10 +16,10 @@
 1. 确保已安装Java JDK 17+
 2. 确保已安装Maven
 3. 确保已安装Node.js和npm
-4. 确保已安装Python 3.8+，并安装了所需依赖：
-   ```bash
-   pip install requirements.txt
-   ```
+4. 创建一个python=3.9的虚拟环境：
+```bash
+conda create -n voice-app python=3.9
+```
 
 ### 启动项目
 

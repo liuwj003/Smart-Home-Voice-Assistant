@@ -447,7 +447,7 @@ class BertNLUProcessor(NLUInterface):
             elif "查" in cleaned_action_text or "询" in cleaned_action_text or "状态" in cleaned_action_text or "情况" in cleaned_action_text or "多少" in cleaned_action_text or "看" in cleaned_action_text or "问" in cleaned_action_text:
                 final_action_english = "query"
                 final_parameter = raw_param_text 
-            elif "上" in cleaned_action_text or "合" in cleaned_action_text or "关" in cleaned_action_text:
+            elif "上" in cleaned_action_text or "合" in cleaned_action_text or "关" in cleaned_action_text or "拉" in cleaned_action_text:
                 final_action_english = "close_curtain" 
                 final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (1.0 if raw_param_text is None else raw_param_text)
             elif "开" in cleaned_action_text:

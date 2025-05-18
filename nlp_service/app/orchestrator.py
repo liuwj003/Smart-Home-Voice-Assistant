@@ -31,7 +31,9 @@ class NLPServiceOrchestrator:
         Args:
             config_path: 配置文件的路径，如果为None则使用默认路径
         """
+        self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         self.config = self._load_config(config_path)
+        self._fix_config_paths()
         logger.info("配置加载完成")
         
         # 初始化STT、NLU和TTS引擎
@@ -71,6 +73,26 @@ class NLPServiceOrchestrator:
                 'tts': {'engine': 'placeholder'}
             }
     
+    def _fix_config_paths(self):
+        """把所有涉及路径的配置项都转为绝对路径"""
+        def to_abs(path):
+            if path and not os.path.isabs(path):
+                return os.path.abspath(os.path.join(self.project_root, path))
+            return path
+
+        # NLU主模型
+        if 'nlu' in self.config and 'local_model_target_dir' in self.config['nlu']:
+            self.config['nlu']['local_model_target_dir'] = to_abs(self.config['nlu']['local_model_target_dir'])
+        # BertNLUProcessor
+        if 'bert_nlu_config' in self.config and 'local_model_target_dir' in self.config['bert_nlu_config']:
+            self.config['bert_nlu_config']['local_model_target_dir'] = to_abs(self.config['bert_nlu_config']['local_model_target_dir'])
+        # RAG知识库
+        if 'rag_data_jsonl_path' in self.config:
+            self.config['rag_data_jsonl_path'] = to_abs(self.config['rag_data_jsonl_path'])
+        # RAG embedding
+        if 'rag_embedding_config' in self.config and 'local_embedding_target_dir' in self.config['rag_embedding_config']:
+            self.config['rag_embedding_config']['local_embedding_target_dir'] = to_abs(self.config['rag_embedding_config']['local_embedding_target_dir'])
+    
     def _init_stt_engine(self) -> STTInterface:
         """
         初始化STT引擎
@@ -95,12 +117,17 @@ class NLPServiceOrchestrator:
             NLU引擎实例
         """
         try:
-            nlu_config = self.config.get('nlu', {'engine': 'placeholder'})
+            nlu_config = self.config.get('nlu', {'engine': 'placeholder'}).copy()
+            # 合并顶层配置
+            if nlu_config.get('engine') == 'nlu_orchestrator':
+                nlu_config['bert_nlu_config'] = self.config.get('bert_nlu_config', {})
+                nlu_config['rag_data_jsonl_path'] = self.config.get('rag_data_jsonl_path')
+                nlu_config['rag_embedding_config'] = self.config.get('rag_embedding_config', {})
+                nlu_config['rag_similarity_threshold'] = self.config.get('rag_similarity_threshold', 250)
             nlu_factory = NLUFactory()
             return nlu_factory.create_engine(nlu_config)
         except Exception as e:
             logger.error(f"初始化NLU引擎失败: {str(e)}")
-            # 如果失败，使用NLUFactory中的默认引擎
             return NLUFactory().create_engine({'engine': 'placeholder'})
     
     def _init_tts_engine(self) -> TTSInterface:
@@ -169,77 +196,79 @@ class NLPServiceOrchestrator:
     
     def _generate_response_message(self, nlu_result: Dict) -> str:
         """
-        基于NLU结果生成响应消息
-        
-        Args:
-            nlu_result: NLU处理结果
-            
-        Returns:
-            响应消息
+        基于NLU五元组结果生成响应消息
         """
-        # 根据不同的NLU结果生成不同的响应
-        action = nlu_result.get('action', 'UNKNOWN')
-        entity = nlu_result.get('entity')
-        location = nlu_result.get('location', '')
-        
-        if action == 'TURN_ON':
-            if entity == 'light':
-                return f"好的，正在为您打开{location}的灯。"
-            elif entity:
-                return f"好的，正在为您打开{location}{entity}。"
-            else:
-                return "好的，正在执行打开操作。"
-        elif action == 'TURN_OFF':
-            if entity == 'air_conditioner':
-                return f"好的，正在为您关闭{location}空调。"
-            elif entity:
-                return f"好的，正在为您关闭{location}{entity}。"
-            else:
-                return "好的，正在执行关闭操作。"
-        else:
-            return "抱歉，我没有理解您的指令。"
+        # 英文动作到中文的映射（参考 fine_tuned_bert_processor）
+        action_map = {
+            "turn_on": "打开",
+            "turn_off": "关闭",
+            "modify": "调整",
+            "add": "添加",
+            "delete": "删除",
+            "query": "查询",
+            "open_curtain": "打开窗帘",
+            "close_curtain": "关闭窗帘",
+            # 可继续补充...
+        }
+        action = nlu_result.get("ACTION")
+        device_type = nlu_result.get("DEVICE_TYPE")
+        device_id = nlu_result.get("DEVICE_ID")
+        location = nlu_result.get("LOCATION")
+        parameter = nlu_result.get("PARAMETER")
+        action_cn = action_map.get(action, action) if action else None
+        parts = ["好的，正在"]
+        if action_cn: parts.append(str(action_cn))
+        if location: parts.append(str(location))
+        if device_type: parts.append(str(device_type))
+        if device_id and device_id not in ("0", 0, None, ""): parts.append(f"编号{device_id}")
+        if parameter not in (None, ""): parts.append(f"参数{parameter}")
+        return "".join(parts)
     
     async def handle_audio_input(self, audio_data: bytes, settings: Dict) -> Dict:
         """
-        处理音频输入，执行STT、NLU和可选的TTS操作
-        
-        Args:
-            audio_data: 音频数据
-            settings: 处理设置
-            
-        Returns:
-            处理结果字典
+        处理音频输入，执行STT、NLU和可选的TTS操作，支持根据settings动态切换引擎。
         """
         try:
+            # 动态切换STT引擎
+            if 'stt_engine' in settings:
+                stt_config = self.config.get('stt', {}).copy()
+                stt_config['engine'] = settings['stt_engine']
+                self.stt_engine = STTFactory().create_engine(stt_config)
+            # 动态切换NLU引擎
+            if 'nlu_engine' in settings:
+                nlu_config = self.config.get('nlu', {}).copy()
+                nlu_config['engine'] = settings['nlu_engine']
+                if nlu_config['engine'] == 'nlu_orchestrator':
+                    nlu_config['bert_nlu_config'] = self.config.get('bert_nlu_config', {})
+                    nlu_config['rag_data_jsonl_path'] = self.config.get('rag_data_jsonl_path')
+                    nlu_config['rag_embedding_config'] = self.config.get('rag_embedding_config', {})
+                    nlu_config['rag_similarity_threshold'] = self.config.get('rag_similarity_threshold', 250)
+                self.nlu_engine = NLUFactory().create_engine(nlu_config)
+            # 动态切换TTS引擎
+            if 'tts_engine' in settings:
+                tts_config = self.config.get('tts', {}).copy()
+                tts_config['engine'] = settings['tts_engine']
+                self.tts_engine = TTSFactory().create_engine(tts_config)
+            tts_enabled = settings.get('tts_enabled', True)
             # 执行STT
             transcribed_text = await self._perform_stt(audio_data)
             logger.info(f"STT结果: {transcribed_text}")
-            
             # 执行NLU
             nlu_result = await self._perform_nlu(transcribed_text)
             logger.info(f"NLU结果: {nlu_result}")
-            
-            # 生成响应消息
+            # 生成TTS反馈
             response_message = self._generate_response_message(nlu_result)
-            
-            # 根据设置决定是否执行TTS
-            tts_enabled = settings.get('tts_enabled', True)
-            tts_output_reference = None
-            if tts_enabled:
-                tts_output_reference = await self._perform_tts(response_message)
-                logger.info(f"TTS结果: {tts_output_reference}")
-            
-            # 返回结果
+            tts_output_reference = await self._perform_tts(response_message) if tts_enabled else None
+            # 返回五元组原样
             return {
                 'input_type': 'audio',
                 'transcribed_text': transcribed_text,
-                'nlu_result': nlu_result,
+                'nlu_result': nlu_result,  # 五元组原样
                 'response_message_for_tts': response_message,
                 'tts_output_reference': tts_output_reference,
                 'status': 'success',
                 'error_message': None
             }
-            
         except Exception as e:
             logger.error(f"处理音频输入失败: {str(e)}")
             return {
@@ -254,41 +283,36 @@ class NLPServiceOrchestrator:
     
     async def handle_text_input(self, text_input: str, settings: Dict) -> Dict:
         """
-        处理文本输入，执行NLU和可选的TTS操作
-        
-        Args:
-            text_input: 输入文本
-            settings: 处理设置
-            
-        Returns:
-            处理结果字典
+        处理文本输入，执行NLU和可选的TTS操作，支持根据settings动态切换引擎。
         """
         try:
-            # 执行NLU
+            if 'nlu_engine' in settings:
+                nlu_config = self.config.get('nlu', {}).copy()
+                nlu_config['engine'] = settings['nlu_engine']
+                if nlu_config['engine'] == 'nlu_orchestrator':
+                    nlu_config['bert_nlu_config'] = self.config.get('bert_nlu_config', {})
+                    nlu_config['rag_data_jsonl_path'] = self.config.get('rag_data_jsonl_path')
+                    nlu_config['rag_embedding_config'] = self.config.get('rag_embedding_config', {})
+                    nlu_config['rag_similarity_threshold'] = self.config.get('rag_similarity_threshold', 250)
+                self.nlu_engine = NLUFactory().create_engine(nlu_config)
+            if 'tts_engine' in settings:
+                tts_config = self.config.get('tts', {}).copy()
+                tts_config['engine'] = settings['tts_engine']
+                self.tts_engine = TTSFactory().create_engine(tts_config)
+            tts_enabled = settings.get('tts_enabled', True)
             nlu_result = await self._perform_nlu(text_input)
             logger.info(f"NLU结果: {nlu_result}")
-            
-            # 生成响应消息
             response_message = self._generate_response_message(nlu_result)
-            
-            # 根据设置决定是否执行TTS
-            tts_enabled = settings.get('tts_enabled', True)
-            tts_output_reference = None
-            if tts_enabled:
-                tts_output_reference = await self._perform_tts(response_message)
-                logger.info(f"TTS结果: {tts_output_reference}")
-            
-            # 返回结果
+            tts_output_reference = await self._perform_tts(response_message) if tts_enabled else None
             return {
                 'input_type': 'text',
-                'transcribed_text': text_input,  # 文本输入时，transcribed_text为原始输入
-                'nlu_result': nlu_result,
+                'transcribed_text': text_input,
+                'nlu_result': nlu_result,  # 五元组原样
                 'response_message_for_tts': response_message,
                 'tts_output_reference': tts_output_reference,
                 'status': 'success',
                 'error_message': None
             }
-            
         except Exception as e:
             logger.error(f"处理文本输入失败: {str(e)}")
             return {

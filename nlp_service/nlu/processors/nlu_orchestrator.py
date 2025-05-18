@@ -10,8 +10,8 @@ import asyncio
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from interfaces.nlu_interface import NLUInterface
-from fine_tuned_bert_processor import BertNLUProcessor 
-from retrieval_rag import StandardCommandRetriever 
+from nlu.processors.fine_tuned_bert_processor import BertNLUProcessor 
+from nlu.processors.retrieval_rag import StandardCommandRetriever 
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +83,16 @@ class SmartHomeNLUOrchestrator(NLUInterface):
         
         logger.info("Direct NLU result insufficient (missing ACTION or DEVICE_TYPE), attempting RAG...")
         if self.rag_system and self.rag_system.vector_store and self.rag_system.embedding_model:
-            # Retrieve top 1 similar standard command text and its original record
-            retrieved_commands_with_scores = self.rag_system.retrieve_similar_commands(text, top_k=1)
+            # Retrieve top 2 similar standard command texts and their original records
+            retrieved_commands_with_scores = self.rag_system.retrieve_similar_commands(text, top_k=2)
 
             if retrieved_commands_with_scores:
-                best_standard_command_text, rag_score, original_rag_kb_record = retrieved_commands_with_scores[0]
+                logger.info("RAG retrieved the following top-2 similar standard commands:")
+                for idx, (cmd_text, score, record) in enumerate(retrieved_commands_with_scores):
+                    logger.info(f"  Top{idx+1}: '{cmd_text}' (Score: {score:.4f})")
+                # 然后再选分数最小的那一个做后续处理
+                best_tuple = min(retrieved_commands_with_scores, key=lambda x: x[1])
+                best_standard_command_text, rag_score, original_rag_kb_record = best_tuple
                 logger.info(f"RAG retrieved most similar standard command: '{best_standard_command_text}' (Score: {rag_score:.4f})")
 
                 if rag_score <= self.rag_similarity_threshold: 
@@ -117,7 +122,7 @@ class SmartHomeNLUOrchestrator(NLUInterface):
 
 
                         return rag_nlu_output
-                    
+
                     # Option 2: Re-run NLU on the standard command text from RAG
                     logger.info(f"Re-running NLU on RAG standard command: '{best_standard_command_text}'")
                     rag_refined_nlu_output = await self.bert_nlu_processor.understand(best_standard_command_text)
@@ -156,7 +161,7 @@ class SmartHomeNLUOrchestrator(NLUInterface):
             else:
                 logger.info("RAG found no similar standard commands.")
                 return {"error": "Direct NLU insufficient, RAG found no matches.", "original_nlu": direct_nlu_output}
-        else: 
+        else:
             logger.info("Direct NLU insufficient, and RAG system is unavailable.")
             return {"error": "Direct NLU insufficient, RAG system unavailable.", "original_nlu": direct_nlu_output}
 
@@ -173,7 +178,7 @@ if __name__ == '__main__':
     bert_nlu_config_test = {
         "local_model_target_dir": str(_fine_tuned_bert_model_path_main),
         "model_hub_id": "LIUWJ/fine-tuned-home-bert",
-        "device": "cpu"
+        "device": "cpu" 
     }
     if not _fine_tuned_bert_model_path_main.exists():
         logger.error(f"ERROR: BertNLUProcessor model path '{_fine_tuned_bert_model_path_main}' does not exist. Orchestrator test will fail for BertNLUProcessor.")
