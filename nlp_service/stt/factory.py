@@ -12,7 +12,6 @@ from interfaces.stt_interface import STTInterface, STTError
 from stt.engines.placeholder_engine import PlaceholderSTTEngine
 from stt.engines.whisper_engine import WhisperSTTEngine
 from stt.engines.dolphin_engine import DolphinSTTEngine
-from stt.engines.simulated_engine import SimulatedSTTEngine
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ class STTFactory:
             "placeholder": PlaceholderSTTEngine,
             "whisper": WhisperSTTEngine,
             "dolphin": DolphinSTTEngine,
-            "simulated": SimulatedSTTEngine
             # 可以在这里添加其他STT引擎
         }
     

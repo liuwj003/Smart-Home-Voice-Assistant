@@ -87,6 +87,9 @@ class SmartHomeNLUOrchestrator(NLUInterface):
             retrieved_commands_with_scores = self.rag_system.retrieve_similar_commands(text, top_k=2)
 
             if retrieved_commands_with_scores:
+                for cmd_text, score, record in retrieved_commands_with_scores: 
+                    print(f"  Retrieved: '{cmd_text}' (Score: {score:.4f}), Original Record Text: {record.get('text')}")
+                    
                 # 选分数最小的那个
                 best_tuple = min(retrieved_commands_with_scores, key=lambda x: x[1])
                 best_standard_command_text, rag_score, original_rag_kb_record = best_tuple

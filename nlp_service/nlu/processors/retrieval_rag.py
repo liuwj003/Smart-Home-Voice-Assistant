@@ -260,7 +260,7 @@ if __name__ == '__main__':
     if retriever and retriever.embedding_model and retriever.vector_store:
         logger.info("StandardCommandRetriever 初始化成功，准备测试。")
         
-        queries = ["客厅太暗", "卧室有点热", "晚安", "肘击微波炉"]
+        queries = ["客厅太暗", "卧室有点热", "晚安", "客厅太冷", "卧室太冷"]
         for q in queries:
             print(f"\nQuerying for: '{q}'")
             similar_commands = retriever.retrieve_similar_commands(q, top_k=2)

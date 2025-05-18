@@ -3,7 +3,7 @@ import axios from 'axios';
 // 创建 axios 实例
 const api = axios.create({
     baseURL: 'http://localhost:8080/api',  // 后端 API 的基础 URL
-    timeout: 5000,  // 请求超时时间
+    timeout: 60000,  // 全局超时时间 60秒
     headers: {
         'Content-Type': 'application/json'
     }
@@ -142,7 +142,7 @@ export const voiceApi = {
             // 设置更长的超时时间，避免音频处理超时
             const response = await api.post('/command/audio', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 10000 // 增加到10秒
+                timeout: 60000 // 1分钟
             });
             
             // 调试信息
@@ -161,7 +161,7 @@ export const voiceApi = {
                     console.log('使用新的baseURL重新发送语音命令:', api.defaults.baseURL);
                     return api.post('/command/audio', formData, {
                         headers: { 'Content-Type': 'multipart/form-data' },
-                        timeout: 10000
+                        timeout: 120000
                     });
                 }
             }
@@ -201,7 +201,7 @@ export const voiceApi = {
             console.log('文本内容:', text);
             
             const response = await api.post('/command/text', requestData, {
-                timeout: 10000 // 设置10秒超时
+                timeout: 60000 // 设置60秒超时
             });
             
             // 调试信息
@@ -222,7 +222,7 @@ export const voiceApi = {
                         textInput: text,
                         settings: { ttsEnabled: true } 
                     }, {
-                        timeout: 10000
+                        timeout: 60000
                     });
                 }
             }

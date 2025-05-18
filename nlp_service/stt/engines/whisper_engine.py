@@ -5,6 +5,8 @@ import torch
 import whisper
 from pathlib import Path
 from typing import Dict, Any, List
+import tempfile
+import time
 
 # 将项目根目录添加到系统路径
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -50,10 +52,7 @@ class WhisperSTTEngine(STTInterface):
         
         try:
             # 保存音频数据到临时文件
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                temp_filename = temp_file.name
-                temp_file.write(audio_data)
+            temp_filename = self.save_audio_temp(audio_data)
             
             logger.info(f"音频数据已保存到临时文件: {temp_filename}")
             
@@ -115,4 +114,17 @@ class WhisperSTTEngine(STTInterface):
             return True
         except ImportError:
             logger.warning("Whisper未安装，请使用: pip install -U openai-whisper")
-            return False 
+            return False
+
+    def save_audio_temp(self, audio_data):
+        # 获取当前文件的上上级目录（即项目根目录）
+        project_root = Path(__file__).resolve().parent.parent.parent
+        tmp_dir = project_root / "data" / "tmp_audio"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        fd, temp_filename = tempfile.mkstemp(suffix='.wav', dir=str(tmp_dir))
+        with os.fdopen(fd, 'wb') as tmp_file:
+            tmp_file.write(audio_data)
+        logger.info(f"写入后文件存在: {os.path.exists(temp_filename)}, 路径: {temp_filename}")
+        logger.info(f"文件大小: {os.path.getsize(temp_filename) if os.path.exists(temp_filename) else '不存在'}")
+        time.sleep(2.0)  # 可选，给系统一点缓冲时间
+        return temp_filename 

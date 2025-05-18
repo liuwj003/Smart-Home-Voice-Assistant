@@ -16,10 +16,12 @@
 1. 确保已安装Java JDK 17+
 2. 确保已安装Maven
 3. 确保已安装Node.js和npm
-4. 创建一个python=3.9的虚拟环境：
+4. 创建一个python=3.9的虚拟环境并安装ffmpeg：
 ```bash
 conda create -n voice-app python=3.9
+conda install -c conda-forge ffmpeg
 ```
+* ffmpeg要conda-forge装一下。
 
 ### 启动项目
 
