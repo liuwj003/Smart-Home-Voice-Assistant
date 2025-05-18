@@ -37,6 +37,7 @@
 <img src="imgs/v0_1.png" alt="alt text" width="100%"/>
 <img src="imgs/rag_test_v0.png" alt="alt text" width="90%"/>
 <img src="imgs/v0.png" alt="alt text" width="90%"/>
+
 * 有一个还不错的前端界面，包括网页，和“手机端”，能调节设置
 * 后端只有框架，设备的绑定、能被用户调整正在施工。
 * 语音服务：目前能实现“客厅太冷了”或者“客厅空调调高2度”都被返回`{空调、0、客厅、modify、2}`给后端的效果，以供后端施加效果到设备上。
