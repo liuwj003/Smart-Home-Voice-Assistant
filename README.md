@@ -31,24 +31,11 @@ conda install -c conda-forge ffmpeg
 run.bat
 ```
 
-
-
 ## 配置
 
-在 `backend/src/main/resources/application.yml` 中可以配置语音处理模块：
+在 `backend/src/main/resources/application.yml` 中可以配置语音处理模块。
+以及各种confiig
 
-```yaml
-voice:
-  # 选择处理器类型: simulated(模拟) 或 real(实际Python模块)
-  processor:
-    type: simulated  # 或 'real'
-  module:
-    path: ./voice_module  # Python模块路径
-  stt:
-    engine-type: simulated  # STT引擎类型
-  nlu:
-    engine-type: rule_based  # NLU引擎类型
-```
 
 ## 语音模块接口
 
@@ -95,40 +82,7 @@ voice:
 
 ## 4. 安装说明
 
-### 后端服务
 
-1. 创建并激活虚拟环境（推荐）：
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-或者
-```bash
-conda create -n voice-app
-conda activate voice-app
-conda install ...
-```
-
-2. 安装依赖：
-```bash
-pip install -r requirements.txt
-```
-
-3. 启动后端服务：
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-4. 启动前端：
-```bash
-cd frontend
-npm install
-npm start
-```
-
-服务将在 http://localhost:5000 运行。
 
 
 
@@ -155,7 +109,7 @@ SmartHomeVoiceAssistant/
 │   ├── requirements.txt
 │   └── README.md
 
-├── voice_module/                  # 语音处理模块
+├── nlu_service/                  # 语音处理模块
 │   ├── src/
 │   │   ├── __init__.py
 │   │   ├── base.py            # 基础类和接口
@@ -165,23 +119,11 @@ SmartHomeVoiceAssistant/
 │   │   ├── nlu.py            # 自然语言理解实现
 │   │   ├── tts.py            # 文本转语音实现
 │   │   └── utils.py          # 工具函数
-│   ├── data/
-│   │   ├── dict/
-│   │   │   └── zh_dict.txt   # 中文词典
-│   │   └── rules/
-│   │       └── nlu_rules.json # NLU规则
-│   ├── examples/
-│   │   └── voice_assistant_demo.py  # 语音助手演示
 │   ├── tests/
 │   │   ├── __init__.py
-│   │   ├── test_recognizer.py
-│   │   ├── test_stt.py
-│   │   ├── test_nlu.py
-│   │   └── test_tts.py
 │   ├── requirements.txt
 │   └── README.md
 
-├── device_module/           # 设备控制模块（Optional？）
 ├── docs/                   # 项目文档
 │   ├── img/                       # 用在文档里的各种图片（如UML图）
 │   ├── requirement.md             # 需求分析文档
@@ -198,9 +140,6 @@ SmartHomeVoiceAssistant/
 │   ├── video/
 │   └── screenshots/
 
-├── scripts/                       # 脚本（部署、启动、初始化模拟数据）
-│   └── start_all.sh
-
 ├── requirements.txt        # 项目依赖
 ├── INSTALL_CN.md                  # 中文安装说明
 ├── INSTALL_EN.md                  # 英文安装说明
@@ -210,56 +149,11 @@ SmartHomeVoiceAssistant/
 
 ```
 
-## 6. 使用说明
-(可以直接在根目录下`run.bat`)
-## 目前
-```bash
-在根目录下
-cd backend
-mvn spring-boot:run
-启动后端服务
-
-在根目录下
-cd frontend
-npm install
-npm start
-启动前端
-```
-1. 启动后端服务
-2. 在移动应用中配置API地址（默认为 http://localhost:5000/api）
-3. 使用语音按钮或设备控制界面控制设备
-
 ### 支持的语音命令
 
-- 设备控制：
-  - "打开/关闭[设备名称]"
-  - "把[设备名称]打开/关闭"
-
-- 参数设置：
-  - "把[设备名称]的[参数]调到[数值]"
-  - "设置[设备名称]的[参数]为[数值]"
-
-- 参数调节：
-  - "把[设备名称]的[参数]调高/调低"
-  - "增加/减少[设备名称]的[参数]"
-
-- 天气查询：
-  - "[城市]天气怎么样"
-  - "查询[城市]的天气"
 
 ## 7. 开发说明
 
-### 添加新设备
-
-1. 在 `voice_module/src/config.py` 中添加设备映射
-2. 在移动应用的设备列表中添加新设备类型
-3. 实现相应的控制界面
-
-### 添加新命令
-
-1. 在 `voice_module/src/config.py` 中添加新的意图和关键词
-2. 在 `voice_module/src/nlu.py` 中实现新的意图识别逻辑
-3. 在移动应用中添加相应的处理逻辑
 
 ## 8. 测试
 
@@ -274,17 +168,12 @@ npm start
 
 ## 10. 许可证
 
-MIT License
+My License
 
 ## 语音模块功能
 
 ### 语音识别 (STT)
-- 支持多种语音识别引擎：
-  - Google Speech Recognition
   - OpenAI Whisper
-  - 模拟STT（用于测试）
-- 支持麦克风输入和音频文件输入
-- 支持实时语音识别
 
 ### 自然语言理解 (NLU)
 - 支持多种语言和方言：
@@ -293,9 +182,9 @@ MIT License
   - 英语
   - 日语
   - 韩语
-- 提供两种NLU实现：
-  - 基于规则的NLU（快速、可定制）
+- 提供2种NLU实现：
   - 基于Transformer的NLU（高准确度、支持多语言）
+  - 基于deepseek
 - 自动语言检测
 - 意图识别和实体提取
 - 支持自定义规则和模型
@@ -311,24 +200,3 @@ MIT License
 
 ### 示例用法
 
-```python
-from voice_module.src.recognizer import VoiceRecognizer
-from voice_module.src.nlu import create_nlu_engine
-from voice_module.src.tts import create_tts_engine, DeviceStatusReporter
-
-# 初始化组件
-recognizer = VoiceRecognizer()
-nlu_engine = create_nlu_engine("transformer")  # 使用基于Transformer的NLU
-tts_engine = create_tts_engine("edge")  # 使用Edge TTS
-status_reporter = DeviceStatusReporter(tts_engine)
-
-# 语音识别
-text = recognizer.recognize_from_microphone()
-
-# 自然语言理解
-intent = nlu_engine.understand(text)
-
-# 语音播报
-tts_engine.speak("设备状态已更新")
-status_reporter.report_single_device(device_info)
-```
