@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button, Typography, Box, CircularProgress, Alert, Snackbar } from '@mui/material';
 import { Mic, MicOff } from '@mui/icons-material';
 import { voiceApi } from '../services/api';
@@ -9,8 +9,24 @@ const VoiceInput = ({ onCommandResult }) => {
   const [response, setResponse] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [ttsEnabled, setTtsEnabled] = useState(true);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+
+  // 初始化时从 localStorage 读取 TTS 设置
+  useEffect(() => {
+    try {
+      const settings = localStorage.getItem('voice_settings');
+      if (settings) {
+        const parsedSettings = JSON.parse(settings);
+        if (parsedSettings.tts && parsedSettings.tts.hasOwnProperty('enabled')) {
+          setTtsEnabled(parsedSettings.tts.enabled);
+        }
+      }
+    } catch (err) {
+      console.error('读取TTS设置失败:', err);
+    }
+  }, []);
 
   const handleStartListening = async () => {
     try {
@@ -76,8 +92,23 @@ const VoiceInput = ({ onCommandResult }) => {
         // 创建表单数据
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.webm');
+        
+        // 从localStorage获取最新的TTS设置
+        let currentTtsEnabled = ttsEnabled;
+        try {
+          const settings = localStorage.getItem('voice_settings');
+          if (settings) {
+            const parsedSettings = JSON.parse(settings);
+            if (parsedSettings.tts && parsedSettings.tts.hasOwnProperty('enabled')) {
+              currentTtsEnabled = parsedSettings.tts.enabled;
+            }
+          }
+        } catch (err) {
+          console.error('读取TTS设置失败:', err);
+        }
+        
         formData.append('settingsJson', JSON.stringify({
-          ttsEnabled: true
+          ttsEnabled: currentTtsEnabled
         }));
         
         try {
@@ -99,8 +130,8 @@ const VoiceInput = ({ onCommandResult }) => {
                 ttsOutputReference: response.data.ttsOutputReference
               });
               
-              // 如果返回了TTS音频，尝试播放
-              if (response.data.ttsOutputReference) {
+              // 如果返回了TTS音频并且TTS已启用，尝试播放
+              if (response.data.ttsOutputReference && currentTtsEnabled) {
                 playTTSAudio(response.data.ttsOutputReference);
               }
             }
@@ -244,9 +275,17 @@ const VoiceInput = ({ onCommandResult }) => {
           <Typography variant="body1">{response.transcribedText}</Typography>
           {response.nluResult && (
             <>
-              <Typography variant="subtitle2" sx={{ mt: 1 }}>意图:</Typography>
+              <Typography variant="subtitle2" sx={{ mt: 1 }}>五元组解析结果:</Typography>
               <Typography variant="body2">
-                {`${response.nluResult.action || "未知"} / ${response.nluResult.entity || "未知"}`}
+                动作: {response.nluResult.action || "未知"} | 
+                设备类型: {response.nluResult.entity || "未知"} | 
+                设备ID: {response.nluResult.deviceId || "0"} | 
+                位置: {response.nluResult.location || "未知"} | 
+                参数: {
+                  response.nluResult.parameter !== null && 
+                  response.nluResult.parameter !== undefined ? 
+                  JSON.stringify(response.nluResult.parameter) : '无'
+                }
               </Typography>
             </>
           )}

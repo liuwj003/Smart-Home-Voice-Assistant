@@ -36,8 +36,9 @@ public interface DeviceService {
      * @param entityType 实体类型（如light, fan等）
      * @param location 位置（如bedroom, living_room等）
      * @param action 动作（如TURN_ON, TURN_OFF等）
+     * @param deviceId 设备ID（如"1", "2"等）
      * @param parameter 额外参数（如亮度、温度等）
      * @return 操作结果描述
      */
-    String updateDeviceState(String entityType, String location, String action, Object parameter);
+    String updateDeviceState(String entityType, String location, String action, String deviceId, Object parameter);
 } 

@@ -134,6 +134,8 @@ public class NlpServiceClient {
         nluResult.put("action", "");
         nluResult.put("entity", "");
         nluResult.put("location", "");
+        nluResult.put("device_id", "0");
+        nluResult.put("parameter", null);
         nluResult.put("confidence", 0.0);
         return nluResult;
     }

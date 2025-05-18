@@ -21,7 +21,8 @@ class TTSFactory:
     def __init__(self):
         # 注册可用的TTS引擎
         self.engines = {
-            "placeholder": "tts.engines.placeholder_engine.PlaceholderTTSEngine"
+            "placeholder": "tts.engines.placeholder_engine.PlaceholderTTSEngine",
+            "pyttsx3": "tts.engines.pyttsx3_engine.Pyttsx3TTSEngine"
             # 可以在这里添加其他TTS引擎
         }
     

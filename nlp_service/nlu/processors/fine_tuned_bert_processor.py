@@ -161,7 +161,7 @@ class BertNLUProcessor(NLUInterface):
         num_map = self.CH_NUM_MAP
         # 单位处理
         units = {'十': 10, '百': 100, '千': 1000}
-        # 移除不参与数值计算的单位词，例如温度的“度”或序数的“号”
+        # 移除不参与数值计算的单位词，例如温度的"度"或序数的"号"
         cleaned_str = cn_int_str.replace("度", "").replace("号","").replace("个","")
 
         if not cleaned_str: return None
@@ -172,7 +172,7 @@ class BertNLUProcessor(NLUInterface):
         current_section_value = 0 # 处理如 "一百零五" 中的 "一百" 和 "五"
         current_digit_value = 0 # 当前数字的值，如 "二" (在 "二百" 中)
         
-        # 简单从左到右解析，处理 “二百三十五”, “二十三”, “十三”, “一百零五” 这种结构
+        # 简单从左到右解析，处理 "二百三十五", "二十三", "十三", "一百零五" 这种结构
         # 对于更复杂的 "一千二百三十四万五千六百七十八" 需要完整算法
         # 这里主要处理日常参数中常见的数字表达
 
@@ -449,10 +449,10 @@ class BertNLUProcessor(NLUInterface):
                 final_parameter = raw_param_text 
             elif "上" in cleaned_action_text or "合" in cleaned_action_text or "关" in cleaned_action_text or "拉" in cleaned_action_text:
                 final_action_english = "close_curtain" 
-                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (1.0 if raw_param_text is None else raw_param_text)
+                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (None if raw_param_text is None else raw_param_text)
             elif "开" in cleaned_action_text:
                 final_action_english = "open_curtain"
-                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (1.0 if raw_param_text is None else raw_param_text)
+                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (None if raw_param_text is None else raw_param_text)
             
             # 处理 modify 类动作
             # (如果上面的条件都不满足，但包含调节类核心词，则认为是modify)
@@ -563,7 +563,8 @@ if __name__ == '__main__':
             "把灯亮度调暗一点点",        # ACTION: modify, PARAMETER: "-0.1"
             "空调低2度",
             "加热烤箱",
-            "热一下烤箱"
+            "热一下烤箱",
+            "拉窗帘"
         ]
 
         for text_case in test_cases:

@@ -216,7 +216,7 @@ const Settings = () => {
                       onChange={(e) => handleSettingChange('tts', 'engine', e.target.value)}
                     >
                       <MenuItem value="placeholder">占位符引擎</MenuItem>
-                      <MenuItem value="simulated">模拟引擎 (测试用)</MenuItem>
+                      <MenuItem value="pyttsx3">本地TTS引擎 (pyttsx3)</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -259,6 +259,21 @@ const Settings = () => {
                     aria-labelledby="pitch-slider"
                   />
                 </Grid>
+                {localSettings.tts.engine === 'pyttsx3' && (
+                  <Grid item xs={12} md={6}>
+                    <Typography id="volume-slider" gutterBottom>
+                      音量: {localSettings.tts.volume || 1.0}
+                    </Typography>
+                    <Slider
+                      value={localSettings.tts.volume || 1.0}
+                      min={0.0}
+                      max={1.0}
+                      step={0.1}
+                      onChange={(e, value) => handleSettingChange('tts', 'volume', value)}
+                      aria-labelledby="volume-slider"
+                    />
+                  </Grid>
+                )}
               </>
             )}
           </Grid>

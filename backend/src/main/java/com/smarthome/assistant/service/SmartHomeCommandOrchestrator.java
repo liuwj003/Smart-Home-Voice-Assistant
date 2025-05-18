@@ -150,21 +150,28 @@ public class SmartHomeCommandOrchestrator {
                         .errorMessage("未能获取NLU结果")
                         .build();
             }
-            // 解析四个字段
+            // 解析五元组字段
             String action = (String) nluResult.get("action");
             String entity = (String) nluResult.get("entity");
             String location = (String) nluResult.get("location");
+            String deviceId = (String) nluResult.get("device_id");
             Object parameter = nluResult.get("parameter");
             Double confidence = nluResult.containsKey("confidence") ? 
                     ((Number) nluResult.get("confidence")).doubleValue() : 0.0;
+            
+            // 构建用于显示的NLU结果
             NluResultDisplayDto nluDisplayDto = NluResultDisplayDto.builder()
                     .action(action)
                     .entity(entity)
                     .location(location)
+                    .deviceId(deviceId)
+                    .parameter(parameter)
                     .confidence(confidence)
                     .build();
-            // 设备控制，传递parameter
-            String deviceFeedback = deviceService.updateDeviceState(entity, location, action, parameter);
+            
+            // 设备控制，传递deviceId和parameter
+            String deviceFeedback = deviceService.updateDeviceState(entity, location, action, deviceId, parameter);
+            
             // 构建响应
             return FrontendResponseDto.builder()
                     .commandSuccess(true)

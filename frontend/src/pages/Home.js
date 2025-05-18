@@ -307,11 +307,17 @@ const Home = () => {
             
             {commandResult.nluResult && (
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary">理解结果:</Typography>
+                <Typography variant="subtitle2" color="text.secondary">理解结果五元组:</Typography>
                 <Typography>
                   动作: {commandResult.nluResult.action || '未知'} | 
-                  设备: {commandResult.nluResult.entity || '未知'} | 
-                  位置: {commandResult.nluResult.location || '未知'}
+                  设备类型: {commandResult.nluResult.entity || '未知'} | 
+                  设备ID: {commandResult.nluResult.deviceId || '0'} | 
+                  位置: {commandResult.nluResult.location || '未知'} | 
+                  参数: {
+                    commandResult.nluResult.parameter !== null && 
+                    commandResult.nluResult.parameter !== undefined ? 
+                    JSON.stringify(commandResult.nluResult.parameter) : '无'
+                  }
                 </Typography>
               </Box>
             )}

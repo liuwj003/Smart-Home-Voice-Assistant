@@ -30,7 +30,7 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public String updateDeviceState(String entityType, String location, String action, Object parameter) {
+    public String updateDeviceState(String entityType, String location, String action, String deviceId, Object parameter) {
         // ... 业务逻辑，查找并批量更新设备
         // 返回操作结果描述
         return "操作完成";

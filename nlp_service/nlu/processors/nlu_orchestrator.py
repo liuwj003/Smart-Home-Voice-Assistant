@@ -186,16 +186,6 @@ if __name__ == '__main__':
         # However, BertNLUProcessor in this version raises FileNotFoundError.
 
     _rag_kb_file_path_main = _nlu_dir_main / "model" / "dataset" / "rag_knowledge.jsonl" # This should be RAG specific
-    if not _rag_kb_file_path_main.exists():
-        _rag_kb_file_path_main.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"WARNING: RAG knowledge base file '{_rag_kb_file_path_main}' not found. Creating a dummy one for testing.")
-        with open(_rag_kb_file_path_main, 'w', encoding='utf-8') as f:
-            json.dump({"user_utterance": "我感觉特别冷", 
-                       "predefined_nlu_output": {"DEVICE_TYPE": "空调", "ACTION": "modify", "PARAMETER": "+2.0", "LOCATION": None, "DEVICE_ID": "0"}}, f)
-            f.write('\n')
-            json.dump({"user_utterance": "这屋里太黑了", 
-                       "standard_command_text": "把客厅的灯打开"}, f)
-            f.write('\n')
     
     _rag_embedding_model_local_path = _nlu_dir_main / "model" / "shibing624-text2vec-base-chinese/" # Example local storage
     rag_embedding_config_test = {

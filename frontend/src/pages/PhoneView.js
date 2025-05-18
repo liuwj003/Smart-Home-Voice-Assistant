@@ -198,6 +198,7 @@ const PhoneView = () => {
   const [language, setLanguage] = useState('zh');
   const [textCommand, setTextCommand] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
 
   const handleSendTextCommand = async () => {
     if (!textCommand.trim() || isProcessing) return;
@@ -224,8 +225,10 @@ const PhoneView = () => {
         // 显示成功信息
         const nluResult = response.data.nluResult || {};
         const message = language === 'zh' ?
-          `命令处理成功: ${textCommand} (${nluResult.action || ''} ${nluResult.entity || ''})` :
-          `Command processed: ${textCommand} (${nluResult.action || ''} ${nluResult.entity || ''})`;
+          `命令处理成功: ${textCommand} (${nluResult.action || ''} - ${nluResult.entity || ''} - 
+          ${nluResult.location || '未知位置'} - ID: ${nluResult.deviceId || '0'})` :
+          `Command processed: ${textCommand} (${nluResult.action || ''} - ${nluResult.entity || ''} - 
+          ${nluResult.location || 'unknown'} - ID: ${nluResult.deviceId || '0'})`;
           
         setAlert({
           open: true,
@@ -233,8 +236,8 @@ const PhoneView = () => {
           severity: 'success'
         });
         
-        // 如果返回了TTS音频，尝试播放
-        if (response.data.ttsOutputReference) {
+        // 如果返回了TTS音频且TTS已启用，尝试播放
+        if (response.data.ttsOutputReference && ttsEnabled) {
           playTTSAudio(response.data.ttsOutputReference);
         }
         
@@ -288,6 +291,15 @@ const PhoneView = () => {
       const savedLanguage = localStorage.getItem('language');
       if (savedLanguage) {
         setLanguage(savedLanguage);
+      }
+      
+      // 尝试从localStorage获取TTS设置
+      const voiceSettings = localStorage.getItem('voice_settings');
+      if (voiceSettings) {
+        const parsedSettings = JSON.parse(voiceSettings);
+        if (parsedSettings.tts && parsedSettings.tts.hasOwnProperty('enabled')) {
+          setTtsEnabled(parsedSettings.tts.enabled);
+        }
       }
       
       // 尝试从语音设置API获取语言设置
@@ -420,8 +432,23 @@ const PhoneView = () => {
         // 创建表单数据
         const formData = new FormData();
         formData.append('audio_file', audioBlob, 'recording.webm');
+        
+        // 获取当前TTS启用状态
+        let currentTtsEnabled = ttsEnabled;
+        try {
+          const settings = localStorage.getItem('voice_settings');
+          if (settings) {
+            const parsedSettings = JSON.parse(settings);
+            if (parsedSettings.tts && parsedSettings.tts.hasOwnProperty('enabled')) {
+              currentTtsEnabled = parsedSettings.tts.enabled;
+            }
+          }
+        } catch (err) {
+          console.error('读取TTS设置失败:', err);
+        }
+        
         formData.append('settingsJson', JSON.stringify({
-          ttsEnabled: true
+          ttsEnabled: currentTtsEnabled
         }));
         
         // 调试信息
@@ -458,8 +485,8 @@ const PhoneView = () => {
               severity: 'success'
             });
             
-            // 如果返回了TTS音频，尝试播放
-            if (response.data.ttsOutputReference) {
+            // 如果返回了TTS音频且TTS已启用，尝试播放
+            if (response.data.ttsOutputReference && currentTtsEnabled) {
               playTTSAudio(response.data.ttsOutputReference);
             }
             

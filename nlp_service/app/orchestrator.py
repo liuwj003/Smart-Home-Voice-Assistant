@@ -170,13 +170,31 @@ class NLPServiceOrchestrator:
             text: 输入文本
             
         Returns:
-            NLU处理结果字典
+            NLU处理结果字典，包含五元组和响应消息
         """
         try:
-            return await self.nlu_engine.understand(text)
+            nlu_result = await self.nlu_engine.understand(text)
+            
+            # 确保结果中包含五元组字段
+            for field in ["ACTION", "DEVICE_TYPE", "DEVICE_ID", "LOCATION", "PARAMETER"]:
+                if field not in nlu_result:
+                    nlu_result[field] = None if field != "DEVICE_ID" else "0"
+            
+            # 生成响应消息并添加到结果中
+            response_message = self._generate_response_message(nlu_result)
+            nlu_result["response_message_for_tts"] = response_message
+            
+            return nlu_result
         except Exception as e:
             logger.error(f"NLU处理失败: {str(e)}")
-            return {'action': 'UNKNOWN', 'entity': None}
+            return {
+                'ACTION': 'UNKNOWN', 
+                'DEVICE_TYPE': None,
+                'DEVICE_ID': "0",
+                'LOCATION': None,
+                'PARAMETER': None,
+                'response_message_for_tts': '对不起，我无法理解您的请求'
+            }
     
     async def _perform_tts(self, text_to_speak: str) -> Union[str, bytes, None]:
         """
@@ -220,8 +238,8 @@ class NLPServiceOrchestrator:
         if action_cn: parts.append(str(action_cn))
         if location: parts.append(str(location))
         if device_type: parts.append(str(device_type))
-        if device_id and device_id not in ("0", 0, None, ""): parts.append(f"编号{device_id}")
-        if parameter not in (None, ""): parts.append(f"参数{parameter}")
+        if device_id and device_id not in ("0", 0, None, ""): parts.append(f"{device_id}号")
+        # if parameter not in (None, ""): parts.append(f"{parameter}")
         return "".join(parts)
     
     async def handle_audio_input(self, audio_data: bytes, settings: Dict) -> Dict:
@@ -249,21 +267,42 @@ class NLPServiceOrchestrator:
                 tts_config = self.config.get('tts', {}).copy()
                 tts_config['engine'] = settings['tts_engine']
                 self.tts_engine = TTSFactory().create_engine(tts_config)
+            
+            # 获取TTS启用状态，默认启用
             tts_enabled = settings.get('tts_enabled', True)
+            logger.info(f"TTS启用状态: {tts_enabled}")
+            
             # 执行STT
             transcribed_text = await self._perform_stt(audio_data)
             logger.info(f"STT结果: {transcribed_text}")
-            # 执行NLU
+            
+            # 执行NLU（现在会返回带有response_message_for_tts的结果）
             nlu_result = await self._perform_nlu(transcribed_text)
             logger.info(f"NLU结果: {nlu_result}")
-            # 生成TTS反馈
-            response_message = self._generate_response_message(nlu_result)
-            tts_output_reference = await self._perform_tts(response_message) if tts_enabled else None
-            # 返回五元组原样
+            
+            # 使用NLU结果中的响应消息进行TTS，仅当tts_enabled为True时执行
+            response_message = nlu_result.get("response_message_for_tts", "")
+            tts_output_reference = None
+            if tts_enabled:
+                logger.info("TTS已启用，正在生成语音")
+                tts_output_reference = await self._perform_tts(response_message)
+            else:
+                logger.info("TTS已禁用，跳过语音生成")
+            
+            # 准备前端需要的五元组格式
+            five_tuple = {
+                "action": nlu_result.get("ACTION"),
+                "entity": nlu_result.get("DEVICE_TYPE"),
+                "device_id": nlu_result.get("DEVICE_ID", "0"),
+                "location": nlu_result.get("LOCATION"),
+                "parameter": nlu_result.get("PARAMETER")
+            }
+            
+            # 返回包含五元组的结果
             return {
                 'input_type': 'audio',
                 'transcribed_text': transcribed_text,
-                'nlu_result': nlu_result,  # 五元组原样
+                'nlu_result': five_tuple,  # 五元组格式化
                 'response_message_for_tts': response_message,
                 'tts_output_reference': tts_output_reference,
                 'status': 'success',
@@ -295,19 +334,42 @@ class NLPServiceOrchestrator:
                     nlu_config['rag_embedding_config'] = self.config.get('rag_embedding_config', {})
                     nlu_config['rag_similarity_threshold'] = self.config.get('rag_similarity_threshold', 250)
                 self.nlu_engine = NLUFactory().create_engine(nlu_config)
+                
             if 'tts_engine' in settings:
                 tts_config = self.config.get('tts', {}).copy()
                 tts_config['engine'] = settings['tts_engine']
                 self.tts_engine = TTSFactory().create_engine(tts_config)
+            
+            # 获取TTS启用状态，默认启用
             tts_enabled = settings.get('tts_enabled', True)
+            logger.info(f"TTS启用状态: {tts_enabled}")
+            
+            # 执行NLU（现在会返回带有response_message_for_tts的结果）
             nlu_result = await self._perform_nlu(text_input)
             logger.info(f"NLU结果: {nlu_result}")
-            response_message = self._generate_response_message(nlu_result)
-            tts_output_reference = await self._perform_tts(response_message) if tts_enabled else None
+            
+            # 使用NLU结果中的响应消息进行TTS，仅当tts_enabled为True时执行
+            response_message = nlu_result.get("response_message_for_tts", "")
+            tts_output_reference = None
+            if tts_enabled:
+                logger.info("TTS已启用，正在生成语音")
+                tts_output_reference = await self._perform_tts(response_message)
+            else:
+                logger.info("TTS已禁用，跳过语音生成")
+            
+            # 准备前端需要的五元组格式
+            five_tuple = {
+                "action": nlu_result.get("ACTION"),
+                "entity": nlu_result.get("DEVICE_TYPE"),
+                "device_id": nlu_result.get("DEVICE_ID", "0"),
+                "location": nlu_result.get("LOCATION"),
+                "parameter": nlu_result.get("PARAMETER")
+            }
+            
             return {
                 'input_type': 'text',
                 'transcribed_text': text_input,
-                'nlu_result': nlu_result,  # 五元组原样
+                'nlu_result': five_tuple,  # 五元组格式化
                 'response_message_for_tts': response_message,
                 'tts_output_reference': tts_output_reference,
                 'status': 'success',

@@ -33,14 +33,18 @@
 
 * 目前已完成的：
 ### 便于理解的版本
-* **如果想尝试当前效果，按照readme里的说明，然后run.bat，就可以文本输入，或者说话，在nlp_service命令窗口看见对你的语音或文字的理解效果**。
+* **如果想尝试当前效果，按照readme里的说明，然后run.bat，就可以文本输入，或者说话，就可以看见对你的语音或文字的理解效果，nlp_service的命令窗口有更详细的调试信息**。
+<img src="imgs/v0_1.png" alt="alt text" width="100%"/>
 <img src="imgs/rag_test_v0.png" alt="alt text" width="90%"/>
+<img src="imgs/v0.png" alt="alt text" width="90%"/>
 * 有一个还不错的前端界面，包括网页，和“手机端”，能调节设置
 * 后端只有框架，设备的绑定、能被用户调整正在施工。
 * 语音服务：目前能实现“客厅太冷了”或者“客厅空调调高2度”都被返回`{空调、0、客厅、modify、2}`给后端的效果，以供后端施加效果到设备上。
 * 用户想文字输入还是语音输入都可以
 * 用户想不想要语音反馈都可以
-* 暂不支持dolphin引擎的语音转文本，因为需要安装espnet=202402，但这个要求的importlib-metadata<5.0，会与opentelemetry-api 1.33.1的importlib-metadata>=6.0,<7.0冲突。
+* 暂不支持dolphin引擎的语音转文本，因为需要安装espnet=202402，但这个要求的`importlib-metadata<5.0`，会与`opentelemetry-api 1.33.1`的`importlib-metadata>=6.0,<7.0`冲突。
+
+* 会返回语音反馈音频文件，但还没有实现音频的播放
 
 
 ### 从更深层次解释
@@ -58,7 +62,7 @@
   - 用来微调的数据集（在`nlp_service/nlu/model/dataset/`）还行，可以改后几十条；微调模型的代码在`nlp_service/nlu/model/train/`目录下
   - 这个微调好的模型参数（放在`nlp_service/nlu/model/fine_tuned_nlu_bert/`目录下）由于有几百MB，**放在hugging face上LIUWJ/fine-tuned-home-bert**，这样用户第一次使用时就能从hugging face上下载这个模型，代码里写好了这部分的下载逻辑。
 
-* **TTS**（text_to_speech）：能接受文本输入，返回语音（女声男声可选），还没找，pyttsx3。
+* **TTS**（text_to_speech）：能接受文本输入，返回语音（女声男声可选），用pyttsx3。
 * 除了NLU模块是必要的，STT和TTS模块都是可选的，**用户可以选择不使用这两个模块（直接文本输入，不需要语音转文本的STT模块；不需要语音播报反馈，就不需要TTS模块）**
 
 #### 前端

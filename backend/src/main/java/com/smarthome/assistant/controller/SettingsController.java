@@ -32,10 +32,11 @@ public class SettingsController {
         }});
         put("tts", new HashMap<String, Object>() {{
             put("enabled", true);
-            put("engine", "simulated");
+            put("engine", "pyttsx3");
             put("voice", "female");
             put("speed", 1.0);
             put("pitch", 1.0);
+            put("volume", 1.0);  // 音量设置，适用于pyttsx3引擎
         }});
         put("ui", new HashMap<String, Object>() {{
             put("theme", "light");

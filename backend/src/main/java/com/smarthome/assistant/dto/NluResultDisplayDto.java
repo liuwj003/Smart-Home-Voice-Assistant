@@ -30,6 +30,16 @@ public class NluResultDisplayDto {
     private String location;
     
     /**
+     * 设备ID，如 "1", "2" 等
+     */
+    private String deviceId;
+    
+    /**
+     * 参数值，如温度、亮度等
+     */
+    private Object parameter;
+    
+    /**
      * 置信度，表示NLU对结果的确信程度
      */
     private double confidence;

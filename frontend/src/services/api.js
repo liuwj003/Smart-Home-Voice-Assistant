@@ -120,7 +120,7 @@ export const voiceApi = {
                     stt_engine: parsed.stt?.engine,
                     nlu_engine: parsed.nlu?.engine,
                     tts_engine: parsed.tts?.engine,
-                    tts_enabled: parsed.tts?.enabled
+                    tts_enabled: parsed.tts?.enabled !== undefined ? parsed.tts.enabled : true // 默认启用
                 };
             }
         } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
@@ -186,7 +186,7 @@ export const voiceApi = {
                     stt_engine: parsed.stt?.engine,
                     nlu_engine: parsed.nlu?.engine,
                     tts_engine: parsed.tts?.engine,
-                    tts_enabled: parsed.tts?.enabled
+                    tts_enabled: parsed.tts?.enabled !== undefined ? parsed.tts.enabled : true // 默认启用
                 };
             }
         } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
@@ -220,7 +220,9 @@ export const voiceApi = {
                     console.log('使用新的baseURL重新发送文本命令:', api.defaults.baseURL);
                     return api.post('/command/text', { 
                         textInput: text,
-                        settings: { ttsEnabled: true } 
+                        settings: { 
+                            tts_enabled: settings.tts_enabled !== undefined ? settings.tts_enabled : true // 默认启用
+                        } 
                     }, {
                         timeout: 60000
                     });
