@@ -223,7 +223,7 @@ if __name__ == '__main__':
             "这屋里太黑了，我在书房",     # Expect RAG -> standard_command -> NLU, merge location
             "打开客厅的灯",              # Expect direct NLU
             "空调温度调到二十五度",     # Expect direct NLU
-            "关一下卧室的空调",        # Expect direct NLU
+            "关一下卧室、客厅、浴室的空调",        
             "肘击微波炉" 
         ]
 

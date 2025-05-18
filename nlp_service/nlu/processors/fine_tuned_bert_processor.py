@@ -396,7 +396,7 @@ class BertNLUProcessor(NLUInterface):
         # --- 获取初步提取的槽位值 ---
         device_type = "".join(extracted_raw_entities.get("DEVICE_TYPE", [])) or None
         device_id_str_list = extracted_raw_entities.get("DEVICE_ID")
-        location = "".join(extracted_raw_entities.get("LOCATION", [])) or None
+        location = ",".join(extracted_raw_entities.get("LOCATION", [])) or None
         
         action_text_list = extracted_raw_entities.get("ACTION", [])
         action_text_raw = "".join(action_text_list) if action_text_list else None 
