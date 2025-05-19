@@ -178,7 +178,7 @@ if __name__ == '__main__':
     bert_nlu_config_test = {
         "local_model_target_dir": str(_fine_tuned_bert_model_path_main),
         "model_hub_id": "LIUWJ/fine-tuned-home-bert",
-        "device": "cpu" 
+        "device": "auto" 
     }
     if not _fine_tuned_bert_model_path_main.exists():
         logger.error(f"ERROR: BertNLUProcessor model path '{_fine_tuned_bert_model_path_main}' does not exist. Orchestrator test will fail for BertNLUProcessor.")
@@ -192,7 +192,7 @@ if __name__ == '__main__':
         "local_embedding_target_dir": str(_rag_embedding_model_local_path),
         "embedding_model_hub_id": "shibing624/text2vec-base-chinese",
         "force_download_embedding": False,
-        "device": "cpu"
+        "device": "auto"
     }
 
     async def main_run():

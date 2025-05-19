@@ -53,13 +53,20 @@ class StandardCommandRetriever:
                 embedding_model_hub_id (str, optional): Hugging Face Hub ID for the embedding model.
                                                          Uses DEFAULT_EMBEDDING_MODEL_HUB_ID if not provided.
                 force_download_embedding (bool, optional): Whether to force re-download of the embedding model. Defaults to False.
-            device (str): Device to run the embedding model on ("cuda" or "cpu").
+            device (str): Device to run the embedding model on ("auto", "cuda" or "cpu").
         """
         
         self.knowledge_base: List[Dict] = [] # Stores original records from knowledge_base_path
         self.documents_for_vectorstore: List[Document] = [] # Stores Langchain Document objects
         self.vector_store: Optional[Chroma] = None
         self.embedding_model: Optional[HuggingFaceEmbeddings] = None
+        
+        # 处理设备参数
+        if device.lower() == "auto":
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            logger.info(f"设置为自动选择设备，将使用: {device}")
+        logger.info(f"RAG检索器初始化使用设备: {device}")
 
         if SentenceTransformer is None or Chroma is None or Document is None:
             logger.error("StandardCommandRetriever initialization failed: Missing essential libraries (sentence_transformers, langchain_community, langchain_core.documents/langchain.schema).")

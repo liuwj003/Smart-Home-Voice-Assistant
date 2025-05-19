@@ -4,7 +4,7 @@
 stt:
   engine: whisper  # 可选: whisper, dolphin, placeholder
   model_size: base     # whisper
-  device: cpu          # whisper
+  device: auto         # 改为auto以自动检测可用设备（cuda或cpu）
 
 # NLU引擎配置
 nlu:
@@ -15,15 +15,15 @@ nlu:
 bert_nlu_config:
   local_model_target_dir: "nlp_service/nlu/model/fine_tuned_nlu_bert"
   model_hub_id: "LIUWJ/fine-tuned-home-bert"
-  device: "cpu"
+  device: "auto"        # 自动检测可用设备
 
 # nlu_orchestrator专用配置
 rag_data_jsonl_path: "nlp_service/nlu/model/dataset/rag_knowledge.jsonl"
 rag_embedding_config:
   local_embedding_target_dir: "nlp_service/nlu/model/shibing624-text2vec-base-chinese"
   embedding_model_hub_id: "shibing624/text2vec-base-chinese"
-  device: "cpu"
-rag_similarity_threshold: 350
+  device: "auto"         # 自动检测可用设备
+rag_similarity_threshold: 300
 
 # TTS引擎配置
 tts:

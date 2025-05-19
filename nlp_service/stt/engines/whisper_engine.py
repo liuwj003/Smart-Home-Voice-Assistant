@@ -30,8 +30,15 @@ class WhisperSTTEngine(STTInterface):
         """
         super().__init__(config)
         self.model_size = self.config.get("model_size", "base")
-        self.device_name = self.config.get("device", "cpu")
-        self.device = torch.device(self.device_name)
+        
+        # 检测可用设备并处理配置
+        self.device_name = self.config.get("device", "auto")
+        if self.device_name == "auto":
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device_name = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            self.device = torch.device(self.device_name)
+        
         logger.info(f"WhisperSTTEngine初始化完成，模型大小: {self.model_size}, 设备: {self.device_name}")
     
     async def transcribe(self, audio_data: bytes) -> str:
@@ -56,8 +63,9 @@ class WhisperSTTEngine(STTInterface):
             
             logger.info(f"音频数据已保存到临时文件: {temp_filename}")
             
-            # 加载模型
-            model = whisper.load_model(self.model_size)
+            # 加载模型并明确指定设备
+            model = whisper.load_model(self.model_size).to(self.device)
+            logger.info(f"Whisper模型已加载到设备: {self.device}")
             
             # 加载音频并进行处理
             audio = whisper.load_audio(temp_filename)
@@ -72,11 +80,15 @@ class WhisperSTTEngine(STTInterface):
             logger.info(f"检测到的语言: {detected_lang}")
             
             # 解码音频
-            options = whisper.DecodingOptions()
+            options = whisper.DecodingOptions(fp16=False if self.device_name == "cpu" else True)
             result = whisper.decode(model, mel, options)
             
             # 清理临时文件
-            os.unlink(temp_filename)
+            try:
+                os.unlink(temp_filename)
+                logger.info(f"临时文件已删除: {temp_filename}")
+            except Exception as e:
+                logger.warning(f"临时文件删除失败: {str(e)}")
             
             return result.text
             
@@ -126,5 +138,4 @@ class WhisperSTTEngine(STTInterface):
             tmp_file.write(audio_data)
         logger.info(f"写入后文件存在: {os.path.exists(temp_filename)}, 路径: {temp_filename}")
         logger.info(f"文件大小: {os.path.getsize(temp_filename) if os.path.exists(temp_filename) else '不存在'}")
-        time.sleep(2.0)  # 可选，给系统一点缓冲时间
         return temp_filename 

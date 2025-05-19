@@ -115,9 +115,14 @@ class BertNLUProcessor(NLUInterface):
         
         self.device = config.get("device")
         if self.device:
-            self.device = torch.device(self.device)
+            if self.device.lower() == "auto":
+                self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                logger.info(f"设置为自动选择设备，将使用: {self.device}")
+            else:
+                self.device = torch.device(self.device)
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            logger.info(f"未指定设备，自动选择: {self.device}")
         logger.info(f"使用设备: {self.device}")
 
         try:
@@ -125,7 +130,9 @@ class BertNLUProcessor(NLUInterface):
             self.tokenizer = AutoTokenizer.from_pretrained(model_load_path_str)
             self.model = AutoModelForTokenClassification.from_pretrained(model_load_path_str)
 
+            # 确保模型加载到正确设备
             self.model.to(self.device)
+            logger.info(f"模型已加载到设备: {self.device}")
             self.model.eval()
 
             if hasattr(self.model.config, 'id2label'):
