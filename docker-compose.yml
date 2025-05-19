@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  nlp-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./nlp_service:/app/nlp_service
+    restart: unless-stopped
+
+  backend:
+    image: maven:3.9-eclipse-temurin-17
+    working_dir: /app
+    command: sh -c "mvn clean install && mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Dfile.encoding=UTF-8'"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+    environment:
+      - NLP_SERVICE_URL=http://nlp-service:8000
+    depends_on:
+      - nlp-service
+    restart: unless-stopped
+
+  frontend:
+    image: node:18
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080/api
+    depends_on:
+      - backend
+    restart: unless-stopped 
