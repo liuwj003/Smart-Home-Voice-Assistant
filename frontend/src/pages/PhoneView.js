@@ -16,11 +16,17 @@ import {
   Slider,
   Switch,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Tab,
+  Tabs,
+  Paper,
+  Avatar,
+  Fade
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MicIcon from '@mui/icons-material/Mic';
 import SettingsIcon from '@mui/icons-material/Settings';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import HomeIcon from '@mui/icons-material/Home';
 import KitchenIcon from '@mui/icons-material/Kitchen';
 import ChairIcon from '@mui/icons-material/Chair';
@@ -34,7 +40,15 @@ import TvIcon from '@mui/icons-material/Tv';
 import WindPowerIcon from '@mui/icons-material/WindPower';
 import BlindIcon from '@mui/icons-material/Blinds';
 import SendIcon from '@mui/icons-material/Send';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import Weather from './Weather';
+import Settings from './Settings';
 import '../MobileApp.css';  // 引入移动样式
+
+// Make sure the component loads correctly
+console.log('PhoneView component loaded with SmartToyIcon:', !!SmartToyIcon);
+console.log('Weather component imported:', !!Weather);
+console.log('Settings component imported:', !!Settings);
 
 // 房间分类和映射
 const ROOMS = {
@@ -42,24 +56,28 @@ const ROOMS = {
     id: 'living_room',
     name: '客厅',
     iconType: 'chair',
+    color: '#e8f0fe', // Google blue light
     devices: []
   },
   kitchen: {
     id: 'kitchen',
     name: '厨房',
     iconType: 'kitchen',
+    color: '#fef7e0', // Google yellow light
     devices: []
   },
   bedroom: {
     id: 'bedroom',
     name: '卧室',
     iconType: 'bed',
+    color: '#e6f4ea', // Google green light
     devices: []
   },
   bathroom: {
     id: 'bathroom',
     name: '浴室',
     iconType: 'bath',
+    color: '#fce8e6', // Google red light
     devices: []
   }
 };
@@ -187,6 +205,29 @@ const mockDevices = [
   }
 ];
 
+// Typing animation component
+const TypingAnimation = ({ text, speed = 70, onComplete }) => {
+  const [displayText, setDisplayText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      
+      return () => clearTimeout(timer);
+    } else if (!isCompleted) {
+      setIsCompleted(true);
+      if (onComplete) onComplete();
+    }
+  }, [text, currentIndex, speed, isCompleted, onComplete]);
+
+  return <Typography variant="body1">{displayText}</Typography>;
+};
+
 const PhoneView = () => {
   const [devices, setDevices] = useState([]);
   const [roomData, setRoomData] = useState(ROOMS);
@@ -198,396 +239,278 @@ const PhoneView = () => {
   const [language, setLanguage] = useState('zh');
   const [textCommand, setTextCommand] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [commandResult, setCommandResult] = useState(null);
+  const [activeTab, setActiveTab] = useState(0); // 0: Home, 1: Settings, 2: Weather
+  const [resultText, setResultText] = useState('');
+  const [showTypingResponse, setShowTypingResponse] = useState(false);
+
+  // Handle tab change
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   const handleSendTextCommand = async () => {
-    if (!textCommand.trim() || isProcessing) return;
+    if (!textCommand.trim()) return;
+    
+    setIsProcessing(true);
+    setCommandResult(null);
+    setResultText('');
+    setShowTypingResponse(false);
     
     try {
-      setIsProcessing(true);
-      setAlert({
-        open: true,
-        message: language === 'zh' ? '正在处理命令...' : 'Processing command...',
-        severity: 'info'
-      });
-      
-      // 调试信息
-      console.log('发送文本命令:', textCommand);
-      console.log('当前API baseURL:', api.defaults.baseURL);
-      
       const response = await voiceApi.sendTextCommand(textCommand);
+      setCommandResult(response.data);
       
-      // 调试日志
-      console.log('文本命令响应:', response);
-      
-      // 处理响应
-      if (response.data && Object.keys(response.data).length > 0) {
-        // 显示成功信息
-        const nluResult = response.data.nluResult || {};
-        const message = language === 'zh' ?
-          `命令处理成功: ${textCommand} (${nluResult.action || ''} - ${nluResult.entity || ''} - 
-          ${nluResult.location || '未知位置'} - ID: ${nluResult.deviceId || '0'})` :
-          `Command processed: ${textCommand} (${nluResult.action || ''} - ${nluResult.entity || ''} - 
-          ${nluResult.location || 'unknown'} - ID: ${nluResult.deviceId || '0'})`;
-          
-        setAlert({
-          open: true,
-          message: message,
-          severity: 'success'
-        });
-        
-        // 如果返回了TTS音频且TTS已启用，尝试播放
-        if (response.data.ttsOutputReference && ttsEnabled) {
-          playTTSAudio(response.data.ttsOutputReference);
-        }
-        
-        // 刷新设备列表以显示最新状态
-        fetchDevices();
-      } else {
-        setAlert({
-          open: true,
-          message: language === 'zh' ? 
-            '命令处理失败' : 
-            'Failed to process command',
-          severity: 'warning'
-        });
-      }
-    } catch (err) {
-      console.error('发送文本命令失败:', err);
-      console.error('错误详情:', err.response ? err.response.data : '无响应数据');
-      
-      // 尝试自动重连
-      try {
-        if (err.message.includes('Network Error') || err.code === 'ECONNREFUSED') {
-          console.log('尝试重新连接到服务器...');
-          await checkServerAvailability();
-          console.log('重新连接后的API baseURL:', api.defaults.baseURL);
-        }
-      } catch (reconnectErr) {
-        console.error('重连失败:', reconnectErr);
+      // Set result text for typing animation if TTS feedback is available
+      if (response.data?.ttsFeedback) {
+        setResultText(response.data.ttsFeedback);
+        setShowTypingResponse(true);
+      } else if (response.data?.deviceActionFeedback) {
+        setResultText(response.data.deviceActionFeedback);
+        setShowTypingResponse(true);
       }
       
-      setAlert({
-        open: true,
-        message: language === 'zh' ? 
-          `处理文本命令失败: ${err.message}` : 
-          `Failed to process text command: ${err.message}`,
-        severity: 'error'
+      // Play TTS if available
+      if (response.data?.ttsAudioUrl) {
+        playTTSAudio(response.data.ttsAudioUrl);
+      }
+    } catch (error) {
+      console.error('发送文本命令失败:', error);
+      setResultText('发送命令失败，请重试');
+      setShowTypingResponse(true);
+      setCommandResult({
+        error: true,
+        errorMessage: error.response?.data?.message || '发送命令失败，请重试'
       });
     } finally {
       setIsProcessing(false);
-      setTextCommand(''); // 清空输入框
+      setTextCommand('');
     }
   };
 
   useEffect(() => {
-    fetchDevices();
     loadSettings();
-  }, []);
-
+    fetchDevices();
+  }, [commandResult]);
+  
   const loadSettings = async () => {
     try {
-      // 尝试从localStorage获取语言设置
-      const savedLanguage = localStorage.getItem('language');
-      if (savedLanguage) {
-        setLanguage(savedLanguage);
+      const settings = localStorage.getItem('voice_settings');
+      if (settings) {
+        const parsed = JSON.parse(settings);
+        const languageCode = parsed.language || 'zh';
+        setLanguage(languageCode);
+      } else {
+        const res = await settingsApi.getVoiceSettings();
+        setLanguage(res.data.language || 'zh');
       }
-      
-      // 尝试从localStorage获取TTS设置
-      const voiceSettings = localStorage.getItem('voice_settings');
-      if (voiceSettings) {
-        const parsedSettings = JSON.parse(voiceSettings);
-        if (parsedSettings.tts && parsedSettings.tts.hasOwnProperty('enabled')) {
-          setTtsEnabled(parsedSettings.tts.enabled);
-        }
-      }
-      
-      // 尝试从语音设置API获取语言设置
-      const response = await settingsApi.getVoiceSettings();
-      if (response.data && response.data.language) {
-        setLanguage(response.data.language);
-        localStorage.setItem('language', response.data.language);
-      }
-    } catch (err) {
-      console.warn('Failed to load settings:', err);
+    } catch (error) {
+      console.error('加载设置失败', error);
+      // 使用中文作为默认语言
+      setLanguage('zh');
     }
   };
-
+  
   const fetchDevices = async () => {
     setLoading(true);
     try {
+      // 尝试从后端获取设备
       const response = await deviceApi.getAllDevices();
-      // 确保数据格式正确
-      const devicesData = response.data && response.data.data ? response.data.data : [];
-      const devicesList = Array.isArray(devicesData) ? devicesData : [];
-      setDevices(devicesList);
-      organizeDevicesByRoom(devicesList);
+      setDevices(response.data);
+      organizeDevicesByRoom(response.data);
       setUseMockData(false);
-      setError(null);
-    } catch (err) {
-      console.error('获取设备列表失败:', err);
-      setError('无法连接到后端服务器，请检查网络连接，或尝试使用模拟数据。');
-      setDevices(mockDevices); // 使用模拟数据
-      organizeDevicesByRoom(mockDevices);
+    } catch (error) {
+      console.warn('无法从后端获取设备列表，使用模拟数据', error);
+      // 如果后端未启动，使用模拟数据
       setUseMockData(true);
     } finally {
       setLoading(false);
     }
   };
-
+  
   const organizeDevicesByRoom = (devicesList) => {
-    // 复制房间数据
-    const newRoomData = JSON.parse(JSON.stringify(ROOMS));
+    const updatedRoomData = { ...ROOMS };
     
-    // 将设备分配到相应的房间
+    // 将设备归类到房间
     devicesList.forEach(device => {
-      const roomId = device.room || 'living_room'; // 如果设备没有指定房间，默认放在客厅
+      const roomId = device.room;
       
-      // 确保房间存在
-      if (Object.values(newRoomData).some(room => room.id === roomId)) {
-        // 找到对应的房间并添加设备
-        Object.values(newRoomData).forEach(room => {
-          if (room.id === roomId) {
-            room.devices.push(device);
-          }
-        });
-      } else {
-        // 如果房间不存在，默认添加到客厅
-        newRoomData.livingRoom.devices.push(device);
-      }
+      // 遍历所有房间，找到匹配的
+      Object.keys(updatedRoomData).forEach(key => {
+        if (updatedRoomData[key].id === roomId) {
+          updatedRoomData[key].devices.push(device);
+        }
+      });
     });
     
-    setRoomData(newRoomData);
+    setRoomData(updatedRoomData);
   };
-
+  
   const handleVoiceCommand = async () => {
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+    
+    setIsListening(true);
+    setResultText('');
+    setShowTypingResponse(false);
+    
+    // 检查麦克风权限
     try {
-      setIsListening(true);
-      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      setAlert({
-        open: true,
-        message: language === 'zh' ? '正在请求麦克风权限...' : 'Requesting microphone permission...',
-        severity: 'info'
-      });
+      // 创建音频上下文和分析器
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
       
-      // 请求麦克风权限
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          channelCount: 1,
-          sampleRate: 16000,
-          echoCancellation: true,
-          noiseSuppression: true,
-        } 
-      });
+      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 1024;
       
-      setAlert({
-        open: true,
-        message: language === 'zh' ? '正在录音，请说话...' : 'Recording, please speak...',
-        severity: 'info'
-      });
+      microphone.connect(analyser);
+      analyser.connect(scriptProcessor);
+      scriptProcessor.connect(audioContext.destination);
       
-      // 创建媒体录制器
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-      
-      const audioChunks = [];
-      
-      // 数据可用时的处理
-      mediaRecorder.addEventListener('dataavailable', (event) => {
-        if (event.data.size > 0) {
+      // 用于检测声音
+      const soundAllowed = (stream) => {
+        // 录音
+        const options = {
+          audioBitsPerSecond: 128000,
+          mimeType: 'audio/webm'
+        };
+        
+        const mediaRecorder = new MediaRecorder(stream, options);
+        const audioChunks = [];
+        
+        mediaRecorder.addEventListener("dataavailable", event => {
           audioChunks.push(event.data);
-        }
-      });
-      
-      // 录制停止时的处理
-      mediaRecorder.addEventListener('stop', async () => {
-        if (audioChunks.length === 0) {
-          setError('没有录制到任何音频');
-          setIsListening(false);
-          stream.getTracks().forEach(track => track.stop());
-          return;
-        }
-        
-        setAlert({
-          open: true,
-          message: language === 'zh' ? '正在处理语音...' : 'Processing audio...',
-          severity: 'info'
         });
         
-        // 创建音频 Blob
-        const audioBlob = new Blob(audioChunks, { 
-          type: 'audio/webm' 
+        mediaRecorder.addEventListener("stop", async () => {
+          // 创建音频 Blob
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          
+          // 创建 FormData 对象，准备发送到后端
+          const formData = new FormData();
+          formData.append('audio_file', audioBlob, 'recording.webm');
+          
+          // 停止麦克风
+          stream.getTracks().forEach(track => track.stop());
+          
+          // 清理音频处理
+          scriptProcessor.disconnect();
+          analyser.disconnect();
+          microphone.disconnect();
+          audioContext.close();
+          
+          setIsListening(false);
+          setIsProcessing(true);
+          
+          try {
+            // 发送到后端
+            const response = await voiceApi.sendVoiceCommand(formData);
+            handleCommandResult(response.data);
+          } catch (error) {
+            console.error('处理语音命令失败:', error);
+            setAlert({
+              open: true,
+              message: '处理语音命令时出错',
+              severity: 'error'
+            });
+          } finally {
+            setIsProcessing(false);
+          }
         });
         
-        // 检查 Blob 大小
-        if (audioBlob.size < 100) {
-          setError('录制的音频太短或为空');
-          setIsListening(false);
-          stream.getTracks().forEach(track => track.stop());
-          return;
-        }
+        // 开始录音
+        mediaRecorder.start();
         
-        // 创建表单数据
-        const formData = new FormData();
-        formData.append('audio_file', audioBlob, 'recording.webm');
-        
-        // 获取当前TTS启用状态
-        let currentTtsEnabled = ttsEnabled;
-        try {
-          const settings = localStorage.getItem('voice_settings');
-          if (settings) {
-            const parsedSettings = JSON.parse(settings);
-            if (parsedSettings.tts && parsedSettings.tts.hasOwnProperty('enabled')) {
-              currentTtsEnabled = parsedSettings.tts.enabled;
-            }
+        // 3秒后停止（模拟实际语音助手）
+        setTimeout(() => {
+          if (mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
           }
-        } catch (err) {
-          console.error('读取TTS设置失败:', err);
-        }
-        
-        formData.append('settingsJson', JSON.stringify({
-          ttsEnabled: currentTtsEnabled
-        }));
-        
-        // 调试信息
-        console.log('准备发送音频, 大小:', audioBlob.size, 'bytes');
-        console.log('当前API baseURL:', api.defaults.baseURL);
-        console.log('FormData包含字段:', Array.from(formData.keys()));
-        
-        try {
-          // 发送到服务器
-          const response = await voiceApi.sendVoiceCommand(formData);
-          
-          // 调试日志
-          console.log('语音命令响应:', response);
-          
-          // 处理响应
-          if (response.data && response.data.error === true) {
-            setAlert({
-              open: true,
-              message: language === 'zh' ? 
-                '没有识别到语音，请重新尝试' : 
-                'No speech detected, please try again',
-              severity: 'warning'
-            });
-          } else {
-            // 显示成功信息
-            const nluResult = response.data.nluResult || {};
-            const message = language === 'zh' ?
-              `命令识别成功: ${response.data.sttText || ''} (${nluResult.action || ''} ${nluResult.entity || ''})` :
-              `Command recognized: ${response.data.sttText || ''} (${nluResult.action || ''} ${nluResult.entity || ''})`;
-              
-            setAlert({
-              open: true,
-              message: message,
-              severity: 'success'
-            });
-            
-            // 如果返回了TTS音频且TTS已启用，尝试播放
-            if (response.data.ttsOutputReference && currentTtsEnabled) {
-              playTTSAudio(response.data.ttsOutputReference);
-            }
-            
-            // 刷新设备列表以显示最新状态
-            fetchDevices();
-          }
-        } catch (err) {
-          const errorDetails = err.response ? `(${err.response.status}: ${JSON.stringify(err.response.data)})` : err.message;
-          console.error('发送语音命令失败:', err);
-          console.error('错误详情:', errorDetails);
-          
-          // 尝试重新连接
-          if (err.message.includes('Network Error') || err.code === 'ECONNREFUSED') {
-            try {
-              await checkServerAvailability();
-            } catch (reconnectErr) {
-              console.error('重连失败:', reconnectErr);
-            }
-          }
-          
-          setAlert({
-            open: true,
-            message: language === 'zh' ? 
-              `处理语音命令失败: ${err.message}` : 
-              `Failed to process voice command: ${err.message}`,
-            severity: 'error'
-          });
-        } finally {
-          setIsListening(false);
-          stream.getTracks().forEach(track => track.stop());
-        }
-      });
+        }, 3000);
+      };
       
-      // 开始录制
-      mediaRecorder.start();
+      // 开始处理音频
+      soundAllowed(stream);
       
-      // 5秒后自动停止录音
-      setTimeout(() => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
-      }, 5000);
-      
-    } catch (err) {
-      setError(`无法访问麦克风: ${err.message}`);
+    } catch (error) {
+      console.error('无法访问麦克风:', error);
       setIsListening(false);
       setAlert({
         open: true,
-        message: language === 'zh' ? 
-          `无法访问麦克风: ${err.message}` : 
-          `Cannot access microphone: ${err.message}`,
+        message: '无法访问麦克风，请检查权限设置',
         severity: 'error'
       });
     }
   };
+
+  const handleCommandResult = (result) => {
+    setCommandResult(result);
+    
+    // 设置结果文本用于打字动画
+    if (result?.ttsFeedback) {
+      setResultText(result.ttsFeedback);
+      setShowTypingResponse(true);
+    } else if (result?.deviceActionFeedback) {
+      setResultText(result.deviceActionFeedback);
+      setShowTypingResponse(true);
+    } else if (result?.error) {
+      setResultText(result.errorMessage || '处理命令时出错');
+      setShowTypingResponse(true);
+    }
+    
+    // 播放 TTS
+    if (result?.ttsAudioUrl) {
+      playTTSAudio(result.ttsAudioUrl);
+    }
+  };
   
-  // TTS音频播放函数
   const playTTSAudio = async (audioReference) => {
+    if (!audioReference) return;
+    
+    let audioUrl = audioReference;
+    
+    // 检查是否为相对路径
+    if (!audioReference.startsWith('http') && !audioReference.startsWith('blob:')) {
+      // 构建完整 URL
+      const baseUrl = 'http://localhost:8080'; // 默认端口
+      audioUrl = `${baseUrl}${audioReference.startsWith('/') ? '' : '/'}${audioReference}`;
+    }
+    
     try {
-      // 判断audioReference是URL还是Base64
-      const audio = new Audio();
-      if (audioReference.startsWith('data:audio')) {
-        // Base64格式
-        audio.src = audioReference;
-      } else if (audioReference.startsWith('http')) {
-        // URL格式
-        audio.src = audioReference;
-      } else {
-        // 假设是文件路径
-        audio.src = audioReference;
-      }
-      
-      await audio.play();
-    } catch (err) {
-      console.error('播放TTS音频失败:', err);
+      const audio = new Audio(audioUrl);
+      audio.play();
+    } catch (error) {
+      console.error('播放 TTS 音频失败:', error);
     }
   };
 
   const getStatusLabel = (status, type) => {
-    if (language === 'zh') {
-      if (status === 'on') return type === 'curtain' ? '打开' : '打开';
-      if (status === 'off') return type === 'curtain' ? '关闭' : '关闭';
-      if (status === 'open') return '打开 ·100%';
-      if (status === 'closed') return '关闭';
-      if (status === 'playing') return '播放中';
-      return status;
-    } else {
-      if (status === 'on') return 'On';
-      if (status === 'off') return 'Off';
-      if (status === 'open') return 'Open ·100%';
-      if (status === 'closed') return 'Closed';
-      if (status === 'playing') return 'Playing';
-      return status;
+    if (type === 'sensor') {
+      return '正常';
     }
+    
+    const statusMap = {
+      'on': '开启',
+      'off': '关闭',
+      'open': '打开',
+      'closed': '关闭',
+      'playing': '播放中'
+    };
+    
+    return statusMap[status] || status;
   };
-
-  // 根据设备类型获取图标
+  
   const getDeviceIcon = (device) => {
     const iconType = DEVICE_TYPES[device.type] || 'device_unknown';
     
-    switch(iconType) {
+    // 根据图标类型返回相应的 Material-UI 图标
+    switch (iconType) {
       case 'lightbulb':
         return <LightbulbIcon />;
       case 'ac_unit':
@@ -602,366 +525,362 @@ const PhoneView = () => {
         return <WindPowerIcon />;
       case 'thermostat':
         return <DeviceThermostatIcon />;
-      case 'speaker':
-        return <DeviceThermostatIcon />;
       case 'kitchen':
         return <KitchenIcon />;
       default:
         return <DeviceThermostatIcon />;
     }
   };
-
+  
   const renderDeviceCard = (device) => {
+    // 获取设备状态颜色
+    const getStatusColor = (status) => {
+      if (status === 'on' || status === 'open' || status === 'playing') {
+        return '#34a853'; // Google green
+      } else {
+        return '#9aa0a6'; // Google gray
+      }
+    };
+    
     return (
-      <Card 
-        key={device.id} 
-        className="device-card" 
-        sx={{ 
-          mb: 1.5, 
-          borderRadius: 2,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      <Card
+        elevation={0}
+        sx={{
+          border: '1px solid #e0e0e0',
+          borderRadius: '8px',
+          overflow: 'visible',
+          mb: 2,
+          transition: 'transform 0.2s, box-shadow 0.2s',
           '&:hover': {
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            transform: 'translateY(-2px)',
           }
         }}
       >
-        <CardContent sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ 
-                color: device.status === 'on' || device.status === 'open' || device.status === 'playing' 
-                  ? '#4CAF50' : '#9e9e9e',
-                mr: 1,
-                display: 'flex'
-              }}>
-                {getDeviceIcon(device)}
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                {device.name}
-              </Typography>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Box 
+              sx={{ 
+                color: getStatusColor(device.status), 
+                mr: 1.5,
+                display: 'flex' 
+              }}
+            >
+              {getDeviceIcon(device)}
             </Box>
-            
-            {device.type === 'light' && device.status === 'on' && device.brightness !== undefined ? (
-              <Typography variant="body2" color="text.secondary">
-                {device.brightness}%
-              </Typography>
-            ) : (
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: device.status === 'on' || device.status === 'open' || device.status === 'playing' 
-                    ? 'text.primary' : 'text.secondary'
-                }}
-              >
-                {getStatusLabel(device.status, device.type)}
-              </Typography>
-            )}
+            <Typography variant="subtitle1" fontWeight={500}>
+              {device.name}
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: getStatusColor(device.status),
+                fontWeight: 500
+              }}
+            >
+              {getStatusLabel(device.status, device.type)}
+            </Typography>
           </Box>
           
-          {device.type === 'light' && device.status === 'on' && device.brightness !== undefined && (
-            <Box sx={{ mt: 1, px: 0.5 }}>
-              <Slider
-                size="small"
-                value={device.brightness}
-                disabled={device.status !== 'on'}
-                valueLabelDisplay="auto"
-                sx={{
-                  color: device.status === 'on' ? '#FFD600' : undefined,
-                  '.MuiSlider-rail': { opacity: 0.32 },
-                }}
-              />
-            </Box>
+          {device.type === 'ac' && device.status === 'on' && (
+            <Typography variant="body2" color="text.secondary">
+              温度: {device.temperature}°C
+            </Typography>
+          )}
+          
+          {device.type === 'sensor' && (
+            <Typography variant="body2" color="text.secondary">
+              温度: {device.temperature}°C, 湿度: {device.humidity}%
+            </Typography>
           )}
         </CardContent>
       </Card>
     );
   };
-
+  
   const renderRoomSection = (roomKey) => {
     const room = roomData[roomKey];
     
-    if (!room || room.devices.length === 0) return null;
+    const getRoomIcon = (iconType) => {
+      switch (iconType) {
+        case 'chair':
+          return <ChairIcon sx={{ fontSize: 28 }} />;
+        case 'kitchen':
+          return <KitchenIcon sx={{ fontSize: 28 }} />;
+        case 'bed':
+          return <SingleBedIcon sx={{ fontSize: 28 }} />;
+        case 'bath':
+          return <BathtubIcon sx={{ fontSize: 28 }} />;
+        default:
+          return <HomeIcon sx={{ fontSize: 28 }} />;
+      }
+    };
     
     return (
-      <Box key={room.id} sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ mr: 1, color: 'text.secondary' }}>
-            {getRoomIcon(room.iconType)}
+      <Card
+        key={room.id}
+        elevation={0}
+        sx={{
+          mb: 3,
+          borderRadius: '12px',
+          backgroundColor: room.color,
+          border: '1px solid #e0e0e0',
+          overflow: 'visible'
+        }}
+      >
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Avatar
+              sx={{
+                bgcolor: '#fff',
+                color: '#5f6368',
+                mr: 2,
+                width: 48,
+                height: 48
+              }}
+            >
+              {getRoomIcon(room.iconType)}
+            </Avatar>
+            <Typography variant="h6" fontWeight={500}>{room.name}</Typography>
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 500 }}>
-            {room.name}
-          </Typography>
           
-          {/* 如果房间是客厅，显示传感器信息 */}
-          {room.id === 'living_room' && room.devices.some(d => d.type === 'sensor') && (
-            <Box sx={{ display: 'flex', ml: 'auto', alignItems: 'center' }}>
-              {room.devices
-                .filter(d => d.type === 'sensor')
-                .map(sensor => (
-                  <React.Fragment key={sensor.id}>
-                    <DeviceThermostatIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                    <Typography variant="body2" sx={{ mr: 1.5 }}>
-                      {sensor.temperature}°C
-                    </Typography>
-                    <WaterDropIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                    <Typography variant="body2">
-                      {sensor.humidity}%
-                    </Typography>
-                  </React.Fragment>
-                ))
-              }
-            </Box>
-          )}
-        </Box>
-        
-        <Box sx={{ pl: 0.5 }}>
-          {room.devices
-            .filter(d => d.type !== 'sensor') // 不显示传感器在设备列表中
-            .map(renderDeviceCard)}
-        </Box>
-      </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {room.devices.length > 0 
+              ? `${room.devices.length} 个设备` 
+              : `后端数据库待接入，暂无设备数据`
+            }
+          </Typography>
+        </CardContent>
+      </Card>
     );
   };
-
+  
   const handleAlertClose = () => {
     setAlert({ ...alert, open: false });
   };
-
-  const navigateToSettings = () => {
-    window.location.href = '/settings';
-  };
-
-  // 获取户外数据
-  const getOutdoorData = () => {
-    return [
-      { 
-        key: 'temperature',
-        icon: 'temperature', 
-        value: '10.5 °C' 
-      },
-      { 
-        key: 'humidity',
-        icon: 'humidity', 
-        value: '70.4%' 
-      },
-      { 
-        key: 'mode',
-        icon: 'home', 
-        value: language === 'zh' ? '外出' : 'Away' 
-      }
-    ];
-  };
   
-  // 根据类型获取适当的图标
-  const getOutdoorIcon = (iconType) => {
-    switch(iconType) {
-      case 'temperature':
-        return <DeviceThermostatIcon />;
-      case 'humidity':
-        return <WaterDropIcon />;
-      case 'home':
-        return <HomeIcon />;
-      default:
-        return null;
-    }
-  };
-
-  // 根据类型获取房间图标
-  const getRoomIcon = (iconType) => {
-    switch(iconType) {
-      case 'chair':
-        return <ChairIcon />;
-      case 'kitchen':
-        return <KitchenIcon />;
-      case 'bed':
-        return <SingleBedIcon />;
-      case 'bath':
-        return <BathtubIcon />;
-      default:
-        return <HomeIcon />;
-    }
-  };
-
   return (
-    <div className="mobile-view">
-      <div className="mobile-view-top"></div>
-      
-      {/* 顶部标题栏 */}
-      <div className="header-bar">
-        <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
-          {language === 'zh' ? '家庭助手' : 'Home Assistant'}
-        </Typography>
-        <Box>
-          <IconButton onClick={navigateToSettings} sx={{ mr: 0.5 }}>
-            <SettingsIcon />
-          </IconButton>
-          <IconButton 
-            color="primary" 
-            onClick={fetchDevices}
-            disabled={loading}
-          >
-            <RefreshIcon />
-          </IconButton>
-        </Box>
-      </div>
-      
-      {/* 顶部状态栏 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2, py: 1.5 }}>
-        {getOutdoorData().map((item) => (
-          <Box 
-            key={item.key}
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              bgcolor: 'rgba(0,0,0,0.03)',
-              px: 2,
-              py: 1,
-              borderRadius: 28,
-              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)'
-            }}
-          >
-            <Box sx={{ color: 'text.secondary', mr: 1 }}>{getOutdoorIcon(item.icon)}</Box>
-            <Typography variant="body2">{item.value}</Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* 设备列表 */}
-      <div className="mobile-content">
-        {/* Text Input for Commands */}
-        <Box sx={{ mb: 3, px: 2 }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder={language === 'zh' ? "输入文本命令..." : "Enter text command..."}
-            value={textCommand}
-            onChange={(e) => setTextCommand(e.target.value)}
-            disabled={isProcessing}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !isProcessing) {
-                handleSendTextCommand();
-              }
-            }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    edge="end"
-                    color="primary"
-                    disabled={isProcessing || !textCommand.trim()}
-                    onClick={handleSendTextCommand}
-                  >
-                    <SendIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ backgroundColor: 'background.paper' }}
-            size="small"
-          />
-        </Box>
-        
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
-            <Typography sx={{ ml: 2 }}>
-              {language === 'zh' ? '加载设备信息...' : 'Loading devices...'}
-            </Typography>
-          </Box>
-        ) : error ? (
-          <>
-            <Alert severity="warning" sx={{ my: 2 }}>{error}</Alert>
-            {useMockData && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {language === 'zh' ? 
-                    '注意: 这是模拟数据，不代表实际设备状态' : 
-                    'Note: This is simulated data, not actual device status'}
-                </Typography>
-              </Box>
-            )}
-            {Object.keys(roomData).map(renderRoomSection)}
-          </>
-        ) : (
-          Object.keys(roomData).map(renderRoomSection)
-        )}
-        
-        {/* 能源部分 */}
-        <Box sx={{ mt: 3, mb: 8 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Box sx={{ mr: 1, color: 'text.secondary' }}>
-              <RefreshIcon />
-            </Box>
-            <Typography variant="h6" sx={{ fontWeight: 500 }}>
-              {language === 'zh' ? '能源' : 'Energy'}
-            </Typography>
-          </Box>
-          
-          {/* 能源内容 */}
-          <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
-            {language === 'zh' ? '今日用电: 4.8 kWh' : 'Today\'s usage: 4.8 kWh'}
-          </Typography>
-        </Box>
-      </div>
-      
-      {/* 底部导航栏 */}
-      <div className="bottom-bar">
-        <Button 
-          variant="contained" 
-          color={isListening ? "secondary" : "primary"}
-          disabled={isListening && !isProcessing}
-          onClick={handleVoiceCommand}
-          startIcon={isListening ? null : <MicIcon />}
+    <Box sx={{ width: '100%', maxWidth: '480px', margin: '0 auto', minHeight: '100vh', bgcolor: '#f8f9fa' }}>
+      {/* Phone header */}
+      <Paper 
+        square 
+        elevation={0}
+        sx={{ 
+          position: 'sticky', 
+          top: 0, 
+          zIndex: 10,
+          borderBottom: '1px solid #e0e0e0',
+          backgroundColor: '#fff'
+        }}
+      >
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="fullWidth"
+          textColor="primary"
+          indicatorColor="primary"
+          aria-label="phone navigation tabs"
           sx={{ 
-            borderRadius: '24px', 
-            px: 3,
-            py: 1.2,
-            boxShadow: 3,
-            position: 'relative',
-            overflow: 'hidden',
-            '&::after': isListening ? {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '120%',
-              height: '120%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%',
-              animation: 'ripple 1.5s infinite',
-            } : {},
-            '@keyframes ripple': {
-              '0%': {
-                transform: 'translate(-50%, -50%) scale(0.8)',
-                opacity: 1,
-              },
-              '100%': {
-                transform: 'translate(-50%, -50%) scale(1.4)',
-                opacity: 0,
-              },
-            },
+            '& .MuiTab-root': { 
+              textTransform: 'none',
+              fontSize: '0.9rem',
+              fontWeight: 500
+            }
           }}
         >
-          {isListening ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            language === 'zh' ? '语音命令' : 'Voice Command'
-          )}
-        </Button>
-      </div>
+          <Tab 
+            icon={<HomeIcon />} 
+            iconPosition="start" 
+            label="主界面" 
+          />
+          <Tab 
+            icon={<SettingsIcon />} 
+            iconPosition="start" 
+            label="设置" 
+          />
+          <Tab 
+            icon={<WbSunnyIcon />} 
+            iconPosition="start" 
+            label="天气" 
+          />
+        </Tabs>
+      </Paper>
 
-      {/* 提示信息 */}
-      <Snackbar 
-        open={alert.open} 
-        autoHideDuration={6000} 
+      {/* Tab content */}
+      <Box sx={{ p: 2 }}>
+        {/* Home Tab */}
+        {activeTab === 0 && (
+          <Box>
+            {/* Voice Input Section */}
+            <Paper
+              elevation={0}
+              sx={{
+                mb: 3,
+                p: 2.5,
+                borderRadius: '12px',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#fff'
+              }}
+            >
+              <Typography 
+                variant="h6" 
+                gutterBottom
+                sx={{ 
+                  fontWeight: 500,
+                  fontFamily: 'Google Sans, Roboto, Arial, sans-serif',
+                  color: '#202124',
+                  mb: 2
+                }}
+              >
+                智能家居助手
+              </Typography>
+              
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  fullWidth
+                  placeholder="输入命令，例如：打开客厅灯"
+                  variant="outlined"
+                  value={textCommand}
+                  onChange={(e) => setTextCommand(e.target.value)}
+                  disabled={isProcessing}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendTextCommand()}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleSendTextCommand}
+                          disabled={isProcessing || !textCommand.trim()}
+                        >
+                          <SendIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '24px',
+                    }
+                  }}
+                />
+              </Box>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Button
+                  variant="contained"
+                  startIcon={isListening ? null : <MicIcon />}
+                  onClick={handleVoiceCommand}
+                  disabled={isProcessing}
+                  sx={{
+                    borderRadius: '24px',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    backgroundColor: isListening ? '#ea4335' : '#1a73e8',
+                    '&:hover': {
+                      backgroundColor: isListening ? '#d93025' : '#1765cc'
+                    },
+                    width: '140px',
+                    height: '48px'
+                  }}
+                >
+                  {isListening ? '正在聆听...' : '语音输入'}
+                </Button>
+              </Box>
+              
+              {/* Response display with typing animation */}
+              <Fade in={showTypingResponse}>
+                <Box 
+                  sx={{ 
+                    mt: 2, 
+                    p: 2,
+                    backgroundColor: '#f1f3f4',
+                    borderRadius: '12px'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <Avatar
+                      sx={{
+                        mr: 1.5,
+                        width: 32,
+                        height: 32,
+                        backgroundColor: '#e8f0fe'
+                      }}
+                    >
+                      <SmartToyIcon sx={{ fontSize: 18, color: '#1a73e8' }} />
+                    </Avatar>
+                    <Box>
+                      <TypingAnimation text={resultText} />
+                    </Box>
+                  </Box>
+                </Box>
+              </Fade>
+            </Paper>
+            
+            {/* Room Sections */}
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 500,
+                fontFamily: 'Google Sans, Roboto, Arial, sans-serif'
+              }}
+            >
+              房间
+            </Typography>
+            
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              Object.keys(roomData).map(roomKey => renderRoomSection(roomKey))
+            )}
+            
+            {!loading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Button
+                  startIcon={<RefreshIcon />}
+                  onClick={fetchDevices}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: '24px',
+                    textTransform: 'none',
+                    fontWeight: 500
+                  }}
+                >
+                  刷新设备状态
+                </Button>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 1 && (
+          <Box sx={{ pb: 10 }}>
+            <Settings />
+          </Box>
+        )}
+
+        {/* Weather Tab */}
+        {activeTab === 2 && (
+          <Box sx={{ pb: 10 }}>
+            <Weather />
+          </Box>
+        )}
+      </Box>
+
+      {/* Snackbar for alerts */}
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={5000}
         onClose={handleAlertClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={alert.severity} variant="filled">
+        <Alert onClose={handleAlertClose} severity={alert.severity}>
           {alert.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

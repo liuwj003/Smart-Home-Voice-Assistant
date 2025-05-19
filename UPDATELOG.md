@@ -108,6 +108,13 @@ frontend/
 ├── package.json       # 项目配置与依赖
 └── README.md          # 项目说明
 ```
+## 5.19 (Version 0.1)
+* 使用AI重构了一个更好看的前端
+* 能保证设置的修改被保存，并及时更改后台 语音服务处理的引擎。
+
+<img src="imgs/frontend_v0.1.png" alt="alt text" width="100%"/>
+<img src="imgs/frontend_v0.1_1.png" alt="alt text" width="100%"/>
+<img src="imgs/frontend_v0.1_2.png" alt="alt text" width="100%"/>
 
 #### 后端
 * 主要实现`backend/src`下的代码（详细结构看下面），`backend/target`是自动生成的。
