@@ -16,6 +16,8 @@ import BathtubIcon from '@mui/icons-material/Bathtub';
 import MicIcon from '@mui/icons-material/Mic';
 import SendIcon from '@mui/icons-material/Send';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -66,6 +68,7 @@ const MobilePhoneView = () => {
   const [loading, setLoading] = useState(false);
   const [language, setLanguage] = useState('zh');
   const [expandedScene, setExpandedScene] = useState(null);
+  const [isUnderstandSuccess, setIsUnderstandSuccess] = useState(true);
   
   // Pull-to-refresh states
   const [refreshing, setRefreshing] = useState(false);
@@ -313,11 +316,19 @@ const MobilePhoneView = () => {
       
       // Set result text for typing animation if TTS feedback is available
       if (response.data?.ttsFeedback) {
-        setResultText(response.data.ttsFeedback);
+        const ttsFeedback = response.data.ttsFeedback;
+        setResultText(ttsFeedback);
         setShowTypingResponse(true);
+        
+        // 检查是否是理解失败的响应
+        setIsUnderstandSuccess(!ttsFeedback.includes("抱歉") && !ttsFeedback.includes("没能理解"));
       } else if (response.data?.deviceActionFeedback) {
-        setResultText(response.data.deviceActionFeedback);
+        const actionFeedback = response.data.deviceActionFeedback;
+        setResultText(actionFeedback);
         setShowTypingResponse(true);
+        
+        // 检查是否是理解失败的响应
+        setIsUnderstandSuccess(!actionFeedback.includes("抱歉") && !actionFeedback.includes("没能理解"));
       }
       
       // Set NLP quintuple result
@@ -334,6 +345,7 @@ const MobilePhoneView = () => {
       console.error('发送文本命令失败:', error);
       setResultText('发送命令失败，请重试');
       setShowTypingResponse(true);
+      setIsUnderstandSuccess(false);
       setCommandResult({
         error: true,
         errorMessage: error.response?.data?.message || '发送命令失败，请重试'
@@ -438,14 +450,23 @@ const MobilePhoneView = () => {
     
     // 设置结果文本用于打字动画
     if (result?.ttsFeedback) {
-      setResultText(result.ttsFeedback);
+      const ttsFeedback = result.ttsFeedback;
+      setResultText(ttsFeedback);
       setShowTypingResponse(true);
+      
+      // 检查是否是理解失败的响应
+      setIsUnderstandSuccess(!ttsFeedback.includes("抱歉") && !ttsFeedback.includes("没能理解"));
     } else if (result?.deviceActionFeedback) {
-      setResultText(result.deviceActionFeedback);
+      const actionFeedback = result.deviceActionFeedback;
+      setResultText(actionFeedback);
       setShowTypingResponse(true);
+      
+      // 检查是否是理解失败的响应
+      setIsUnderstandSuccess(!actionFeedback.includes("抱歉") && !actionFeedback.includes("没能理解"));
     } else if (result?.error) {
       setResultText(result.errorMessage || '处理命令时出错');
       setShowTypingResponse(true);
+      setIsUnderstandSuccess(false);
     }
     
     // 设置 NLP 识别结果
@@ -660,7 +681,9 @@ const MobilePhoneView = () => {
                   margin: '0 20px',
                   p: 2,
                   borderRadius: '16px',
-                  backgroundColor: 'rgba(37, 37, 37, 0.55)'
+                  backgroundColor: isUnderstandSuccess 
+                    ? 'rgba(75, 181, 67, 0.15)' // 成功理解用绿色底
+                    : 'rgba(37, 37, 37, 0.55)' // 未理解用灰色底
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -669,37 +692,45 @@ const MobilePhoneView = () => {
                       mr: 1.5,
                       width: 32,
                       height: 32,
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                      backgroundColor: isUnderstandSuccess 
+                        ? 'rgba(75, 181, 67, 0.6)' // 成功理解用绿色
+                        : 'rgba(255, 255, 255, 0.2)' // 未理解用灰色
                     }}
                   >
-                    <SmartToyIcon sx={{ fontSize: 18, color: 'white' }} />
+                    {isUnderstandSuccess ? 
+                      <EmojiEmotionsIcon sx={{ fontSize: 18, color: 'white' }} /> : // 成功理解用笑脸
+                      <SentimentDissatisfiedIcon sx={{ fontSize: 18, color: 'white' }} /> // 未理解用难过脸
+                    }
                   </Avatar>
-                  <Box sx={{ color: 'white' }}>
+                  <Box sx={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+                      {isUnderstandSuccess ? '操作完成' : '理解失败'}
+                    </Typography>
                     <TypingAnimation text={resultText} />
                   </Box>
                 </Box>
                 
-                {/* NLP Quintuple Result Display */}
+                {/* NLP Quintuple Result Display - 只在有结果时显示 */}
                 {nlpResult && (
-                  <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgba(255, 255, 255, 0.7)' }}>
-                      NLP识别结果 (置信度: {(nlpResult.confidence * 100).toFixed(1)}%)
+                  <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${isUnderstandSuccess ? 'rgba(75, 181, 67, 0.2)' : 'rgba(255, 255, 255, 0.1)'}` }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
+                      NLP识别结果 {nlpResult.confidence ? `(置信度: ${(nlpResult.confidence * 100).toFixed(1)}%)` : ''}
                     </Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
-                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                        意图: <span style={{ color: 'white' }}>{nlpResult.intent}</span>
+                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
+                        意图: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.intent}</span>
                       </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                        动作: <span style={{ color: 'white' }}>{nlpResult.action}</span>
+                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
+                        动作: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.action}</span>
                       </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                        对象: <span style={{ color: 'white' }}>{nlpResult.object}</span>
+                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
+                        对象: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.object}</span>
                       </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                        位置: <span style={{ color: 'white' }}>{nlpResult.location}</span>
+                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
+                        位置: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.location}</span>
                       </Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', gridColumn: '1 / span 2' }}>
-                        时间: <span style={{ color: 'white' }}>{nlpResult.time}</span>
+                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)', gridColumn: '1 / span 2' }}>
+                        时间: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.time}</span>
                       </Typography>
                     </Box>
                   </Box>
@@ -773,7 +804,7 @@ const MobilePhoneView = () => {
           </Box>
         </Box>
         
-        {/* Favorites Section */}
+        {/* Favorites Section - 替换第二个项目的图标为金色机器人 */}
         <Box className="ios-section">
           <Box className="ios-section-title">
             <Typography variant="h2" component="h2">收藏</Typography>
@@ -781,20 +812,26 @@ const MobilePhoneView = () => {
           </Box>
           
           <Box sx={{ padding: '0 20px' }}>
-            {favoriteDevices.map(device => (
+            {favoriteDevices.map((device, index) => (
               <Box 
                 key={device.id}
                 className={`ios-card ${device.active ? 'active' : ''}`}
               >
-                <Box className="ios-card-icon">
-                  {device.icon}
+                <Box className="ios-card-icon" 
+                     sx={index === 1 ? {
+                       backgroundColor: 'rgba(255, 215, 0, 0.2)' // 金色背景
+                     } : {}}>
+                  {index === 1 ? 
+                    <SmartToyIcon sx={{ color: 'gold' }} /> : // 第二个项目使用金色机器人图标
+                    device.icon
+                  }
                 </Box>
                 <Box className="ios-card-content">
                   <Typography className="ios-card-title">
-                    {device.title}
+                    {index === 1 ? '智能助手' : device.title}
                   </Typography>
                   <Typography className="ios-card-subtitle">
-                    {device.subtitle}
+                    {index === 1 ? '随时为您服务' : device.subtitle}
                   </Typography>
                 </Box>
               </Box>

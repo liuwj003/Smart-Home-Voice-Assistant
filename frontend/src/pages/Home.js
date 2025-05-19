@@ -189,10 +189,10 @@ const Home = () => {
               <Avatar 
                 sx={{ 
                   mr: 2, 
-                  backgroundColor: '#e8f0fe'
+                  backgroundColor: 'rgba(255, 215, 0, 0.2)'
                 }}
               >
-                <SmartToyIcon sx={{ color: '#1a73e8' }} />
+                <SmartToyIcon sx={{ color: 'gold' }} />
               </Avatar>
               <Box>
                 <TypingAnimation 
@@ -296,11 +296,11 @@ const Home = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Avatar 
                     sx={{ 
-                      backgroundColor: '#fad2cf',
+                      backgroundColor: 'rgba(255, 215, 0, 0.2)',
                       mr: 2
                     }}
                   >
-                    <PlayArrowIcon sx={{ color: '#ea4335' }} />
+                    <SmartToyIcon sx={{ color: 'gold' }} />
                   </Avatar>
                   <Typography 
                     variant="h6" 
@@ -324,15 +324,15 @@ const Home = () => {
               <CardActions sx={{ p: 2, pt: 0 }}>
                 <Button
                   variant="contained"
-                  startIcon={<PlayArrowIcon />}
+                  startIcon={<SmartToyIcon />}
                   onClick={handleDirectExperience}
                   fullWidth
                   sx={{
                     textTransform: 'none',
                     fontWeight: 500,
-                    backgroundColor: '#ea4335',
+                    backgroundColor: 'rgb(218, 165, 32)',
                     '&:hover': {
-                      backgroundColor: '#d93025'
+                      backgroundColor: 'rgb(184, 134, 11)'
                     }
                   }}
                 >
