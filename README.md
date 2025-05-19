@@ -112,7 +112,6 @@ SmartHomeVoiceAssistant/
 │   │   ├── services/              # 核心逻辑（如状态变更、天气获取）
 │   │   ├── simulators/            # 仿真器：模拟设备行为和反馈
 │   │   └── config/                # 配置项（如设备列表、天气API密钥等）
-│   ├── requirements.txt
 │   └── README.md
 
 ├── nlu_service/                  # 语音处理模块
@@ -125,9 +124,6 @@ SmartHomeVoiceAssistant/
 │   │   ├── nlu.py            # 自然语言理解实现
 │   │   ├── tts.py            # 文本转语音实现
 │   │   └── utils.py          # 工具函数
-│   ├── tests/
-│   │   ├── __init__.py
-│   ├── requirements.txt
 │   └── README.md
 
 ├── docs/                   # 项目文档
