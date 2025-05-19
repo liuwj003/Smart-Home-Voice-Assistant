@@ -152,12 +152,12 @@
 {"text": "卧室空调调到26度", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
 {"text": "把那个电视声音关小一点", "labels": ["O", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "O", "O"]}
 {"text": "拉上书房的窗帘，谢谢", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
-{"text": "关闭厨房的油烟机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭厨房的油烟机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "我想添加一个灯到餐厅", "labels": ["O", "O", "B-ACTION","I-ACTION", "O", "O", "B-DEVICE_TYPE", "B-ACTION", "B-LOCATION", "I-LOCATION"]}
 {"text": "删除客厅那个空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "把走廊的灯光调亮些", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "B-ACTION", "I-ACTION", "O"]}
 {"text": "将卧室的空调模式设为自动", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER"]}
-{"text": "打开电视，随便看点什么", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I_DEVICE_TYPE", "O", "O", "B-ACTION", "O", "O", "O"]}
+{"text": "打开电视，随便看点什么", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I_DEVICE_TYPE", "O", "O", "O", "B-ACTION", "O", "O", "O"]}
 {"text": "把所有窗户都关一下", "labels": ["O", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "B-ACTION", "O", "O"]}
 {"text": "客厅空调制热，温度30度", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-PARAMETER", "I-PARAMETER", "O", "O", "O", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
 {"text": "关掉我房间的灯", "labels": ["B-ACTION", "I-ACTION", "O", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
@@ -166,26 +166,25 @@
 {"text": "把厨房的灯1号和灯2号都关了", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "B-DEVICE_ID", "I-DEVICE_ID", "O", "B-DEVICE_TYPE", "B-DEVICE_ID", "I-DEVICE_ID", "O", "B-ACTION", "O"]}
 {"text": "请把扫地机器人派去客厅打扫", "labels": ["O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-ACTION", "I-ACTION"]}
 {"text": "将客厅的灯亮度调到百分之五十", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
-{"text": "那个，客厅的灯帮我关一下哈", "labels": ["O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "O", "B-ACTION", "O", "O", "O"]}
+{"text": "那个，客厅的灯帮我关一下哈", "labels": ["O", "O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "O", "B-ACTION", "O", "O", "O"]}
 {"text": "现在把卧室空调开到二十五度呗", "labels": ["O", "O", "O", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O"]}
-{"text": "把电视声音调低一点，太吵了", "labels": ["O", "B-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "O", "O", "O", "O", "O", "O"]}
+{"text": "把电视声音调低一点，太吵了", "labels": ["O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "B-ACTION", "I-ACTION", "O", "O", "O", "O", "O", "O"]}
 {"text": "书房窗帘全部拉上行不行", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-PARAMETER", "I-PARAMETER", "B-ACTION", "I-ACTION", "O", "O", "O"]}
-{"text": "厨房油烟机需要清洗了，先关掉", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "B-PARAMETER", "B-ACTION", "I-ACTION"]}
-{"text": "把客厅的那个扫地机器人充电去", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "O"]}
+{"text": "厨房油烟机需要清洗了，先关掉", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "B-PARAMETER", "B-ACTION", "I-ACTION"]}
+{"text": "把客厅的那个扫地机器人充电去", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "O"]}
 {"text": "走廊的灯，嗯，调成暖白色的吧", "labels": ["B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O"]}
 {"text": "将卧室空调的模式改成自动的", "labels": ["O", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
-{"text": "打开电视看看有没有什么好玩的", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
+{"text": "打开电视看看有没有什么好玩的", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
 {"text": "家里的窗户都给我关严实了", "labels": ["B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "I-ACTION", "O", "O"]}
-{"text": "客厅空调制冷模式，然后温度23度就行", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O", "O", "O", "O", "O", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O", "O"]}
+{"text": "客厅空调制冷模式，然后温度23度就行", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O", "O", "O", "O", "O", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O", "O"]}
 {"text": "把我房间的灯关了，我要睡觉了", "labels": ["O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "B-ACTION", "O", "O", "O", "O", "O", "O", "O"]}
-{"text": "加湿器的湿度再往上调百分之十", "labels": ["B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "I-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
-{"text": "二楼所有的窗帘都打开吧", "labels": ["B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "B-ACTION", "O"]}
+{"text": "加湿器的湿度再往上调百分之十", "labels": ["B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "O", "B-ACTION", "I-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER"]}
 {"text": "厨房的那个灯1和灯2都关掉算了", "labels": ["B-LOCATION", "I-LOCATION", "O", "O", "O", "B-DEVICE_TYPE", "B-DEVICE_ID", "O", "B-DEVICE_TYPE", "B-DEVICE_ID", "O", "B-ACTION", "I-ACTION", "O", "O"]}
 {"text": "空气净化器开一下，最近空气不太好", "labels": ["B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "O", "O", "O", "O", "O", "O", "O", "O", "O", "O"]}
 {"text": "把客厅灯的亮度弄到百分之八十左右", "labels": ["O", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O", "O"]}
 {"text": "把餐厅的灯调暗一点儿", "labels": ["O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "B-ACTION", "I-ACTION", "O", "O", "O"]}
 {"text": "打开电视，声音小点声", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O", "B-ACTION", "B-PARAMETER", "I-PARAMETER"]}
-{"text": "所有房间的空调都设置成25度吧", "labels": ["O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "B-ACTION", "I-ACTION", "O", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O"]}
+{"text": "所有房间的空调都设置成25度吧", "labels": ["O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "B-ACTION", "I-ACTION", "O", "B-PARAMETER", "I-PARAMETER", "I-PARAMETER", "O"]}
 {"text": "那个，把书房的窗帘拉到一半就行", "labels": ["O", "O", "O", "O", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-ACTION", "I-ACTION", "B-PARAMETER", "I-PARAMETER", "O", "O"]}
 {"text": "我想在卫生间新装一个排风扇", "labels": ["O", "O", "O", "B-LOCATION", "I-LOCATION", "I-LOCATION", "B-ACTION", "I-ACTION", "O", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "帮我删除客厅的灯编号2", "labels": ["O", "O", "B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "O", "O", "B-DEVICE_ID"]}

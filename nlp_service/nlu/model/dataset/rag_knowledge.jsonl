@@ -150,3 +150,33 @@
 {"text": "打开客厅的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关闭客厅的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关闭书房的投影仪", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开厨房的排气扇", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭客厅的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动厨房的洗碗机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "暂停卧室的音响", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "加热厨房的电饭煲", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉上阳台的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "调亮玄关的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "调暗工作间的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "播放书房的背景音乐", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "净化客厅的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开车库的摄像头", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭庭院的摄像头", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动餐厅的咖啡机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开厨房的热水器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭书房的投影仪", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "调高卧室空调的温度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "调低客厅电视的音量", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "降低书房灯的亮度", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "调高卧室风扇的风速", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "打开阳台的洗衣机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "暂停厨房的冰箱", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关上车库的车库门", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "拉开餐厅的电动窗户", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "启动客厅的加湿器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭浴室的浴霸", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开花园的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
+{"text": "调低音响的音量", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "降低风扇的风速", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O", "O"]}
+{"text": "打开餐厅的电视", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭厨房的微波炉", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
