@@ -21,12 +21,13 @@
 - `Windows 10 SDK`（如果你使用的是 Windows 10，具体版本根据你的需求选择）
 - `C++ CMake tools for Windows`
 
-1. 创建一个python=3.9的虚拟环境并安装ffmpeg：
+5. **创建一个python=3.9的虚拟环境并安装ffmpeg**：
 ```bash
 conda create -n voice-app python=3.9
 conda install -c conda-forge ffmpeg
 ```
-* ffmpeg要conda-forge装一下。
+* **ffmpeg要conda-forge装一下**。
+* 如果不用conda或者不创建虚拟环境，直接运行的话，**记得要把ffmpeg添加到系统路径**，参考教程https://blog.csdn.net/Natsuago/article/details/143231558。
 
 ### 启动项目
 
