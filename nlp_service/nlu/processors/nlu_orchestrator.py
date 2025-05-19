@@ -157,13 +157,31 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                                 "rag_attempted_command": best_standard_command}
                 else:
                     logger.info(f"RAG retrieved score {rag_score:.4f} > threshold {self.rag_similarity_threshold}. RAG result not adopted.")
-                    return {"error": "Direct NLU insufficient, RAG match below threshold.", "original_nlu": direct_nlu_output}
+                    return {"error": "Direct NLU insufficient, RAG match below threshold.", 
+                            "original_nlu": direct_nlu_output,
+                            "ACTION": None,
+                            "DEVICE_TYPE": None,
+                            "DEVICE_ID": "0",
+                            "LOCATION": None,
+                            "PARAMETER": None}
             else:
                 logger.info("RAG found no similar standard commands.")
-                return {"error": "Direct NLU insufficient, RAG found no matches.", "original_nlu": direct_nlu_output}
+                return {"error": "Direct NLU insufficient, RAG found no matches.", 
+                        "original_nlu": direct_nlu_output,
+                        "ACTION": None,
+                        "DEVICE_TYPE": None,
+                        "DEVICE_ID": "0",
+                        "LOCATION": None,
+                        "PARAMETER": None}
         else:
             logger.info("Direct NLU insufficient, and RAG system is unavailable.")
-            return {"error": "Direct NLU insufficient, RAG system unavailable.", "original_nlu": direct_nlu_output}
+            return {"error": "Direct NLU insufficient, RAG system unavailable.", 
+                    "original_nlu": direct_nlu_output,
+                    "ACTION": None,
+                    "DEVICE_TYPE": None,
+                    "DEVICE_ID": "0",
+                    "LOCATION": None,
+                    "PARAMETER": None}
 
 # --- 主程序/测试部分 ---
 if __name__ == '__main__':

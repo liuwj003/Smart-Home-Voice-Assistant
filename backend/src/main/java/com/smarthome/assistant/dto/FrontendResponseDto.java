@@ -30,6 +30,11 @@ public class FrontendResponseDto {
     private String deviceActionFeedback;
     
     /**
+     * 来自NLP服务的响应消息，用于前端显示
+     */
+    private String responseMessageForTts;
+    
+    /**
      * 命令是否成功处理
      */
     private boolean commandSuccess;

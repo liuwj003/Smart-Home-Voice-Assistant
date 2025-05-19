@@ -38,6 +38,7 @@ public class SmartHomeCommandOrchestrator {
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage("NLP服务不可用，请确保NLP服务已启动")
+                        .responseMessageForTts("抱歉，我没能理解您的意思")
                         .build();
             }
             
@@ -52,6 +53,9 @@ public class SmartHomeCommandOrchestrator {
                 String errorMsg = nlpResponse.containsKey("errorMessage") ? 
                         (String)nlpResponse.get("errorMessage") : "处理音频时出错";
                 
+                // 获取response_message_for_tts，如果没有则使用默认值
+                String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", "抱歉，我没能理解您的意思");
+                
                 log.error("NLP服务返回错误: {}", errorMsg);
                 
                 // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
@@ -60,12 +64,17 @@ public class SmartHomeCommandOrchestrator {
                     FrontendResponseDto response = processNlpResponse(nlpResponse);
                     response.setCommandSuccess(false);
                     response.setErrorMessage(errorMsg);
+                    // 确保设置了responseMessageForTts
+                    if (response.getResponseMessageForTts() == null) {
+                        response.setResponseMessageForTts(responseMessageForTts);
+                    }
                     return response;
                 }
                 
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage(errorMsg)
+                        .responseMessageForTts(responseMessageForTts)
                         .build();
             }
             
@@ -75,6 +84,7 @@ public class SmartHomeCommandOrchestrator {
             return FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理音频命令时出错: " + e.getMessage())
+                    .responseMessageForTts("抱歉，我没能理解您的意思")
                     .build();
         }
     }
@@ -94,6 +104,8 @@ public class SmartHomeCommandOrchestrator {
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage("NLP服务不可用，请确保NLP服务已启动")
+                        .responseMessageForTts("抱歉，我没能理解您的意思")
+                        .sttText(textInput)
                         .build();
             }
             
@@ -105,6 +117,9 @@ public class SmartHomeCommandOrchestrator {
                 String errorMsg = nlpResponse.containsKey("errorMessage") ? 
                         (String)nlpResponse.get("errorMessage") : "处理文本时出错";
                 
+                // 获取response_message_for_tts，如果没有则使用默认值
+                String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", "抱歉，我没能理解您的意思");
+                
                 log.error("NLP服务返回错误: {}", errorMsg);
                 
                 // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
@@ -113,12 +128,18 @@ public class SmartHomeCommandOrchestrator {
                     FrontendResponseDto response = processNlpResponse(nlpResponse);
                     response.setCommandSuccess(false);
                     response.setErrorMessage(errorMsg);
+                    // 确保设置了responseMessageForTts
+                    if (response.getResponseMessageForTts() == null) {
+                        response.setResponseMessageForTts(responseMessageForTts);
+                    }
                     return response;
                 }
                 
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage(errorMsg)
+                        .sttText(textInput)
+                        .responseMessageForTts(responseMessageForTts)
                         .build();
             }
             
@@ -129,6 +150,7 @@ public class SmartHomeCommandOrchestrator {
                     .commandSuccess(false)
                     .errorMessage("处理文本命令时出错: " + e.getMessage())
                     .sttText(textInput) // 至少返回用户输入的文本
+                    .responseMessageForTts("抱歉，我没能理解您的意思")
                     .build();
         }
     }
@@ -172,12 +194,16 @@ public class SmartHomeCommandOrchestrator {
             // 设备控制，传递deviceId和parameter
             String deviceFeedback = deviceService.updateDeviceState(entity, location, action, deviceId, parameter);
             
+            // 提取NLP服务的响应消息
+            String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", null);
+            
             // 构建响应
             return FrontendResponseDto.builder()
                     .commandSuccess(true)
                     .sttText((String) nlpResponse.getOrDefault("transcribed_text", null))
                     .nluResult(nluDisplayDto)
                     .deviceActionFeedback(deviceFeedback)
+                    .responseMessageForTts(responseMessageForTts)
                     .ttsOutputReference((String) nlpResponse.getOrDefault("tts_output_reference", null))
                     .build();
         } catch (Exception e) {

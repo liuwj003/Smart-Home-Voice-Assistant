@@ -34,10 +34,10 @@
 {"text": "拉上书房的窗帘", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "暂停厨房的洗碗机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "启动浴室的浴霸", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "调亮衣帽间的镜前灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "调暗走廊的壁灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "打开庭院的草坪灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "关闭花园的射灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "调亮衣帽间的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "调暗走廊的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "打开庭院的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
+{"text": "关闭花园的灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "启动客厅的扫地机器人", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "净化卧室的空气", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE"]}
 {"text": "调高音响的音量", "labels": ["B-ACTION", "I-ACTION", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "O", "O"]}
@@ -144,14 +144,6 @@
 {"text": "启动厨房的洗碗机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关闭厨房的洗碗机", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关闭浴室的浴霸", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "打开衣帽间的镜前灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "关闭衣帽间的镜前灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "调暗衣帽间的镜前灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "打开走廊的壁灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "关闭走廊的壁灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "调亮走廊的壁灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "关闭庭院的草坪灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
-{"text": "打开花园的射灯", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关闭客厅的扫地机器人", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "暂停客厅的扫地机器人", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}
 {"text": "关闭卧室的空气净化器", "labels": ["B-ACTION", "I-ACTION", "B-LOCATION", "I-LOCATION", "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE", "I-DEVICE_TYPE"]}

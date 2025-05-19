@@ -235,7 +235,10 @@ class NLPServiceOrchestrator:
         parameter = nlu_result.get("PARAMETER")
         
         # 检查是否是理解失败的情况
-        if not action or action in ["UNKNOWN", "not_understand", None, ""] or not device_type:
+        if (not action or 
+            action in ["UNKNOWN", "not_understand", None, ""] or 
+            not device_type or 
+            device_type in [None, ""]):
             return "抱歉，我没能理解您的意思"
             
         action_cn = action_map.get(action, action) if action else None

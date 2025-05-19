@@ -285,19 +285,34 @@ const MobilePhoneView = () => {
 
   // Format NLP quintuple result
   const formatNlpQuintuple = (result) => {
-    if (!result || !result.nluResult || !result.nluResult.quintuple) {
-      return null;
+    // 检查两种可能的响应格式
+    // 1. 直接包含nluResult的格式
+    if (result && result.nluResult) {
+      const nluResult = result.nluResult;
+      const formattedQuintuple = {
+        action: nluResult.action || "未识别",
+        object: nluResult.entity || "未识别",
+        location: nluResult.location || "未指定",
+        deviceId: nluResult.deviceId || "0",
+        parameter: nluResult.parameter,
+      };
+      
+      // 根据用户需求，简化判断逻辑：仅当ACTION和DEVICE_TYPE（entity）中有一个为None/null/空时，认为理解失败
+      const isSuccess = 
+        formattedQuintuple.action && 
+        formattedQuintuple.action !== "未识别" &&
+        formattedQuintuple.action !== "" &&
+        formattedQuintuple.object && 
+        formattedQuintuple.object !== "未识别" && 
+        formattedQuintuple.object !== "";
+      
+      return {
+        ...formattedQuintuple,
+        isSuccess
+      };
     }
     
-    const { quintuple } = result.nluResult;
-    return {
-      intent: quintuple.intent || "未识别",
-      action: quintuple.action || "未识别",
-      object: quintuple.object || "未识别",
-      location: quintuple.location || "未指定",
-      time: quintuple.time || "当前",
-      confidence: result.nluResult.confidence || 0
-    };
+    return null;
   };
 
   // Handle text command input
@@ -314,32 +329,41 @@ const MobilePhoneView = () => {
       const response = await voiceApi.sendTextCommand(textCommand);
       setCommandResult(response.data);
       
-      // Set result text for typing animation if TTS feedback is available
-      if (response.data?.ttsFeedback) {
-        const ttsFeedback = response.data.ttsFeedback;
-        setResultText(ttsFeedback);
-        setShowTypingResponse(true);
-        
-        // 检查是否是理解失败的响应
-        setIsUnderstandSuccess(!ttsFeedback.includes("抱歉") && !ttsFeedback.includes("没能理解"));
-      } else if (response.data?.deviceActionFeedback) {
-        const actionFeedback = response.data.deviceActionFeedback;
-        setResultText(actionFeedback);
-        setShowTypingResponse(true);
-        
-        // 检查是否是理解失败的响应
-        setIsUnderstandSuccess(!actionFeedback.includes("抱歉") && !actionFeedback.includes("没能理解"));
-      }
-      
-      // Set NLP quintuple result
+      // 设置 NLP 识别结果
       const nlpQuintuple = formatNlpQuintuple(response.data);
+      
+      // 简化逻辑，只根据NLU字段来判断成功失败（DEVICE_TYPE和ACTION至少1个是None）
+      const isSuccess = 
+        nlpQuintuple && 
+        nlpQuintuple.action && 
+        nlpQuintuple.action !== "未识别" && 
+        nlpQuintuple.action !== "" &&
+        nlpQuintuple.object && 
+        nlpQuintuple.object !== "未识别" && 
+        nlpQuintuple.object !== "";
+      
+      setIsUnderstandSuccess(isSuccess);
       if (nlpQuintuple) {
         setNlpResult(nlpQuintuple);
       }
       
+      // 优先使用responseMessageForTts作为显示文本
+      if (response.data?.responseMessageForTts) {
+        setResultText(response.data.responseMessageForTts);
+        setShowTypingResponse(true);
+      }
+      // 回退到其他文本
+      else if (response.data?.deviceActionFeedback) {
+        setResultText(response.data.deviceActionFeedback);
+        setShowTypingResponse(true);
+      } else if (response.data?.errorMessage) {
+        setResultText(response.data.errorMessage);
+        setShowTypingResponse(true);
+      }
+      
       // Play TTS if available
-      if (response.data?.ttsAudioUrl) {
-        playTTSAudio(response.data.ttsAudioUrl);
+      if (response.data?.ttsOutputReference) {
+        playTTSAudio(response.data.ttsOutputReference);
       }
     } catch (error) {
       console.error('发送文本命令失败:', error);
@@ -448,36 +472,41 @@ const MobilePhoneView = () => {
   const handleCommandResult = (result) => {
     setCommandResult(result);
     
-    // 设置结果文本用于打字动画
-    if (result?.ttsFeedback) {
-      const ttsFeedback = result.ttsFeedback;
-      setResultText(ttsFeedback);
-      setShowTypingResponse(true);
-      
-      // 检查是否是理解失败的响应
-      setIsUnderstandSuccess(!ttsFeedback.includes("抱歉") && !ttsFeedback.includes("没能理解"));
-    } else if (result?.deviceActionFeedback) {
-      const actionFeedback = result.deviceActionFeedback;
-      setResultText(actionFeedback);
-      setShowTypingResponse(true);
-      
-      // 检查是否是理解失败的响应
-      setIsUnderstandSuccess(!actionFeedback.includes("抱歉") && !actionFeedback.includes("没能理解"));
-    } else if (result?.error) {
-      setResultText(result.errorMessage || '处理命令时出错');
-      setShowTypingResponse(true);
-      setIsUnderstandSuccess(false);
-    }
-    
     // 设置 NLP 识别结果
     const nlpQuintuple = formatNlpQuintuple(result);
+    
+    // 简化逻辑，只根据NLU字段来判断成功失败（DEVICE_TYPE和ACTION至少1个是None）
+    const isSuccess = 
+      nlpQuintuple && 
+      nlpQuintuple.action && 
+      nlpQuintuple.action !== "未识别" && 
+      nlpQuintuple.action !== "" &&
+      nlpQuintuple.object && 
+      nlpQuintuple.object !== "未识别" && 
+      nlpQuintuple.object !== "";
+    
+    setIsUnderstandSuccess(isSuccess);
     if (nlpQuintuple) {
       setNlpResult(nlpQuintuple);
     }
     
+    // 优先使用responseMessageForTts作为显示文本
+    if (result?.responseMessageForTts) {
+      setResultText(result.responseMessageForTts);
+      setShowTypingResponse(true);
+    }
+    // 回退到其他文本
+    else if (result?.deviceActionFeedback) {
+      setResultText(result.deviceActionFeedback);
+      setShowTypingResponse(true);
+    } else if (result?.errorMessage) {
+      setResultText(result.errorMessage || '处理命令时出错');
+      setShowTypingResponse(true);
+    }
+    
     // 播放 TTS
-    if (result?.ttsAudioUrl) {
-      playTTSAudio(result.ttsAudioUrl);
+    if (result?.ttsOutputReference) {
+      playTTSAudio(result.ttsOutputReference);
     }
   };
   
@@ -702,39 +731,36 @@ const MobilePhoneView = () => {
                       <SentimentDissatisfiedIcon sx={{ fontSize: 18, color: 'white' }} /> // 未理解用难过脸
                     }
                   </Avatar>
-                  <Box sx={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>
-                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-                      {isUnderstandSuccess ? '操作完成' : '理解失败'}
-                    </Typography>
+                  <Box sx={{ color: isUnderstandSuccess ? '#4BB543' : 'white', width: '100%' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {isUnderstandSuccess ? '操作完成' : '理解失败'}
+                      </Typography>
+                      
+                      {/* 显示NLU结果标签（仅在理解成功时显示） */}
+                      {isUnderstandSuccess && nlpResult && (
+                        <Box 
+                          sx={{ 
+                            display: 'inline-flex',
+                            ml: 2,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 4,
+                            backgroundColor: 'rgba(75, 181, 67, 0.2)',
+                            color: '#4BB543'
+                          }}
+                        >
+                          <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
+                            {nlpResult.action !== "未识别" && nlpResult.action !== "" ? `${nlpResult.action} ` : ""} 
+                            {nlpResult.object !== "未识别" && nlpResult.object !== "" ? nlpResult.object : ""} 
+                            {nlpResult.location && nlpResult.location !== "未指定" ? ` (${nlpResult.location})` : ""}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
                     <TypingAnimation text={resultText} />
                   </Box>
                 </Box>
-                
-                {/* NLP Quintuple Result Display - 只在有结果时显示 */}
-                {nlpResult && (
-                  <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${isUnderstandSuccess ? 'rgba(75, 181, 67, 0.2)' : 'rgba(255, 255, 255, 0.1)'}` }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1, color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
-                      NLP识别结果 {nlpResult.confidence ? `(置信度: ${(nlpResult.confidence * 100).toFixed(1)}%)` : ''}
-                    </Typography>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
-                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
-                        意图: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.intent}</span>
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
-                        动作: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.action}</span>
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
-                        对象: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.object}</span>
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)' }}>
-                        位置: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.location}</span>
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: isUnderstandSuccess ? 'rgba(75, 181, 67, 0.8)' : 'rgba(255, 255, 255, 0.7)', gridColumn: '1 / span 2' }}>
-                        时间: <span style={{ color: isUnderstandSuccess ? '#4BB543' : 'white' }}>{nlpResult.time}</span>
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
               </Box>
             </Fade>
           )}
