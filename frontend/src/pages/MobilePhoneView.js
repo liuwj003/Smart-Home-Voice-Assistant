@@ -22,31 +22,9 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MobileContainer from '../components/MobileContainer';
+import TypingAnimation from '../components/TypingAnimation';
 import { deviceApi, voiceApi, settingsApi } from '../services/api';
 import '../MobileApp.css';
-
-// Typing animation component from PhoneView
-const TypingAnimation = ({ text, speed = 70, onComplete }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
-      
-      return () => clearTimeout(timer);
-    } else if (!isCompleted) {
-      setIsCompleted(true);
-      if (onComplete) onComplete();
-    }
-  }, [text, currentIndex, speed, isCompleted, onComplete]);
-
-  return <Typography variant="body1">{displayText}</Typography>;
-};
 
 /**
  * MobilePhoneView - Apple-style home view with scenes and voice input

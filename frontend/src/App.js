@@ -15,14 +15,14 @@ function App() {
     <SettingsProvider>
       <ThemeProvider>
         <Routes>
-          {/* 主界面 - 使用Layout包装 */}
+          {/* Main layout */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/weather" element={<Weather />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           
-          {/* 手机端视图 - 使用Bezel组件包装 */}
+          {/* Mobile phone view */}
           <Route path="/phone" element={
             <Bezel>
               <MobileOnboarding />
@@ -33,18 +33,6 @@ function App() {
               <MobilePhoneView />
             </Bezel>
           } />
-          {/* 临时移除未实现的组件路由
-          <Route path="/phone/weather" element={
-            <Bezel>
-              <MobileWeather />
-            </Bezel>
-          } />
-          <Route path="/phone/settings" element={
-            <Bezel>
-              <MobileSettings />
-            </Bezel>
-          } />
-          */}
         </Routes>
       </ThemeProvider>
     </SettingsProvider>

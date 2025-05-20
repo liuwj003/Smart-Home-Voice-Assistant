@@ -8,6 +8,7 @@ import WaterIcon from '@mui/icons-material/Water';
 import AirIcon from '@mui/icons-material/Air';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import NavigationIcon from '@mui/icons-material/Navigation';
+import '../styles/animations.css';
 
 // Debug logs
 console.log('Weather component imported successfully');
@@ -275,30 +276,6 @@ const Weather = () => {
               </Grid>
             </CardContent>
           </Card>
-
-          {/* Add the weather animation keyframes */}
-          <style jsx="true">{`
-            @keyframes pulse {
-              0% { transform: scale(1); opacity: 1; }
-              50% { transform: scale(1.1); opacity: 0.9; }
-              100% { transform: scale(1); opacity: 1; }
-            }
-            @keyframes float {
-              0% { transform: translateY(0px); }
-              50% { transform: translateY(-10px); }
-              100% { transform: translateY(0px); }
-            }
-            @keyframes bounce {
-              0% { transform: translateY(0); }
-              50% { transform: translateY(-10px); }
-              100% { transform: translateY(0); }
-            }
-            @keyframes fadeInOut {
-              0% { opacity: 0.7; }
-              50% { opacity: 1; }
-              100% { opacity: 0.7; }
-            }
-          `}</style>
         </>
       )}
     </Box>

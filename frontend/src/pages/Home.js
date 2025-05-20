@@ -19,29 +19,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LocalAtmIcon from '@mui/icons-material/LocalAtm';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { voiceApi } from '../services/api';
-
-// Typing animation component
-const TypingAnimation = ({ text, speed = 70, onComplete }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
-      
-      return () => clearTimeout(timer);
-    } else if (!isCompleted) {
-      setIsCompleted(true);
-      if (onComplete) onComplete();
-    }
-  }, [text, currentIndex, speed, isCompleted, onComplete]);
-
-  return <Typography variant="body1">{displayText}</Typography>;
-};
+import TypingAnimation from '../components/TypingAnimation';
 
 const Home = () => {
   const theme = useTheme();
@@ -161,6 +139,7 @@ const Home = () => {
                 <TypingAnimation 
                   text="客厅太冷了。" 
                   onComplete={handleInputComplete}
+                  variant="body1"
                 />
               )}
               {animationState !== 'input' && (
@@ -198,6 +177,7 @@ const Home = () => {
                 <TypingAnimation 
                   text="好的，正在为您调低客厅空调温度。" 
                   onComplete={handleResponseComplete}
+                  variant="body1"
                 />
               </Box>
             </Box>

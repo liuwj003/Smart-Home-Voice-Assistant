@@ -224,8 +224,8 @@ class NLPServiceOrchestrator:
             "add": "添加",
             "delete": "删除",
             "query": "查询",
-            "open_curtain": "打开窗帘",
-            "close_curtain": "关闭窗帘",
+            "open_curtain": "拉开",
+            "close_curtain": "拉上",
             # 可继续补充...
         }
         action = nlu_result.get("ACTION")
