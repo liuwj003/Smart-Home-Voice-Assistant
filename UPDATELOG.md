@@ -2,7 +2,14 @@
 
 * 实时分工调整在`docs/member_summary.md`下记录
 * 可以把整个项目克隆下来，然后`run.bat`试试效果。
-  
+
+## 5.20 (Version 0.2)
+
+* Apple-Style
+
+<img src="imgs/Apple-Style-v0.png" alt="alt text" width="100%"/>
+<img src="imgs/Apple-Style-v0.1.png" alt="alt text" width="100%"/>
+
 ## 5.18 （Version 0）
 * 写文档、画图的同学可以根据这些实时进度来理解代码结构：
 

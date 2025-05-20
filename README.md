@@ -110,7 +110,6 @@ SmartHomeVoiceAssistant/
 │   │   ├── controllers/           # 接收API请求（如 /device/on /weather）
 │   │   ├── models/                # 模拟设备状态对象（如 Light, AC）
 │   │   ├── services/              # 核心逻辑（如状态变更、天气获取）
-│   │   ├── simulators/            # 仿真器：模拟设备行为和反馈
 │   │   └── config/                # 配置项（如设备列表、天气API密钥等）
 │   └── README.md
 

@@ -55,10 +55,9 @@ const MobilePhoneView = () => {
   const touchStartY = useRef(0);
   const refreshIndicatorRef = useRef(null);
 
-  // Navigation handlers - temporarily removing actual navigation
+  // Navigation handlers
   const goToSettings = () => {
-    // Temporary placeholder - will be implemented later
-    console.log('Settings button clicked - feature coming soon');
+    navigate('/phone/settings');
   };
   
   const goToWeather = () => {
@@ -241,6 +240,17 @@ const MobilePhoneView = () => {
   // Load settings
   useEffect(() => {
     loadSettings();
+  }, []);
+
+  // 添加页面聚焦监听，在从设置页返回后刷新设置
+  useEffect(() => {
+    const onFocus = () => {
+      loadSettings();
+      console.log('重新加载设置');
+    };
+    
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const loadSettings = async () => {

@@ -54,7 +54,7 @@ const Home = () => {
     setAnimationState('processing');
     setTimeout(() => {
       setAnimationState('response');
-    }, 1500); // Simulate processing delay
+    }, 1200); // Simulate processing delay
   };
 
   const handleResponseComplete = () => {

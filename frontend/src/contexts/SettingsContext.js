@@ -5,8 +5,28 @@ const SettingsContext = createContext();
 
 export const useSettings = () => useContext(SettingsContext);
 
+// 默认设置
+const defaultSettings = {
+  stt: {
+    engine: 'whisper',
+    language: 'zh-CN'
+  },
+  nlu: {
+    engine: 'fine_tuned_bert',
+    confidence_threshold: 0.7
+  },
+  tts: {
+    enabled: true,
+    engine: 'pyttsx3'
+  },
+  ui: {
+    theme: 'light',
+    showFeedback: true
+  }
+};
+
 export const SettingsProvider = ({ children }) => {
-  const [settings, setSettingsState] = useState(null);
+  const [settings, setSettingsState] = useState(defaultSettings);
   const [loading, setLoading] = useState(true);
 
   // 加载 settings（优先 localStorage，后端兜底）
@@ -20,7 +40,7 @@ export const SettingsProvider = ({ children }) => {
         setSettingsState(res.data);
         setLoading(false);
       }).catch(() => {
-        setSettingsState(null);
+        setSettingsState(defaultSettings);
         setLoading(false);
       });
     }

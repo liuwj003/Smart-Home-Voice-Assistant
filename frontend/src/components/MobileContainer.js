@@ -16,8 +16,9 @@ import '../MobileApp.css';
  * @param {string} props.title - The title to display in the header, defaults to "Our Home"
  * @param {boolean} props.showHeader - Whether to show the title header, defaults to true
  * @param {React.ReactNode} props.rightButtons - Optional buttons/components to display on the right side of the header
+ * @param {boolean} props.hideBottomNav - Whether to hide the bottom navigation bar, defaults to false
  */
-const MobileContainer = ({ children, title = "Our Home", showHeader = true, rightButtons }) => {
+const MobileContainer = ({ children, title = "Our Home", showHeader = true, rightButtons, hideBottomNav = false }) => {
   const [currentTime, setCurrentTime] = useState('');
   const { darkMode } = useTheme();
 
@@ -79,9 +80,11 @@ const MobileContainer = ({ children, title = "Our Home", showHeader = true, righ
       </Box>
 
       {/* Home Indicator (iOS style) - Fixed at bottom */}
-      <Box sx={{ padding: '8px 0', flexShrink: 0 }}>
-        <div className="home-indicator"></div>
-      </Box>
+      {!hideBottomNav && (
+        <Box sx={{ padding: '8px 0', flexShrink: 0 }}>
+          <div className="home-indicator"></div>
+        </Box>
+      )}
     </Box>
   );
 };

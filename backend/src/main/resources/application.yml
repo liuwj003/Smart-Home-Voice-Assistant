@@ -32,16 +32,16 @@ nlp:
     
 # 音频处理配置
 voice:
-  # 选择处理器类型: simulated(模拟) 或 real(实际Python模块)
+  # 选择处理器类型: real(使用实际的Python NLP服务)
   processor:
-    type: simulated
+    type: real
   module:
-    path: ./voice_module
+    path: ./nlp_service
   audio:
     silence-threshold: 0.01
     silence-duration: 1.0
     min-speech-duration: 0.5
   stt:
-    engine-type: simulated
+    engine-type: whisper
   nlu:
-    engine-type: rule_based 
+    engine-type: fine_tuned_bert 

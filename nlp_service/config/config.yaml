@@ -2,14 +2,15 @@
 
 # STT引擎配置
 stt:
-  engine: whisper  # 可选: whisper, dolphin, placeholder
-  model_size: base     # whisper
-  device: auto         # 改为auto以自动检测可用设备（cuda或cpu）
+  engine: whisper  # 默认使用Whisper引擎
+  model_size: base     
+  device: auto         # 自动检测可用设备（cuda或cpu）
 
 # NLU引擎配置
 nlu:
-  engine: nlu_orchestrator
+  engine: nlu_orchestrator    # 可选: fine_tuned_bert, nlu_orchestrator
   local_model_target_dir: "nlp_service/nlu/model/fine_tuned_nlu_bert"
+
 
 # BertNLUProcessor专用配置
 bert_nlu_config:
@@ -27,10 +28,10 @@ rag_similarity_threshold: 300
 
 # TTS引擎配置
 tts:
-  engine: pyttsx3  # 可选: placeholder, pyttsx3
-  enabled: true
-  voice: female        # 语音类型: female, male
-  speed: 1.0           # 语速 (0.5-2.0)
-  pitch: 1.0           # 音调 (0.5-2.0)
-  volume: 1.0          # 音量 (0.0-1.0), 仅适用于pyttsx3引擎
+  engine: pyttsx3       # 默认使用pyttsx3引擎
+  enabled: true         # 默认启用TTS
+  voice: female         # 语音类型: female, male
+  speed: 1.0            # 语速 (0.5-2.0)
+  pitch: 1.0            # 音调 (0.5-2.0)
+  volume: 1.0           # 音量 (0.0-1.0), 仅适用于pyttsx3引擎
   # 更多TTS参数可在此补充 

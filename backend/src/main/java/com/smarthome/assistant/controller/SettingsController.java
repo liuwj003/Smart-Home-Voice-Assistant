@@ -27,7 +27,7 @@ public class SettingsController {
             put("sensitivity", 0.5);
         }});
         put("nlu", new HashMap<String, Object>() {{
-            put("engine", "simulated");
+            put("engine", "fine_tuned_bert");
             put("confidence_threshold", 0.7);
         }});
         put("tts", new HashMap<String, Object>() {{
