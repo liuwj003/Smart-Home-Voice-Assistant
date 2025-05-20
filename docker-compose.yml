@@ -10,6 +10,15 @@ services:
     volumes:
       - ./nlp_service:/app/nlp_service
     restart: unless-stopped
+    environment:
+      - NLP_SERVICE_HOST=0.0.0.0
+      - NLP_SERVICE_PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health" , "||", "exit", "0"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   backend:
     image: maven:3.9-eclipse-temurin-17
@@ -19,11 +28,19 @@ services:
       - "8080:8080"
     volumes:
       - ./backend:/app
+      - maven_repo:/root/.m2
     environment:
       - NLP_SERVICE_URL=http://nlp-service:8000
+      - SERVER_PORT=8080
     depends_on:
       - nlp-service
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api" , "||", "exit", "0"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   frontend:
     image: node:18
@@ -35,6 +52,10 @@ services:
       - ./frontend:/app
     environment:
       - REACT_APP_API_URL=http://localhost:8080/api
+      - WDS_SOCKET_PORT=0
     depends_on:
       - backend
-    restart: unless-stopped 
+    restart: unless-stopped
+
+volumes:
+  maven_repo: 

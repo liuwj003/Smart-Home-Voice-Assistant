@@ -7,7 +7,9 @@
 - 安装 [Docker](https://docs.docker.com/get-docker/)
 - 安装 [Docker Compose](https://docs.docker.com/compose/install/)
 
-## 部署步骤
+## 开发环境部署
+
+### 部署步骤
 
 1. 克隆项目仓库：
 
@@ -43,12 +45,40 @@ docker-compose logs -f frontend
 
 在浏览器中打开 http://localhost:3000 来访问应用界面。
 
+### 检查服务健康状态
+
+所有服务都配置了健康检查，可以通过以下端点查看：
+
+- NLP Service: http://localhost:8000/health
+- Backend: http://localhost:8080/api
+
+### 解决常见问题
+
+1. **无法访问前端应用**：
+   - 确保前端容器正在运行：`docker-compose ps`
+   - 检查前端日志：`docker-compose logs frontend`
+   - 尝试重启前端服务：`docker-compose restart frontend`
+
+2. **后端服务启动失败**：
+   - 检查后端日志：`docker-compose logs backend`
+   - 确保所有依赖项都已安装：`docker-compose exec backend mvn dependency:tree`
+
+3. **NLP服务无法连接**：
+   - 确保ffmpeg已正确安装在容器中
+   - 检查NLP服务日志：`docker-compose logs nlp-service`
+
 ## 停止服务
 
 停止并移除所有容器：
 
 ```bash
 docker-compose down
+```
+
+如果也想删除持久化的数据卷：
+
+```bash
+docker-compose down -v
 ```
 
 ## 重新构建
@@ -59,20 +89,77 @@ docker-compose down
 docker-compose up -d --build
 ```
 
-## 部署到在线平台
+## 生产环境部署
 
-要部署到在线平台 (.io 站点等)，可以考虑以下选项：
+要在生产环境部署，建议做以下调整：
 
-1. 使用 Docker 托管服务，如 Google Cloud Run、AWS ECS 或 Azure Container Instances
-2. 使用 Kubernetes 部署到云平台
-3. 使用 PaaS 服务，如 Heroku、Render 或 DigitalOcean App Platform
+1. 修改 `docker-compose.yml`，添加适当的资源限制
+2. 为前端构建生产版本（而非开发服务器）
+3. 配置 HTTPS 支持和域名
+4. 设置环境变量，特别是任何敏感信息
+5. 设置持久化存储
 
-### 部署到 GitHub Pages (仅前端)
+### 生产环境部署示例
 
-如果仅部署前端界面，可以修改前端代码以使用在线托管的后端 API，然后将前端部署到 GitHub Pages。
+可以创建 `docker-compose.prod.yml`：
 
-## 注意事项
+```yaml
+version: '3.8'
 
-- 默认配置中，数据存储在容器内，容器删除后数据会丢失。如需持久化存储，请添加额外的数据卷配置
+services:
+  nlp-service:
+    # 基本配置与开发环境相同
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+          
+  backend:
+    # 基本配置与开发环境相同
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+          
+  frontend:
+    # 修改为生产构建
+    command: sh -c "npm install && npm run build && npm install -g serve && serve -s build -l 3000"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+```
+
+使用生产配置：
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+## 在线云平台部署
+
+可以将这些Docker配置用于以下云服务：
+
+1. **阿里云容器服务**：
+   - 将镜像推送到阿里云容器镜像服务
+   - 使用容器服务Kubernetes版(ACK)部署
+
+2. **腾讯云容器服务**：
+   - 将镜像推送到腾讯云容器镜像仓库
+   - 使用TKE部署应用
+
+3. **AWS、GCP等其他云平台**：
+   - 可使用类似方式部署，只需调整对应的仓库地址和命令
+
+## 部署注意事项
+
+- 默认配置中，Maven依赖数据存储在持久化卷中，但其他应用数据未持久化
 - 在生产环境中，建议配置 HTTPS
-- 请确保设置适当的环境变量，特别是涉及到 API 密钥的部分 
+- 确保设置适当的环境变量，特别是涉及到 API 密钥的部分
+- 生产环境请使用更强的密码和安全设置 
