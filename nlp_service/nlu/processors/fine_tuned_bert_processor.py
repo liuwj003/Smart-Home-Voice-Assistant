@@ -46,7 +46,7 @@ class BertNLUProcessor(NLUInterface):
             config: 处理器配置，应包含:
                 local_model_target_dir (str): 希望模型文件存放的本地目录路径.
                                             例如: "nlu/model/fine_tuned_nlu_bert"
-                model_hub_id (str, optional): 您在Hugging Face Hub上的模型ID。
+                model_hub_id (str, optional): Hugging Face Hub上的模型ID。
                                              如果未提供，则使用类中定义的 DEFAULT_MODEL_HUB_ID。
                 tokenizer_hub_id (str, optional): Tokenizer在Hub上的ID，如果与model_hub_id不同。
                                                  通常使用 model_hub_id 即可。
@@ -70,7 +70,7 @@ class BertNLUProcessor(NLUInterface):
 
         # --- 模型下载和加载逻辑 ---
         # 检查本地目标目录是否已包含必要的模型文件
-        # 我们可以通过检查 config.json 和权重文件（pytorch_model.bin 或 model.safetensors）来判断
+        # 通过检查 config.json 和权重文件（pytorch_model.bin 或 model.safetensors）来判断
         config_file = self.local_model_path / "config.json"
         weights_file_bin = self.local_model_path / "pytorch_model.bin"
         weights_file_safetensors = self.local_model_path / "model.safetensors"
@@ -99,14 +99,14 @@ class BertNLUProcessor(NLUInterface):
                     local_dir_use_symlinks=False, 
                     # revision="main", # 可以指定分支、标签或commit hash
                     # token=True, # 如果是私有模型，确保已登录或传入token
-                    ignore_patterns=["*.md", ".gitattributes"] # 示例：忽略md文件和git属性文件
+                    ignore_patterns=[".gitattributes"] # 忽略git属性文件
                 )
                 logger.info(f"模型文件已成功下载/更新到: {downloaded_path_str}")
             except Exception as e:
                 logger.error(f"从 Hub 下载模型 '{model_hub_id_to_download}' 到 '{self.local_model_path}' 失败: {e}", exc_info=True)
                 logger.error("请检查网络连接、模型ID是否正确，以及您是否有权访问该模型（如果是私有模型）。")
                 # 如果下载失败，但本地仍有部分文件，加载可能会出错。可以考虑清空目录或抛出更严重的错误。
-                # 为简单起见，这里我们继续尝试加载，但很可能会失败。
+                # 为简单起见，这里继续尝试加载，但很可能会失败。
                 if not model_exists_locally: # 如果之前本地根本没有，现在下载又失败，则无法继续
                      raise FileNotFoundError(f"模型下载失败且本地 '{self.local_model_path}' 无有效模型。") from e
         else:
