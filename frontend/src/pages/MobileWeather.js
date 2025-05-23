@@ -12,6 +12,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MobileContainer from '../components/MobileContainer';
+import { useTheme } from '../contexts/ThemeContext';
 import '../MobileApp.css';
 
 /**
@@ -22,6 +23,8 @@ const MobileWeather = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [weatherData, setWeatherData] = useState(null);
+  const { darkMode } = useTheme();
+  const theme = darkMode ? 'dark' : 'light';
 
   // 加载天气数据
   useEffect(() => {
@@ -98,17 +101,24 @@ const MobileWeather = () => {
   };
 
   return (
-    <MobileContainer
-      title="天气"
-      leftButtons={
-        <IconButton 
-          className="ios-nav-button"
-          onClick={handleBackClick}
-        >
+    <MobileContainer title="Our Home">
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        p: 2, 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        bgcolor: theme === 'dark' ? '#121212' : '#fff'
+      }}>
+        <IconButton edge="start" onClick={handleBackClick} aria-label="back">
           <ArrowBackIcon />
         </IconButton>
-      }
-    >
+        <Typography variant="h6" sx={{ ml: 2, flexGrow: 1 }}>天气</Typography>
+      </Box>
+      
       <Box 
         className="ios-scrollable-content"
         sx={{ 

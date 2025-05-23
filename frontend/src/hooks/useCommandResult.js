@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
+import { playTTSAudio } from '../utils/audio-utils';
 
 /**
- * 自定义Hook处理命令结果
- * 
- * @returns {Object} - 包含命令结果处理状态和函数
+ * 命令结果处理Hook
+ * 处理语音和文本命令的结果显示和音频播放
  */
 const useCommandResult = () => {
   const [resultText, setResultText] = useState('');
@@ -12,32 +12,47 @@ const useCommandResult = () => {
   const [isUnderstandSuccess, setIsUnderstandSuccess] = useState(true);
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
 
+  // 检查文本是否包含理解失败的关键词
+  const containsFailureKeywords = (text) => {
+    if (!text) return false;
+    
+    const lowerText = text.toLowerCase();
+    const failureKeywords = [
+      "抱歉", "对不起", "没能理解", "不明白", "没听清", "请再说一遍"
+    ];
+    
+    return failureKeywords.some(keyword => lowerText.includes(keyword));
+  };
+
   // 格式化NLP五元组结果
   const formatNlpQuintuple = (result) => {
+    if (!result) return null;
+    
     // 检查两种可能的响应格式
     // 1. 直接包含nluResult的格式
-    if (result && result.nluResult) {
+    if (result.nluResult) {
       const nluResult = result.nluResult;
-      const formattedQuintuple = {
+      return {
         action: nluResult.action || "未识别",
         object: nluResult.entity || "未识别",
         location: nluResult.location || "未指定",
         deviceId: nluResult.deviceId || "0",
         parameter: nluResult.parameter,
+        success: nluResult.success !== undefined ? nluResult.success : true
       };
-      
-      // 根据用户需求，简化判断逻辑：仅当ACTION和DEVICE_TYPE（entity）中有一个为None/null/空时，认为理解失败
-      const isSuccess = 
-        formattedQuintuple.action && 
-        formattedQuintuple.action !== "未识别" &&
-        formattedQuintuple.action !== "" &&
-        formattedQuintuple.object && 
-        formattedQuintuple.object !== "未识别" && 
-        formattedQuintuple.object !== "";
-      
+    } 
+    
+    // 2. 旧格式：直接包含五元组字段
+    else if (result.ACTION || result.DEVICE_TYPE) {
       return {
-        ...formattedQuintuple,
-        isSuccess
+        action: result.ACTION || "未识别",
+        object: result.DEVICE_TYPE || "未识别", 
+        location: result.LOCATION || "未指定",
+        deviceId: result.DEVICE_ID || "0",
+        parameter: result.PARAMETER,
+        // 根据用户需求，简化判断逻辑：仅当ACTION和DEVICE_TYPE中有一个为None/null/空时，认为理解失败
+        success: !!(result.ACTION && result.ACTION !== "未识别" && result.ACTION !== "" && 
+                  result.DEVICE_TYPE && result.DEVICE_TYPE !== "未识别" && result.DEVICE_TYPE !== "")
       };
     }
     
@@ -61,18 +76,63 @@ const useCommandResult = () => {
     // 先完全清除旧的状态
     clearResult();
     
+    if (!result) {
+      setIsProcessingResponse(false);
+      return;
+    }
+    
+    // 获取响应文本，用于判断理解成功状态
+    // 优先使用responseMessageForTts作为显示文本
+    let responseText = '';
+    if (result.responseMessageForTts) {
+      responseText = result.responseMessageForTts;
+    }
+    // 回退到deviceActionFeedback
+    else if (result.deviceActionFeedback) {
+      responseText = result.deviceActionFeedback;
+    }
+    // 错误消息
+    else if (result.errorMessage) {
+      responseText = result.errorMessage;
+    }
+    // 最后尝试transcribedText
+    else if (result.transcribedText) {
+      responseText = "已识别: " + result.transcribedText;
+    }
+    // 最终默认
+    else {
+      responseText = "命令已处理";
+    }
+    
     // 设置 NLP 识别结果
     const nlpQuintuple = formatNlpQuintuple(result);
     
     // 判断理解成功或失败
-    const isSuccess = 
-      nlpQuintuple && 
-      nlpQuintuple.action && 
-      nlpQuintuple.action !== "未识别" && 
-      nlpQuintuple.action !== "" &&
-      nlpQuintuple.object && 
-      nlpQuintuple.object !== "未识别" && 
-      nlpQuintuple.object !== "";
+    let isSuccess = true;
+    
+    // 1. 明确的错误响应
+    if (result.error) {
+      console.log("检测到错误标志，设置为理解失败");
+      isSuccess = false;
+    }
+    // 2. 根据文本内容判断
+    else if (containsFailureKeywords(responseText)) {
+      console.log(`检测到理解失败的文本提示: "${responseText}"`);
+      isSuccess = false;
+    }
+    // 3. NLP五元组中的成功标志
+    else if (nlpQuintuple && nlpQuintuple.success === false) {
+      console.log("NLP五元组标记为失败");
+      isSuccess = false;
+    } 
+    // 4. 直接的成功标志
+    else if (result.success === false) {
+      console.log("结果直接标记为失败");
+      isSuccess = false;
+    }
+    
+    // 记录最终判断结果
+    console.log(`理解结果: ${isSuccess ? '成功' : '失败'}, 文本: "${responseText}"`);
     
     // 同步设置所有相关状态，避免状态更新不一致
     setTimeout(() => {
@@ -83,52 +143,18 @@ const useCommandResult = () => {
         setNlpResult(nlpQuintuple);
       }
       
-      // 设置响应文本
-      let responseText = '';
-      // 优先使用responseMessageForTts作为显示文本
-      if (result?.responseMessageForTts) {
-        responseText = result.responseMessageForTts;
-      }
-      // 回退到其他文本
-      else if (result?.deviceActionFeedback) {
-        responseText = result.deviceActionFeedback;
-      } else if (result?.errorMessage) {
-        responseText = result.errorMessage || '处理命令时出错';
-      }
-      
       setResultText(responseText);
       setShowTypingResponse(true);
       
       // 播放 TTS
-      if (result?.ttsOutputReference) {
+      if (result.ttsOutputReference) {
         playTTSAudio(result.ttsOutputReference);
       }
       
       setIsProcessingResponse(false);
     }, 0);
-  }, [clearResult]);
+  }, [clearResult, containsFailureKeywords]);
   
-  // 播放 TTS 音频
-  const playTTSAudio = async (audioReference) => {
-    if (!audioReference) return;
-    
-    let audioUrl = audioReference;
-    
-    // 检查是否为相对路径
-    if (!audioReference.startsWith('http') && !audioReference.startsWith('blob:')) {
-      // 构建完整 URL
-      const baseUrl = 'http://localhost:8080'; // 默认端口
-      audioUrl = `${baseUrl}${audioReference.startsWith('/') ? '' : '/'}${audioReference}`;
-    }
-    
-    try {
-      const audio = new Audio(audioUrl);
-      await audio.play();
-    } catch (error) {
-      console.error('播放TTS语音失败:', error);
-    }
-  };
-
   // 对外暴露简化版清除函数
   const resetState = () => {
     clearResult();
