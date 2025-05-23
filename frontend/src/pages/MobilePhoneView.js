@@ -87,7 +87,7 @@ const MobilePhoneView = () => {
   };
 
   const isProcessing = isTextProcessing || isVoiceProcessing || isProcessingResponse;
-  
+
   return (
     <MobileContainer 
       title="Our Home"
