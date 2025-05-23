@@ -20,6 +20,19 @@ public class Device {
     private String status;
     private String location;
     
+    // 设备元数据
+    private String deviceId;                // 设备唯一标识（如MAC地址或序列号）
+    
+    @Column(columnDefinition = "TEXT")
+    private String capabilities;            // 设备支持的功能列表(JSON格式)
+    
+    private String category;                // 设备类别（如灯光、空调、窗帘等）
+    
+    @Column(columnDefinition = "TEXT")
+    private String supportedParameters;     // 支持的参数列表(JSON格式)
+    
+    private String icon;                    // 设备图标路径
+    
     // 灯光特有属性
     private Integer brightness;
     private String color;

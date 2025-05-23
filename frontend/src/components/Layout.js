@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, Container, Button, IconButton } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Container, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';

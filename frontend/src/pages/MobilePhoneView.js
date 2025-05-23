@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, IconButton, TextField, Button, InputAdornment, Avatar, Fade, CircularProgress, Collapse, Accordion, AccordionSummary, AccordionDetails, Divider } from '@mui/material';
+import { Box, Typography, IconButton, TextField, Button, InputAdornment, Avatar, Fade, CircularProgress, Collapse } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import HomeIcon from '@mui/icons-material/Home';
-import DevicesIcon from '@mui/icons-material/Devices';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import LightIcon from '@mui/icons-material/Light';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
-import NightsStayIcon from '@mui/icons-material/NightsStay';
 import WifiIcon from '@mui/icons-material/Wifi';
 import LivingIcon from '@mui/icons-material/Weekend';
 import KitchenIcon from '@mui/icons-material/Kitchen';
@@ -23,7 +20,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MobileContainer from '../components/MobileContainer';
 import TypingAnimation from '../components/TypingAnimation';
-import { deviceApi, voiceApi, settingsApi } from '../services/api';
+import { voiceApi, settingsApi } from '../services/api';
 import '../MobileApp.css';
 
 /**
@@ -39,11 +36,10 @@ const MobilePhoneView = () => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [textCommand, setTextCommand] = useState('');
-  const [commandResult, setCommandResult] = useState(null);
   const [resultText, setResultText] = useState('');
   const [nlpResult, setNlpResult] = useState(null);
   const [showTypingResponse, setShowTypingResponse] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [language, setLanguage] = useState('zh');
   const [expandedScene, setExpandedScene] = useState(null);
   const [isUnderstandSuccess, setIsUnderstandSuccess] = useState(true);
@@ -308,14 +304,12 @@ const MobilePhoneView = () => {
     if (!textCommand.trim()) return;
     
     setIsProcessing(true);
-    setCommandResult(null);
     setResultText('');
     setShowTypingResponse(false);
     setNlpResult(null);
     
     try {
       const response = await voiceApi.sendTextCommand(textCommand);
-      setCommandResult(response.data);
       
       // 设置 NLP 识别结果
       const nlpQuintuple = formatNlpQuintuple(response.data);
@@ -358,10 +352,6 @@ const MobilePhoneView = () => {
       setResultText('发送命令失败，请重试');
       setShowTypingResponse(true);
       setIsUnderstandSuccess(false);
-      setCommandResult({
-        error: true,
-        errorMessage: error.response?.data?.message || '发送命令失败，请重试'
-      });
     } finally {
       setIsProcessing(false);
       setTextCommand('');
@@ -458,7 +448,9 @@ const MobilePhoneView = () => {
 
   // Process command result
   const handleCommandResult = (result) => {
-    setCommandResult(result);
+    setResultText('');
+    setShowTypingResponse(false);
+    setNlpResult(null);
     
     // 设置 NLP 识别结果
     const nlpQuintuple = formatNlpQuintuple(result);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import WifiIcon from '@mui/icons-material/Wifi';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import { useTheme } from '../contexts/ThemeContext';
