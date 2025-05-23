@@ -29,7 +29,7 @@ export const SettingsProvider = ({ children }) => {
   const [settings, setSettingsState] = useState(defaultSettings);
   const [loading, setLoading] = useState(true);
 
-  // 加载 settings（优先 localStorage，后端兜底）
+  // 加载 settings（优先 localStorage，后端...）
   useEffect(() => {
     const saved = localStorage.getItem('voice_settings');
     if (saved) {
