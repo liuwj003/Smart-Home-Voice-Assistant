@@ -5,6 +5,7 @@ import logging
 from typing import Dict, Union, Optional
 import sys
 from pathlib import Path
+import base64
 
 # 添加父目录到系统路径，以便导入其他模块
 sys.path.append(str(Path(__file__).parent.parent))
@@ -196,6 +197,53 @@ class NLPServiceOrchestrator:
                 'response_message_for_tts': '对不起，我无法理解您的请求'
             }
     
+    def _convert_file_to_base64(self, file_path: str) -> Optional[str]:
+        """
+        将音频文件转换为base64编码
+        
+        Args:
+            file_path: 音频文件路径
+            
+        Returns:
+            base64编码的字符串，格式为 "base64://DATA"
+            如果转换失败则返回None
+        """
+        try:
+            # 尝试多种路径拼接方式，确保能找到文件
+            possible_paths = [
+                # 1. 使用原始路径（可能是绝对路径）
+                file_path,
+                # 2. 相对于project_root
+                os.path.join(self.project_root, file_path),
+                # 3. 相对于nlp_service目录（可能是TTS引擎返回的）
+                os.path.join(self.project_root, "nlp_service", file_path)
+            ]
+            
+            # 找到第一个存在的文件路径
+            abs_path = None
+            for path in possible_paths:
+                if os.path.exists(path):
+                    abs_path = path
+                    logger.info(f"找到音频文件路径: {abs_path}")
+                    break
+                else:
+                    logger.debug(f"尝试路径不存在: {path}")
+            
+            # 如果没有找到有效路径
+            if not abs_path:
+                logger.error(f"所有尝试路径均不存在: {possible_paths}")
+                return None
+                
+            # 读取文件内容并转换为base64
+            with open(abs_path, "rb") as f:
+                audio_bytes = f.read()
+                base64_data = base64.b64encode(audio_bytes).decode("utf-8")
+                return f"base64://{base64_data}"
+                
+        except Exception as e:
+            logger.error(f"转换音频文件到base64失败: {str(e)}")
+            return None
+    
     async def _perform_tts(self, text_to_speak: str) -> Union[str, bytes, None]:
         """
         执行文字转语音
@@ -207,7 +255,20 @@ class NLPServiceOrchestrator:
             TTS音频的URL、Base64编码的字节数据，或None
         """
         try:
-            return await self.tts_engine.synthesize(text_to_speak)
+            result = await self.tts_engine.synthesize(text_to_speak)
+            
+            # 检查结果类型
+            if isinstance(result, str):
+                # 如果是路径，则转换为base64
+                if os.path.exists(os.path.join(self.project_root, result)) or os.path.exists(result):
+                    logger.info(f"将音频文件路径转换为base64: {result}")
+                    return self._convert_file_to_base64(result)
+                # 如果已经是URL或base64格式，直接返回
+                elif result.startswith(('http://', 'https://', 'base64://')):
+                    return result
+                    
+            # 返回原始结果
+            return result
         except Exception as e:
             logger.error(f"TTS转换失败: {str(e)}")
             return None
