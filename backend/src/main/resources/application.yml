@@ -28,7 +28,7 @@ logging:
 # NLP服务配置
 nlp:
   service:
-    baseurl: http://localhost:8000
+    baseurl: http://localhost:8010
     
 # 音频处理配置
 voice:

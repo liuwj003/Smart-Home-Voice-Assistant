@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 import tempfile
 import time
+from zhconv import convert  
 
 # 将项目根目录添加到系统路径
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -90,7 +91,12 @@ class WhisperSTTEngine(STTInterface):
             except Exception as e:
                 logger.warning(f"临时文件删除失败: {str(e)}")
             
-            return result.text
+            # 将文本从繁体转换为简体中文
+            converted_text = convert(result.text, 'zh-cn')
+            logger.info(f"原始文本: {result.text}")
+            logger.info(f"转换后文本: {converted_text}")
+            
+            return converted_text
             
         except Exception as e:
             logger.error(f"音频转文本失败: {str(e)}")

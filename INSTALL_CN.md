@@ -75,7 +75,7 @@ run.bat
 ```
 
 这将启动：
-- 端口8000上的NLP服务
+- 端口8010上的NLP服务
 - 端口8080上的Java后端
 - 端口3000上的React前端
 
@@ -99,7 +99,7 @@ docker-compose up -d
 ```
 
 这将构建并启动所有必要的容器：
-- nlp-service - 端口8000上的NLP处理
+- nlp-service - 端口8010上的NLP处理
 - backend - 端口8080上的Java Spring Boot后端
 - frontend - 端口3000上的React前端
 
@@ -126,13 +126,13 @@ NLP服务的配置可以在以下位置找到：
 
 1. 在浏览器中访问`http://localhost:3000`以访问前端界面
 2. 测试位于`http://localhost:8080/api`的后端API
-3. 检查位于`http://localhost:8000/health`的NLP服务健康状态
+3. 检查位于`http://localhost:8010/health`的NLP服务健康状态
 
 ## 故障排除
 
 ### 常见问题
 
-1. **端口冲突**：确保端口3000、8000和8080没有被其他应用程序使用。
+1. **端口冲突**：确保端口3000、8010和8080没有被其他应用程序使用。
 
 2. **Python依赖项问题**：如果遇到Python依赖项问题，请尝试：
    ```bash

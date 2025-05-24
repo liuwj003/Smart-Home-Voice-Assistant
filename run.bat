@@ -85,7 +85,7 @@ start "Frontend" cmd /k "cd %~dp0frontend && npm install && npm start"
 
 echo ======================================
 echo Application started successfully!
-echo NLP Service will run on http://localhost:8000
+echo NLP Service will run on http://localhost:8010
 echo Backend API will run on http://localhost:8080/api
 echo Frontend will run on http://localhost:3000
 echo ======================================

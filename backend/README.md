@@ -32,7 +32,7 @@ mvn spring-boot:run
 
 nlp:
   service:
-    baseurl: http://localhost:8000  # NLP服务地址
+    baseurl: http://localhost:8010  # NLP服务地址
 ```
 
 ## 数据流

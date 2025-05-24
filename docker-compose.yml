@@ -6,15 +6,15 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8010:8010"
     volumes:
       - ./nlp_service:/app/nlp_service
     restart: unless-stopped
     environment:
       - NLP_SERVICE_HOST=0.0.0.0
-      - NLP_SERVICE_PORT=8000
+      - NLP_SERVICE_PORT=8010
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health" , "||", "exit", "0"]
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health" , "||", "exit", "0"]
       interval: 20s
       timeout: 5s
       retries: 3
@@ -30,7 +30,7 @@ services:
       - ./backend:/app
       - maven_repo:/root/.m2
     environment:
-      - NLP_SERVICE_URL=http://nlp-service:8000
+      - NLP_SERVICE_URL=http://nlp-service:8010
       - SERVER_PORT=8080
     depends_on:
       - nlp-service

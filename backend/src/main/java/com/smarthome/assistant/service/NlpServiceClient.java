@@ -30,7 +30,7 @@ public class NlpServiceClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${nlp.service.baseurl:http://localhost:8000}")
+    @Value("${nlp.service.baseurl:http://localhost:8010}")
     private String nlpServiceBaseUrl;
 
     /**

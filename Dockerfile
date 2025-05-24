@@ -26,11 +26,11 @@ RUN echo 'from fastapi import FastAPI\nimport uvicorn\nfrom fastapi.middleware.c
 
 # Set environment variables
 ENV NLP_SERVICE_HOST=0.0.0.0
-ENV NLP_SERVICE_PORT=8000
+ENV NLP_SERVICE_PORT=8010
 ENV PYTHONUNBUFFERED=1
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8010
 
 # Run the application
 WORKDIR /app/nlp_service

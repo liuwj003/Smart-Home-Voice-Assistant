@@ -11,7 +11,7 @@ python start_service.py
 
 * 方法1：直接在文件管理器里双击打开nlp_test.html
 * 方法2，如下：
-* 打开:http://localhost:8000/docs
+* 打开:http://localhost:8010/docs
 * 这是fastAPI自动生成的API交互式文档，可以看到如下界面：
 <img src="imgs/image_1.png" alt="alt text" width="80%"/>
 
@@ -93,15 +93,15 @@ nlp_service/
 #### 2.1.1 音频处理接口
 
 - **接口名称**：处理音频输入
-- **接口URL**：`http://localhost:8000/process_audio`
-- **端口**：8000
+- **接口URL**：`http://localhost:8010/process_audio`
+- **端口**：8010
 - **请求方式**：POST (multipart/form-data)
 - **响应格式**：JSON
 
 #### 2.1.2 文本处理接口
 
 - **接口名称**：处理文本输入
-- **接口URL**：`http://localhost:8000/process_text`
+- **接口URL**：`http://localhost:8010/process_text`
 - **请求方式**：POST
 - **数据格式**：JSON
 - **响应格式**：JSON
@@ -109,7 +109,7 @@ nlp_service/
 #### 2.1.3 健康检查接口
 
 - **接口名称**：健康检查
-- **接口URL**：`http://localhost:8000/health`
+- **接口URL**：`http://localhost:8010/health`
 - **请求方式**：GET
 - **响应格式**：JSON
 
@@ -316,7 +316,7 @@ public class NlpServiceClient {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${nlp.service.baseurl:http://localhost:8000}")
+    @Value("${nlp.service.baseurl:http://localhost:8010}")
     private String nlpServiceBaseUrl;
     
     public Map<String, Object> callProcessAudio(MultipartFile audioFile, Map<String, Object> settings) throws Exception {
@@ -490,7 +490,7 @@ python start_service.py
 | 环境变量 | 说明 | 默认值 |
 |---------|-----|---------|
 | NLP_SERVICE_HOST | 服务监听主机 | 0.0.0.0 |
-| NLP_SERVICE_PORT | 服务监听端口 | 8000 |
+| NLP_SERVICE_PORT | 服务监听端口 | 8010 |
 
 ## 10. 注意事项
 

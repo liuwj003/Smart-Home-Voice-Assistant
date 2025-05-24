@@ -25,7 +25,7 @@ docker-compose up -d
 ```
 
 这个命令会构建并启动三个服务：
-- NLP Service (语音处理服务): 端口 8000
+- NLP Service (语音处理服务): 端口 8010
 - Backend (Java 后端): 端口 8080
 - Frontend (React 前端): 端口 3000
 
@@ -49,7 +49,7 @@ docker-compose logs -f frontend
 
 所有服务都配置了健康检查，可以通过以下端点查看：
 
-- NLP Service: http://localhost:8000/health
+- NLP Service: http://localhost:8010/health
 - Backend: http://localhost:8080/api
 
 ### 解决常见问题

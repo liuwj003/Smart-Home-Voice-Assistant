@@ -213,7 +213,7 @@
                 
                 document.getElementById('textResult').textContent = '正在处理...';
                 
-                const response = await fetch('http://localhost:8000/process_text', {
+                const response = await fetch('http://localhost:8010/process_text', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -268,7 +268,7 @@
                     tts_enabled: ttsEnabled
                 }));
                 
-                const response = await fetch('http://localhost:8000/process_audio', {
+                const response = await fetch('http://localhost:8010/process_audio', {
                     method: 'POST',
                     body: formData,
                 });
@@ -293,7 +293,7 @@
             try {
                 document.getElementById('healthResult').textContent = '正在检查...';
                 
-                const response = await fetch('http://localhost:8000/health');
+                const response = await fetch('http://localhost:8010/health');
                 const result = await response.json();
                 
                 document.getElementById('healthResult').textContent = JSON.stringify(result, null, 2);

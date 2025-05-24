@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     host = os.environ.get("NLP_SERVICE_HOST", "0.0.0.0")
-    port = int(os.environ.get("NLP_SERVICE_PORT", "8000"))
+    port = int(os.environ.get("NLP_SERVICE_PORT", "8010"))
     
     logger.info(f"Starting NLP service on {host}:{port}")
     

@@ -74,7 +74,7 @@ run.bat
 ```
 
 This will launch:
-- The NLP service on port 8000
+- The NLP service on port 8010
 - The Java backend on port 8080
 - The React frontend on port 3000
 
@@ -98,7 +98,7 @@ docker-compose up -d
 ```
 
 This will build and start all necessary containers:
-- nlp-service - NLP processing on port 8000
+- nlp-service - NLP processing on port 8010
 - backend - Java Spring Boot backend on port 8080
 - frontend - React frontend on port 3000
 
@@ -125,13 +125,13 @@ To verify your installation is working:
 
 1. Visit `http://localhost:3000` in your browser to access the frontend interface
 2. Test the backend API at `http://localhost:8080/api`
-3. Check the NLP service health at `http://localhost:8000/health`
+3. Check the NLP service health at `http://localhost:8010/health`
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Port conflicts**: Ensure ports 3000, 8000, and 8080 are not being used by other applications.
+1. **Port conflicts**: Ensure ports 3000, 8010, and 8080 are not being used by other applications.
 
 2. **Python dependencies**: If you encounter issues with Python dependencies, try:
    ```bash

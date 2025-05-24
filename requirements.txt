@@ -17,6 +17,7 @@ torchaudio
 transformers>=4.36.0
 soundfile
 PyAudio
+zhconv
 
 # NLU依赖
 pandas

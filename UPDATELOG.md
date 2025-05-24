@@ -3,7 +3,12 @@
 * 实时分工调整在`docs/member_summary.md`下记录
 * 可以把整个项目克隆下来，然后`run.bat`试试效果。
 
-## 5.20 (Version 0.2)
+## 5.24 (Version 0)
+* 完善了nlp_service的README文档，添加了简单可用的测试界面
+* 使用zhconv解决whisper会识别成繁体中文的问题，把繁体中文转换成简体中文。
+* 添加、修改了前后端目前框架的README
+
+## 5.20 (Version 0)
 
 * Apple-Style
 
