@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NLP服务测试</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NLP服务测试工具</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('text-tab')">文本处理</div>
+            <div class="tab" onclick="showTab('audio-tab')">音频处理</div>
+            <div class="tab" onclick="showTab('health-tab')">健康检查</div>
+        </div>
+        
+        <div id="text-tab" class="tab-content active">
+            <h2>文本处理测试</h2>
+            <div class="form-group">
+                <label for="textInput">文本输入：</label>
+                <input type="text" id="textInput" value="打开卧室的灯" placeholder="输入文本命令...">
+            </div>
+            
+            <div class="form-group">
+                <label for="nluEngine">NLU引擎：</label>
+                <select id="nluEngine">
+                    <option value="placeholder">placeholder</option>
+                    <option value="fine_tuned_bert">fine_tuned_bert</option>
+                    <option value="nlu_orchestrator">nlu_orchestrator</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="ttsEngine">TTS引擎：</label>
+                <select id="ttsEngine">
+                    <option value="placeholder">placeholder</option>
+                    <option value="pyttsx3">pyttsx3</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>TTS启用：</label>
+                <label style="display:inline">
+                    <input type="radio" name="ttsEnabled" value="true"> 启用
+                </label>
+                <label style="display:inline; margin-left:15px;">
+                    <input type="radio" name="ttsEnabled" value="false" checked> 禁用
+                </label>
+            </div>
+            
+            <button onclick="testTextAPI()">测试文本处理</button>
+            <h3>结果：</h3>
+            <pre id="textResult">结果将显示在这里...</pre>
+        </div>
+        
+        <div id="audio-tab" class="tab-content">
+            <h2>音频处理测试</h2>
+            <div class="form-group">
+                <label for="audioFile">音频文件：</label>
+                <input type="file" id="audioFile" accept="audio/*">
+            </div>
+            
+            <div class="form-group">
+                <label for="sttEngine">STT引擎：</label>
+                <select id="sttEngine">
+                    <option value="placeholder">placeholder</option>
+                    <option value="whisper">whisper</option>
+                    <option value="dolphin">dolphin</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="nluEngineAudio">NLU引擎：</label>
+                <select id="nluEngineAudio">
+                    <option value="placeholder">placeholder</option>
+                    <option value="fine_tuned_bert">fine_tuned_bert</option>
+                    <option value="nlu_orchestrator">nlu_orchestrator</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="ttsEngineAudio">TTS引擎：</label>
+                <select id="ttsEngineAudio">
+                    <option value="placeholder">placeholder</option>
+                    <option value="pyttsx3">pyttsx3</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>TTS启用：</label>
+                <label style="display:inline">
+                    <input type="radio" name="ttsEnabledAudio" value="true"> 启用
+                </label>
+                <label style="display:inline; margin-left:15px;">
+                    <input type="radio" name="ttsEnabledAudio" value="false" checked> 禁用
+                </label>
+            </div>
+            
+            <button onclick="testAudioAPI()">测试音频处理</button>
+            <h3>结果：</h3>
+            <pre id="audioResult">结果将显示在这里...</pre>
+        </div>
+        
+        <div id="health-tab" class="tab-content">
+            <h2>健康检查</h2>
+            <button onclick="checkHealth()">检查服务状态</button>
+            <h3>结果：</h3>
+            <pre id="healthResult">结果将显示在这里...</pre>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabId) {
+            // 隐藏所有选项卡内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 取消所有选项卡的激活状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 激活点击的选项卡
+            document.getElementById(tabId).classList.add('active');
+            // 激活对应的选项卡按钮
+            event.currentTarget.classList.add('active');
+        }
+        
+        async function testTextAPI() {
+            try {
+                const textInput = document.getElementById('textInput').value;
+                const nluEngine = document.getElementById('nluEngine').value;
+                const ttsEngine = document.getElementById('ttsEngine').value;
+                const ttsEnabled = document.querySelector('input[name="ttsEnabled"]:checked').value === 'true';
+                
+                document.getElementById('textResult').textContent = '正在处理...';
+                
+                const response = await fetch('http://localhost:8000/process_text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text_input: textInput,
+                        settings: {
+                            nlu_engine: nluEngine,
+                            tts_engine: ttsEngine,
+                            tts_enabled: ttsEnabled
+                        }
+                    }),
+                });
+                
+                const result = await response.json();
+                document.getElementById('textResult').textContent = JSON.stringify(result, null, 2);
+                
+                // 如果有TTS输出，尝试播放
+                if (result.tts_output_reference && result.tts_output_reference.startsWith('base64://')) {
+                    const base64Data = result.tts_output_reference.replace('base64://', '');
+                    const audioBlob = b64toBlob(base64Data, 'audio/wav');
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                }
+            } catch (error) {
+                document.getElementById('textResult').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function testAudioAPI() {
+            try {
+                const fileInput = document.getElementById('audioFile');
+                if (!fileInput.files.length) {
+                    document.getElementById('audioResult').textContent = '请选择音频文件';
+                    return;
+                }
+                
+                const sttEngine = document.getElementById('sttEngine').value;
+                const nluEngine = document.getElementById('nluEngineAudio').value;
+                const ttsEngine = document.getElementById('ttsEngineAudio').value;
+                const ttsEnabled = document.querySelector('input[name="ttsEnabledAudio"]:checked').value === 'true';
+                
+                document.getElementById('audioResult').textContent = '正在处理音频...';
+                
+                const formData = new FormData();
+                formData.append('audio_file', fileInput.files[0]);
+                formData.append('settings_json', JSON.stringify({
+                    stt_engine: sttEngine,
+                    nlu_engine: nluEngine,
+                    tts_engine: ttsEngine,
+                    tts_enabled: ttsEnabled
+                }));
+                
+                const response = await fetch('http://localhost:8000/process_audio', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                const result = await response.json();
+                document.getElementById('audioResult').textContent = JSON.stringify(result, null, 2);
+                
+                // 如果有TTS输出，尝试播放
+                if (result.tts_output_reference && result.tts_output_reference.startsWith('base64://')) {
+                    const base64Data = result.tts_output_reference.replace('base64://', '');
+                    const audioBlob = b64toBlob(base64Data, 'audio/wav');
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                }
+            } catch (error) {
+                document.getElementById('audioResult').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function checkHealth() {
+            try {
+                document.getElementById('healthResult').textContent = '正在检查...';
+                
+                const response = await fetch('http://localhost:8000/health');
+                const result = await response.json();
+                
+                document.getElementById('healthResult').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('healthResult').textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        // base64转Blob工具函数
+        function b64toBlob(b64Data, contentType='', sliceSize=512) {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            
+            const blob = new Blob(byteArrays, {type: contentType});
+            return blob;
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,52 @@
 # NLP服务接口文档
 
+## 0. 最直接的测试手段：
+```
+cd nlp_service
+python start_service.py
+```
+然后，可以看到如下启动信息：
+
+<img src="imgs/image_0.png" alt="alt text" width="80%"/>
+
+* 方法1：直接在文件管理器里双击打开nlp_test.html
+* 方法2，如下：
+* 打开:http://localhost:8000/docs
+* 这是fastAPI自动生成的API交互式文档，可以看到如下界面：
+<img src="imgs/image_1.png" alt="alt text" width="80%"/>
+
+* 然后下拉，找到`Try it Out`按钮，就可以直接测试了：
+<img src="imgs/image_2.png" alt="alt text" width="80%"/>
+
+* 输入的setting有2种：
+```bash
+{
+  "text_input": "客厅太冷",
+  "settings": {
+         "stt_engine": "whisper",
+         "nlu_engine": "nlu_orchestrator",
+         "tts_engine": "pyttsx3",
+         "tts_enabled": false
+   }
+}
+```
+或者
+```bash
+{
+  "text_input": "客厅太冷",
+  "settings": {
+         "stt_engine": "whisper",
+         "nlu_engine": "fine_tuned_bert",
+         "tts_engine": "pyttsx3",
+         "tts_enabled": false
+   }
+}
+```
+
+* 响应结果如下:
+<img src="imgs/image_3.png" alt="alt text" width="80%"/>
+
+
 ## 1. 服务架构
 
 NLP（自然语言处理）服务是智能家居语音助手的核心组件，负责将用户的自然语言指令转化为系统可理解和执行的结构化命令。本服务由以下核心模块组成：
