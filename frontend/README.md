@@ -259,6 +259,235 @@ const handleCommandResult = useCallback((result) => {
 }
 ```
 
+## 音频文件格式转换与传递路径
+
+系统中的音频文件经历了多个阶段的处理和转换。下面详细说明了音频数据在整个系统中的流转过程：
+
+### 1. 前端音频采集与编码
+
+1. **原始音频采集**:
+   - 使用浏览器的`MediaDevices.getUserMedia()` API获取用户麦克风的音频流
+   - 获取到的是原始PCM音频数据流
+
+2. **前端音频编码**:
+   - 使用`MediaRecorder` API将音频流编码为WebM格式
+   - WebM容器中通常包含Opus编码的音频数据
+   ```javascript
+   const mediaRecorder = new MediaRecorder(stream);
+   const audioChunks = [];
+   ```
+
+3. **音频数据封装**:
+   - 录制完成后，音频数据被封装为Blob对象
+   - 指定MIME类型为`audio/webm`
+   ```javascript
+   const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+   ```
+
+### 2. 前端到Spring后端传输
+
+1. **HTTP请求封装**:
+   - 使用FormData对象封装音频Blob
+   - 字段名固定为`audio_file`，文件名为`recording.webm`
+   ```javascript
+   const formData = new FormData();
+   formData.append('audio_file', audioBlob, 'recording.webm');
+   ```
+
+2. **API请求发送**:
+   - 通过Axios发送POST请求到后端`/command/audio`端点
+   - Content-Type设置为`multipart/form-data`
+   - 请求同时包含用户语音设置信息`settingsJson`
+   ```javascript
+   api.post('/command/audio', formData, {
+     headers: { 'Content-Type': 'multipart/form-data' },
+     timeout: 60000 // 1分钟超时
+   });
+   ```
+
+### 3. Spring后端处理
+
+1. **音频文件接收**:
+   - Spring后端通过`VoiceCommandController`的`processAudioCommand`方法接收音频文件
+   - 通过`@RequestParam("audio_file") MultipartFile audioFile`参数获取上传的WebM音频
+   - 支持`audio_file`或`audio`两种参数名（优先使用`audio_file`）
+   ```java
+   @PostMapping("/audio")
+   public ResponseEntity<FrontendResponseDto> processAudioCommand(
+           @RequestParam(value = "audio_file", required = false) MultipartFile audioFile,
+           @RequestParam(value = "audio", required = false) MultipartFile audioFallback,
+           @RequestParam(value = "settingsJson", defaultValue = "{}") String settingsJson) {
+       // ...
+   }
+   ```
+
+2. **音频文件传递**:
+   - 收到的WebM音频文件**不进行格式转换**，直接以原始格式传递
+   - 由`SmartHomeCommandOrchestrator`协调处理流程
+   ```java
+   // SmartHomeCommandOrchestrator.java
+   public FrontendResponseDto orchestrateAudioCommand(MultipartFile audioFile, String settingsJson) {
+       // 解析设置
+       Map<String, Object> settings = objectMapper.readValue(settingsJson, Map.class);
+       
+       // 调用NLP服务进行音频处理
+       Map<String, Object> nlpResponse = nlpServiceClient.callProcessAudio(audioFile, settings);
+       // ...
+   }
+   ```
+
+### 4. 后端到NLP服务传输
+
+1. **原始音频文件传输**:
+   - 后端**不对音频进行任何格式转换**，保持WebM格式
+   - 通过`NlpServiceClient`类构建多部分表单请求将文件发送给NLP服务
+   ```java
+   // NlpServiceClient.java
+   public Map<String, Object> callProcessAudio(MultipartFile audioFile, Map<String, Object> settings) {
+       // 配置请求头
+       HttpHeaders headers = new HttpHeaders();
+       headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+       // 构建表单数据
+       MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+       ByteArrayResource fileResource = new ByteArrayResource(audioFile.getBytes()) {
+           @Override
+           public String getFilename() {
+               return audioFile.getOriginalFilename();
+           }
+       };
+       body.add("audio_file", fileResource);
+       body.add("settings_json", objectMapper.writeValueAsString(settings));
+
+       // 发送请求
+       HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+       String url = nlpServiceBaseUrl + "/process_audio";
+       ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+       // ...
+   }
+   ```
+
+2. **请求参数封装**:
+   - 音频文件作为`audio_file`字段发送
+   - 语音设置以JSON字符串形式作为`settings_json`字段发送
+   - 使用Spring的`RestTemplate`发起HTTP请求
+
+### 5. NLP服务处理
+
+1. **音频文件接收**:
+   - NLP服务通过FastAPI的`UploadFile`参数接收WebM格式的音频文件
+   ```python
+   @app.post("/process_audio")
+   async def process_audio(
+       audio_file: UploadFile = File(...),
+       settings_json: str = Form(...)
+   ):
+   ```
+
+2. **音频临时存储与格式转换**:
+   - 音频数据先被读取为字节数据
+   - 然后通过`WhisperSTTEngine`的`transcribe`方法处理
+   - 音频数据被保存为临时WAV文件（无格式转换）
+   ```python
+   # 读取音频文件内容
+   audio_data = await audio_file.read()
+   
+   # 使用编排器处理音频（包含STT转写）
+   result = await orchestrator.handle_audio_input(audio_data, settings)
+   ```
+   
+   ```python
+   # WhisperSTTEngine.transcribe方法中
+   # 保存音频数据到临时文件
+   temp_filename = self.save_audio_temp(audio_data)
+   ```
+
+3. **Whisper模型处理**:
+   - Whisper模型直接读取临时音频文件进行处理
+   - Whisper本身支持多种音频格式，包括WAV、MP3、WebM等
+   ```python
+   # 加载模型并明确指定设备
+   model = whisper.load_model(self.model_size).to(self.device)
+   
+   # 加载音频并进行处理
+   audio = whisper.load_audio(temp_filename)
+   audio = whisper.pad_or_trim(audio)
+   
+   # 解码音频
+   options = whisper.DecodingOptions()
+   result = whisper.decode(model, mel, options)
+   ```
+
+### 6. 文本响应与TTS生成
+
+1. **文本响应生成**:
+   - NLP服务处理识别出的文本，生成响应文本
+   ```python
+   # 执行NLU
+   nlu_result = await self._perform_nlu(transcribed_text)
+   
+   # 生成响应消息
+   response_message = nlu_result.get("response_message_for_tts", "")
+   ```
+
+2. **TTS音频生成** (如果启用):
+   - 根据`tts_engine`参数选择TTS引擎
+   - 将响应文本转换为语音
+   ```python
+   if tts_enabled:
+       tts_output_reference = await self._perform_tts(response_message)
+   ```
+
+3. **TTS音频编码**:
+   - 音频通常被编码为Base64字符串格式返回
+   - 通过`tts_output_reference`字段传递给Spring后端
+
+### 7. 响应返回到前端
+
+1. **响应数据处理**:
+   - Spring后端通过`SmartHomeCommandOrchestrator`的`processNlpResponse`方法处理NLP服务响应
+   - 构建`FrontendResponseDto`对象，包含NLU结果、TTS引用等
+   ```java
+   // 构建响应
+   FrontendResponseDto.builder()
+       .commandSuccess(true)
+       .sttText((String) nlpResponse.getOrDefault("transcribed_text", null))
+       .nluResult(nluDisplayDto)
+       .deviceActionFeedback(deviceFeedback)
+       .responseMessageForTts(responseMessageForTts)
+       .ttsOutputReference((String) nlpResponse.getOrDefault("tts_output_reference", null))
+       .build();
+   ```
+
+2. **前端音频播放**:
+   - 如果响应包含`ttsOutputReference`，前端解析并播放
+   - 通常以Base64格式返回，前端直接解码播放
+
+3. **音频解码与播放**:
+   ```javascript
+   // 处理Base64音频
+   if (ttsReference.startsWith('base64://')) {
+     const base64Data = ttsReference.replace('base64://', '');
+     const audioData = atob(base64Data);
+     const audioBlob = new Blob([audioData], { type: 'audio/mp3' });
+     const audioUrl = URL.createObjectURL(audioBlob);
+     // 播放音频
+     const audio = new Audio(audioUrl);
+     audio.play();
+   }
+   ```
+
+### 8. 整体音频格式流程总结
+
+```
+浏览器麦克风(PCM流) → 前端WebM/Opus编码 → HTTP传输 → 
+Spring后端接收(不转换格式) → 直接以WebM格式转发 → 
+NLP服务将WebM直接保存为临时文件（保存为.wav格式） → Whisper模型直接读取 → 
+STT识别 → 文本 → NLU处理 → 响应文本 → 
+TTS生成(WAV/MP3) → Base64编码 → 返回至Spring后端 → 
+返回至前端 → 解码播放
+```
+
 ## 实现天气预报查看功能
 
 天气预报查看是一个常见的语音助手功能，需要实现：
