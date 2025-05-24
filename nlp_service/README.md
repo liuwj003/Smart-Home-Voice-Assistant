@@ -26,7 +26,7 @@ python start_service.py
          "stt_engine": "whisper",
          "nlu_engine": "nlu_orchestrator",
          "tts_engine": "pyttsx3",
-         "tts_enabled": false
+         "tts_enabled": true
    }
 }
 ```
