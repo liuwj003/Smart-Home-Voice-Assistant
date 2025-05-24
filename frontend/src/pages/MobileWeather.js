@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Card, CardContent, Grid, IconButton, Divider, Skeleton } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  Card, 
+  CardContent, 
+  Grid, 
+  IconButton, 
+  Divider, 
+  Skeleton,
+  Tabs,
+  Tab,
+  Paper,
+  LinearProgress
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
@@ -11,8 +24,12 @@ import AirIcon from '@mui/icons-material/Air';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import OpacityIcon from '@mui/icons-material/Opacity';
+import CompressIcon from '@mui/icons-material/Compress';
 import MobileContainer from '../components/MobileContainer';
 import { useTheme } from '../contexts/ThemeContext';
+import { api } from '../services/api';
 import '../MobileApp.css';
 
 /**
@@ -22,17 +39,32 @@ import '../MobileApp.css';
 const MobileWeather = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [weatherData, setWeatherData] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
   const { darkMode } = useTheme();
   const theme = darkMode ? 'dark' : 'light';
 
   // 加载天气数据
-  useEffect(() => {
-    // 模拟网络请求延迟
-    const timer = setTimeout(() => {
-      // 模拟天气数据 (实际项目中应从API获取)
+  const fetchWeatherData = async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      // 实际项目中应调用API获取数据
+      // const response = await api.getWeatherData();
+      // setWeatherData(response.data);
+      
+      // 模拟网络请求延迟
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 模拟天气数据
       setWeatherData({
         location: '北京市',
+        updateTime: '更新于 ' + new Date().toLocaleTimeString(),
         current: {
           temperature: 22,
           condition: 'sunny',
@@ -42,38 +74,66 @@ const MobileWeather = () => {
           feelsLike: 21,
           visibility: 10,
           uvIndex: 4,
-          airQuality: '优',
+          airQuality: {
+            level: '优',
+            pm25: 15,
+            pm10: 28,
+            o3: 35,
+          },
           pressure: 1012,
+          precipitation: 0,
         },
         hourly: [
-          { time: '09:00', temp: 18, condition: 'sunny' },
-          { time: '10:00', temp: 19, condition: 'sunny' },
-          { time: '11:00', temp: 21, condition: 'sunny' },
-          { time: '12:00', temp: 22, condition: 'sunny' },
-          { time: '13:00', temp: 23, condition: 'cloudy' },
-          { time: '14:00', temp: 23, condition: 'cloudy' },
-          { time: '15:00', temp: 22, condition: 'cloudy' },
-          { time: '16:00', temp: 21, condition: 'rainy' },
+          { time: '09:00', temp: 18, condition: 'sunny', precipitation: 0 },
+          { time: '10:00', temp: 19, condition: 'sunny', precipitation: 0 },
+          { time: '11:00', temp: 21, condition: 'sunny', precipitation: 0 },
+          { time: '12:00', temp: 22, condition: 'sunny', precipitation: 0 },
+          { time: '13:00', temp: 23, condition: 'cloudy', precipitation: 0 },
+          { time: '14:00', temp: 23, condition: 'cloudy', precipitation: 0 },
+          { time: '15:00', temp: 22, condition: 'cloudy', precipitation: 10 },
+          { time: '16:00', temp: 21, condition: 'rainy', precipitation: 30 },
+          { time: '17:00', temp: 20, condition: 'rainy', precipitation: 40 },
+          { time: '18:00', temp: 19, condition: 'rainy', precipitation: 35 },
+          { time: '19:00', temp: 18, condition: 'cloudy', precipitation: 20 },
+          { time: '20:00', temp: 17, condition: 'cloudy', precipitation: 10 },
         ],
         forecast: [
-          { day: '今天', high: 24, low: 18, condition: 'sunny' },
-          { day: '明天', high: 23, low: 17, condition: 'cloudy' },
-          { day: '周三', high: 21, low: 15, condition: 'rainy' },
-          { day: '周四', high: 19, low: 14, condition: 'rainy' },
-          { day: '周五', high: 20, low: 15, condition: 'cloudy' },
-          { day: '周六', high: 22, low: 16, condition: 'sunny' },
-          { day: '周日', high: 21, low: 15, condition: 'snowy' },
+          { day: '今天', high: 24, low: 18, condition: 'sunny', precipitation: 0 },
+          { day: '明天', high: 23, low: 17, condition: 'cloudy', precipitation: 20 },
+          { day: '周三', high: 21, low: 15, condition: 'rainy', precipitation: 60 },
+          { day: '周四', high: 19, low: 14, condition: 'rainy', precipitation: 70 },
+          { day: '周五', high: 20, low: 15, condition: 'cloudy', precipitation: 30 },
+          { day: '周六', high: 22, low: 16, condition: 'sunny', precipitation: 10 },
+          { day: '周日', high: 21, low: 15, condition: 'snowy', precipitation: 40 },
         ]
       });
+    } catch (error) {
+      console.error("获取天气数据失败:", error);
+      // 可以添加错误提示
+    } finally {
       setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+      setRefreshing(false);
+    }
+  };
+
+  // 组件挂载时加载数据
+  useEffect(() => {
+    fetchWeatherData();
   }, []);
 
   // 返回按钮点击事件
   const handleBackClick = () => {
     navigate(-1);
+  };
+
+  // 刷新按钮点击事件
+  const handleRefreshClick = () => {
+    fetchWeatherData(true);
+  };
+
+  // 标签页切换事件
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
   };
 
   // 获取天气图标
@@ -100,6 +160,14 @@ const MobileWeather = () => {
     }
   };
 
+  // 获取降水概率颜色
+  const getPrecipitationColor = (probability) => {
+    if (probability === 0) return '#e0e0e0';
+    if (probability < 30) return '#81d4fa';
+    if (probability < 60) return '#29b6f6';
+    return '#0288d1';
+  };
+
   return (
     <MobileContainer title="Our Home">
       <Box sx={{ 
@@ -117,7 +185,12 @@ const MobileWeather = () => {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h6" sx={{ ml: 2, flexGrow: 1 }}>天气</Typography>
+        <IconButton edge="end" onClick={handleRefreshClick} disabled={refreshing} aria-label="refresh">
+          <RefreshIcon sx={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+        </IconButton>
       </Box>
+      
+      {refreshing && <LinearProgress color="primary" sx={{ height: 2 }} />}
       
       <Box 
         className="ios-scrollable-content"
@@ -136,7 +209,9 @@ const MobileWeather = () => {
             <Box 
               className="ios-section" 
               sx={{ 
-                background: 'linear-gradient(to bottom, rgba(66, 165, 245, 0.1), rgba(66, 165, 245, 0))',
+                background: theme === 'dark' 
+                  ? 'linear-gradient(to bottom, rgba(30, 60, 90, 0.3), rgba(30, 40, 60, 0.1))' 
+                  : 'linear-gradient(to bottom, rgba(66, 165, 245, 0.1), rgba(66, 165, 245, 0))',
                 pt: 2,
                 pb: 3
               }}
@@ -163,6 +238,10 @@ const MobileWeather = () => {
                 
                 <Typography variant="subtitle1">
                   体感温度 {weatherData.current.feelsLike}°
+                </Typography>
+                
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                  {weatherData.updateTime}
                 </Typography>
               </Box>
 
@@ -194,7 +273,12 @@ const MobileWeather = () => {
 
               {/* 主要天气指标 */}
               <Box sx={{ px: 3 }}>
-                <Card elevation={0} sx={{ borderRadius: '16px', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+                <Card elevation={0} sx={{ 
+                  borderRadius: '16px', 
+                  bgcolor: theme === 'dark' 
+                    ? 'rgba(30, 40, 60, 0.6)' 
+                    : 'rgba(255, 255, 255, 0.7)'
+                }}>
                   <CardContent>
                     <Grid container spacing={2}>
                       <Grid item xs={6}>
@@ -229,106 +313,261 @@ const MobileWeather = () => {
                           </Typography>
                         </Box>
                       </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <OpacityIcon sx={{ mr: 1, color: '#29b6f6', fontSize: 18 }} />
+                          <Typography variant="body2">
+                            降水: {weatherData.current.precipitation} mm
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <CompressIcon sx={{ mr: 1, color: '#9e9e9e', fontSize: 18 }} />
+                          <Typography variant="body2">
+                            气压: {weatherData.current.pressure} hPa
+                          </Typography>
+                        </Box>
+                      </Grid>
                     </Grid>
                   </CardContent>
                 </Card>
               </Box>
             </Box>
 
-            {/* 逐小时预报 */}
-            <Box className="ios-section" sx={{ mt: 2 }}>
-              <Box className="ios-section-title">
-                <Typography variant="h2" component="h2">今日预报</Typography>
-              </Box>
-              
-              <Box sx={{ overflowX: 'auto', px: 2 }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  minWidth: weatherData.hourly.length * 70, 
-                  pb: 1 
-                }}>
-                  {weatherData.hourly.map((hour, index) => (
+            {/* 标签页导航 */}
+            <Paper sx={{ 
+              position: 'sticky', 
+              top: 56, 
+              zIndex: 9,
+              borderRadius: 0,
+              boxShadow: 'none',
+              borderBottom: 1,
+              borderColor: 'divider',
+              bgcolor: theme === 'dark' ? '#121212' : '#fff'
+            }}>
+              <Tabs 
+                value={tabValue} 
+                onChange={handleTabChange}
+                variant="fullWidth"
+                sx={{
+                  '& .MuiTab-root': {
+                    textTransform: 'none',
+                    minHeight: '48px',
+                    fontWeight: 500
+                  }
+                }}
+              >
+                <Tab label="24小时" />
+                <Tab label="7天" />
+                <Tab label="空气质量" />
+              </Tabs>
+            </Paper>
+
+            {/* 内容区域 */}
+            <Box sx={{ pt: 2 }}>
+              {/* 24小时预报 */}
+              {tabValue === 0 && (
+                <Box sx={{ px: 2 }}>
+                  <Box sx={{ overflowX: 'auto', py: 1 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      minWidth: weatherData.hourly.length * 80,
+                      pb: 1 
+                    }}>
+                      {weatherData.hourly.map((hour, index) => (
+                        <Box 
+                          key={index} 
+                          sx={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            width: 80,
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            {hour.time}
+                          </Typography>
+                          {getWeatherIcon(hour.condition, 'small')}
+                          <Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 'bold' }}>
+                            {hour.temp}°
+                          </Typography>
+                          <Box sx={{ 
+                            width: '100%', 
+                            mt: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            {hour.precipitation > 0 && (
+                              <>
+                                <OpacityIcon sx={{ 
+                                  fontSize: 14, 
+                                  mr: 0.5, 
+                                  color: getPrecipitationColor(hour.precipitation)
+                                }} />
+                                <Typography variant="caption" sx={{ 
+                                  color: getPrecipitationColor(hour.precipitation)
+                                }}>
+                                  {hour.precipitation}%
+                                </Typography>
+                              </>
+                            )}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+              )}
+
+              {/* 7天预报 */}
+              {tabValue === 1 && (
+                <Box sx={{ px: 2 }}>
+                  {weatherData.forecast.map((day, index) => (
                     <Box 
                       key={index} 
                       sx={{ 
-                        flex: '0 0 70px', 
                         display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center',
-                        opacity: index === 0 ? 1 : 0.8
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        py: 2,
+                        borderBottom: index < weatherData.forecast.length - 1 ? 1 : 0,
+                        borderColor: 'divider'
                       }}
                     >
-                      <Typography variant="body2" color="text.secondary">
-                        {hour.time}
-                      </Typography>
-                      <Box sx={{ my: 1 }}>
-                        {getWeatherIcon(hour.condition, 'small')}
+                      <Box sx={{ width: '25%' }}>
+                        <Typography variant="body1" sx={{ fontWeight: index === 0 ? 'bold' : 'normal' }}>
+                          {day.day}
+                        </Typography>
                       </Box>
-                      <Typography variant="body1" fontWeight="500">
-                        {hour.temp}°
-                      </Typography>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        width: '20%',
+                        justifyContent: 'center'
+                      }}>
+                        {getWeatherIcon(day.condition, 'small')}
+                        {day.precipitation > 0 && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ ml: 1, color: getPrecipitationColor(day.precipitation) }}
+                          >
+                            {day.precipitation}%
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box sx={{ 
+                        width: '55%', 
+                        display: 'flex', 
+                        alignItems: 'center'
+                      }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ width: 30 }}>
+                          {day.low}°
+                        </Typography>
+                        <Box sx={{ 
+                          mx: 1, 
+                          flex: 1, 
+                          display: 'flex', 
+                          alignItems: 'center'
+                        }}>
+                          <Box sx={{ 
+                            height: 4, 
+                            bgcolor: theme === 'dark' 
+                              ? 'linear-gradient(to right, #90caf9, #f44336)' 
+                              : 'linear-gradient(to right, #42a5f5, #f9a825)',
+                            width: '100%',
+                            borderRadius: 2
+                          }} />
+                        </Box>
+                        <Typography variant="body2" sx={{ width: 30 }}>
+                          {day.high}°
+                        </Typography>
+                      </Box>
                     </Box>
                   ))}
                 </Box>
-              </Box>
-            </Box>
+              )}
 
-            {/* 未来几天预报 */}
-            <Box className="ios-section" sx={{ mt: 2 }}>
-              <Box className="ios-section-title">
-                <Typography variant="h2" component="h2">7天预报</Typography>
-              </Box>
-              
-              <Box sx={{ px: 2 }}>
-                <Card elevation={0} sx={{ borderRadius: '16px' }}>
-                  <CardContent sx={{ p: 0 }}>
-                    {weatherData.forecast.map((day, index) => (
-                      <React.Fragment key={index}>
+              {/* 空气质量 */}
+              {tabValue === 2 && (
+                <Box sx={{ px: 3, pt: 2 }}>
+                  <Card elevation={0} sx={{ 
+                    borderRadius: '16px',
+                    bgcolor: theme === 'dark' ? 'rgba(30, 40, 60, 0.6)' : 'rgba(66, 165, 245, 0.05)',
+                    mb: 3
+                  }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ mb: 2 }}>空气质量指数</Typography>
+                      <Box sx={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        mb: 2
+                      }}>
+                        <Typography variant="h3" sx={{ 
+                          fontWeight: 'bold',
+                          color: weatherData.current.airQuality.level === '优' ? '#4caf50' :
+                                weatherData.current.airQuality.level === '良' ? '#8bc34a' :
+                                weatherData.current.airQuality.level === '轻度污染' ? '#ffc107' :
+                                weatherData.current.airQuality.level === '中度污染' ? '#ff9800' : '#f44336'
+                        }}>
+                          {weatherData.current.airQuality.level}
+                        </Typography>
+                      </Box>
+                      
+                      <Divider sx={{ my: 2 }} />
+                      
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">PM2.5</Typography>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            mt: 1
+                          }}>
+                            <Typography variant="body1" fontWeight="bold">
+                              {weatherData.current.airQuality.pm25} μg/m³
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" color="text.secondary">PM10</Typography>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            mt: 1
+                          }}>
+                            <Typography variant="body1" fontWeight="bold">
+                              {weatherData.current.airQuality.pm10} μg/m³
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                      
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" color="text.secondary">臭氧 (O₃)</Typography>
                         <Box sx={{ 
                           display: 'flex', 
                           alignItems: 'center', 
                           justifyContent: 'space-between',
-                          p: 2
+                          mt: 1
                         }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontWeight: '500',
-                              width: '40px',
-                              color: index === 0 ? 'primary.main' : 'inherit'
-                            }}
-                          >
-                            {day.day}
+                          <Typography variant="body1" fontWeight="bold">
+                            {weatherData.current.airQuality.o3} μg/m³
                           </Typography>
-                          <Box sx={{ 
-                            display: 'flex',
-                            alignItems: 'center',
-                            mr: 2
-                          }}>
-                            {getWeatherIcon(day.condition, 'small')}
-                          </Box>
-                          <Box sx={{ 
-                            flex: 1,
-                            display: 'flex', 
-                            alignItems: 'center',
-                            justifyContent: 'flex-end'
-                          }}>
-                            <Typography sx={{ fontWeight: '500', mr: 1 }}>
-                              {day.high}°
-                            </Typography>
-                            <Typography color="text.secondary">
-                              {day.low}°
-                            </Typography>
-                          </Box>
                         </Box>
-                        {index < weatherData.forecast.length - 1 && (
-                          <Divider sx={{ mx: 2 }} />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </CardContent>
-                </Card>
-              </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 3, px: 1 }}>
+                    空气质量数据来源于环境监测站，每小时更新一次。空气质量良好时，可以正常进行户外活动。
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </>
         )}
@@ -337,38 +576,88 @@ const MobileWeather = () => {
   );
 };
 
-// 加载中骨架屏组件
+// 加载状态的骨架屏
 const WeatherSkeleton = () => (
-  <>
-    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Skeleton variant="circular" width={80} height={80} />
-      <Skeleton variant="text" width={120} height={60} sx={{ my: 2 }} />
-      <Skeleton variant="text" width={80} height={24} />
-      <Skeleton variant="text" width={180} height={24} sx={{ mt: 1 }} />
-      
-      <Box sx={{ width: '100%', mt: 2 }}>
-        <Skeleton variant="rounded" width="100%" height={100} />
-      </Box>
+  <Box sx={{ p: 3 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      textAlign: 'center',
+      mb: 4
+    }}>
+      <Skeleton variant="circular" width={64} height={64} sx={{ mb: 2 }} />
+      <Skeleton variant="rectangular" width={120} height={60} sx={{ mb: 1 }} />
+      <Skeleton variant="text" width={100} />
     </Box>
     
-    <Box sx={{ p: 3 }}>
-      <Skeleton variant="text" width={100} height={32} sx={{ mb: 2 }} />
-      <Box sx={{ display: 'flex', gap: 2, overflowX: 'hidden' }}>
-        {[...Array(6)].map((_, i) => (
-          <Box key={i} sx={{ minWidth: 60 }}>
-            <Skeleton variant="text" width={60} height={20} />
-            <Skeleton variant="circular" width={40} height={40} sx={{ my: 1, mx: 'auto' }} />
-            <Skeleton variant="text" width={30} height={20} sx={{ mx: 'auto' }} />
-          </Box>
-        ))}
-      </Box>
+    <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 2, mb: 3 }} />
+    
+    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+      <Skeleton width={120} />
+    </Typography>
+    
+    <Box sx={{ 
+      display: 'flex', 
+      overflowX: 'hidden',
+      mb: 4
+    }}>
+      {[1, 2, 3, 4, 5].map((item) => (
+        <Box 
+          key={item} 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            mr: 2,
+            width: 60
+          }}
+        >
+          <Skeleton variant="text" width={40} />
+          <Skeleton variant="circular" width={40} height={40} sx={{ my: 1 }} />
+          <Skeleton variant="text" width={30} />
+        </Box>
+      ))}
     </Box>
     
-    <Box sx={{ px: 3, mt: 2 }}>
-      <Skeleton variant="text" width={100} height={32} sx={{ mb: 2 }} />
-      <Skeleton variant="rounded" width="100%" height={250} />
-    </Box>
-  </>
+    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+      <Skeleton width={80} />
+    </Typography>
+    
+    {[1, 2, 3, 4].map((item) => (
+      <Box 
+        key={item} 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          py: 2,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}
+      >
+        <Skeleton variant="text" width={60} />
+        <Skeleton variant="circular" width={24} height={24} />
+        <Skeleton variant="rectangular" width={120} height={16} sx={{ borderRadius: 1 }} />
+      </Box>
+    ))}
+  </Box>
 );
 
-export default MobileWeather; 
+export default MobileWeather;
+
+// 添加动画帧
+const styles = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+`;
+
+// 将样式添加到文档
+if (!document.querySelector('style#weather-styles')) {
+  const styleElement = document.createElement('style');
+  styleElement.id = 'weather-styles';
+  styleElement.textContent = styles;
+  document.head.appendChild(styleElement);
+} 
