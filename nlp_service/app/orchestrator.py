@@ -17,7 +17,6 @@ from stt.factory import STTFactory
 from nlu.factory import NLUFactory
 from tts.factory import TTSFactory
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class NLPServiceOrchestrator:
