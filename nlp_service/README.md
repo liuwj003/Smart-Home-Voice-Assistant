@@ -23,7 +23,7 @@ python start_service.py
 {
   "text_input": "客厅太冷",
   "settings": {
-         "stt_engine": "whisper",
+         "stt_engine": "dolphin",
          "nlu_engine": "nlu_orchestrator",
          "tts_engine": "pyttsx3",
          "tts_enabled": true

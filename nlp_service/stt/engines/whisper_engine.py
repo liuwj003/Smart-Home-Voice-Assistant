@@ -30,7 +30,7 @@ class WhisperSTTEngine(STTInterface):
             config: 引擎配置
         """
         super().__init__(config)
-        self.model_size = self.config.get("model_size", "base")
+        self.model_size = self.config.get("model_size", "small")
         
         # 检测可用设备并处理配置
         self.device_name = self.config.get("device", "auto")

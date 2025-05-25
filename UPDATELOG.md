@@ -3,11 +3,13 @@
 * 实时分工调整在`docs/member_summary.md`下记录
 * 可以把整个项目克隆下来，然后`run.bat`试试效果。
 
-## 5.24 (Version 0)
+## 5.25 (Version 0)
 * 完善了nlp_service的README文档，添加了简单可用的测试界面
 * 使用zhconv解决whisper会识别成繁体中文的问题，把繁体中文转换成简体中文。
 * 添加、修改了前后端目前框架的README
 * 前端能播放语音反馈
+* 测试了dolphin引擎，在中文方言上效果比whisper更好。
+* 但dolphin会比whisper慢一点。dolphin会在本地目录nlp_service/data/models把stt模型下载下来，有1G+
 
 ## 5.20 (Version 0)
 
@@ -57,7 +59,7 @@
 * 语音服务：目前能实现“客厅太冷了”或者“客厅空调调高2度”都被返回`{空调、0、客厅、modify、2}`给后端的效果，以供后端施加效果到设备上。
 * 用户想文字输入还是语音输入都可以
 * 用户想不想要语音反馈都可以
-* 暂不支持dolphin引擎的语音转文本，因为需要安装espnet=202402，但这个要求的`importlib-metadata<5.0`，会与`opentelemetry-api 1.33.1`的`importlib-metadata>=6.0,<7.0`冲突。
+* dolphin引擎会带来奇怪的环境冲突，但目前好像没带来什么后续问题，因为需要安装espnet=202402，但这个要求的`importlib-metadata<5.0`，会与`opentelemetry-api 1.33.1`的`importlib-metadata>=6.0,<7.0`冲突。
 
 * 会返回语音反馈音频文件，但还没有实现音频的播放
 
@@ -70,8 +72,7 @@
 #### NLP服务
 * **STT**（speech_to_text）：能接受语音输入，使用whisper引擎进行 **语音转文本** 的功能，**还不错，后续考虑指定转录语言，或者用opencc库将识别结果转成简体中文**，需要添加一些音频文件来测试
 * 暂时打算：
-  - 建议中文用户用dolphin引擎（考虑到更多的中文方言支持）（环境依赖冲突，不打算支持了）
-  - 建议用户用whisper引擎
+  - 建议中文用户用dolphin引擎（考虑到更多的中文方言支持）
 * **NLU**（natural_language_understanding）：能**接受文本输入**，然后用一个被100多条**家居场景数据**微调过后的中文BERT模型进行意图识别，然后返回**识别出来的五个字段**（家居类型，家居编号（用户说的，比如客厅里的第2个灯的"2"），地点，动作，动作参数）
   - **用户可选**：用户认为自己说的话比较标准，能说出“客厅空调调高2度”这种，就用用fine-tuned-bert-processor就好
   - 用户想更智能，用nlu_orchestrator。

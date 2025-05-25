@@ -2,9 +2,9 @@
 
 # STT引擎配置
 stt:
-  engine: whisper  # 默认使用Whisper引擎
-  model_size: base     
-  device: auto         # 自动检测可用设备（cuda或cpu）
+  engine: dolphin  
+  model_size: small     
+  device: "auto"        # 自动检测可用设备（cuda或cpu）
 
 # NLU引擎配置
 nlu:

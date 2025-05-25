@@ -42,6 +42,6 @@ voice:
     silence-duration: 1.0
     min-speech-duration: 0.5
   stt:
-    engine-type: whisper
+    engine-type: dolphin
   nlu:
     engine-type: fine_tuned_bert 

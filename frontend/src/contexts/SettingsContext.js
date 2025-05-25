@@ -8,12 +8,12 @@ export const useSettings = () => useContext(SettingsContext);
 // 默认设置
 const defaultSettings = {
   stt: {
-    engine: 'whisper',
+    engine: 'dolphin',
     language: 'zh-CN'
   },
   nlu: {
     engine: 'fine_tuned_bert',
-    confidence_threshold: 0.7
+    confidence_threshold: 300
   },
   tts: {
     enabled: true,

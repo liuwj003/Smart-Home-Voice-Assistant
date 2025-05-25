@@ -15,8 +15,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -U openai-whisper dataoceanai-dolphin huggingface_hub
+RUN pip install --no-cache-dir -U openai-whisper huggingface_hub
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -U dataoceanai-dolphin
 
 # Copy application code
 COPY nlp_service/ ./nlp_service/

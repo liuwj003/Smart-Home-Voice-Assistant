@@ -4,6 +4,9 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, List
 import torch
+import dolphin
+import re
+from zhconv import convert  
 
 # 将项目根目录添加到系统路径
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -27,7 +30,14 @@ class DolphinSTTEngine(STTInterface):
         """
         super().__init__(config)
         self.model_size = self.config.get("model_size", "small")
-        self.device_name = self.config.get("device", "cpu")
+        # 检测可用设备并处理配置
+        self.device_name = self.config.get("device", "auto")
+        if self.device_name == "auto":
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device_name = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            self.device = torch.device(self.device_name)
+
         self.device = torch.device(self.device_name)
         self.models_dir = self.config.get("models_dir", os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
@@ -62,12 +72,9 @@ class DolphinSTTEngine(STTInterface):
             
             logger.info(f"音频数据已保存到临时文件: {temp_filename}")
             
-            # 导入dolphin
-            import dolphin
-            
             # 加载音频和模型
             waveform = dolphin.load_audio(temp_filename)
-            model = dolphin.load_model(self.model_size, self.models_dir, self.device)
+            model = dolphin.load_model(self.model_size, self.models_dir,self.device_name)
             
             # 执行转录
             result = model(waveform)
@@ -75,8 +82,10 @@ class DolphinSTTEngine(STTInterface):
             # 清理临时文件
             os.unlink(temp_filename)
             
-            # 假设result是一个包含文本的字典
-            return result.get("text", "")
+            pattern = re.compile(r"<[^>]*>")
+            result_text = pattern.sub("", result.text)
+            converted_text = convert(result_text, 'zh-cn')
+            return converted_text
             
         except Exception as e:
             logger.error(f"音频转文本失败: {str(e)}")
@@ -113,3 +122,4 @@ class DolphinSTTEngine(STTInterface):
         except ImportError:
             logger.warning("Dolphin未安装，请使用: pip install -U dataoceanai-dolphin")
             return False 
+    

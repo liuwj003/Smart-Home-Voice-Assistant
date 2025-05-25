@@ -58,7 +58,7 @@ const MobileSettings = () => {
   // 从全局设置状态加载设置
   useEffect(() => {
     if (settings) {
-      setSttEngine(settings.stt?.engine || 'whisper');
+      setSttEngine(settings.stt?.engine || 'dolphin');
       // 使用正确的引擎名称
       const nluEngineValue = settings.nlu?.engine || 'fine_tuned_bert';
       setNluEngine(nluEngineValue);
@@ -165,8 +165,7 @@ const MobileSettings = () => {
         <FormControlLabel
           value="dolphin"
           control={<Radio />}
-          label="Dolphin引擎(测试中，敬请期待)"
-          disabled
+          label="Dolphin引擎"
         />
       </RadioGroup>
     </FormControl>
@@ -251,7 +250,7 @@ const MobileSettings = () => {
       case 'whisper':
         return 'Whisper';
       case 'dolphin':
-        return 'Dolphin(测试中)';
+        return 'Dolphin';
       default:
         return 'Whisper';
     }

@@ -22,13 +22,12 @@ public class SettingsController {
     // 默认设置，实际项目中应从数据库或配置文件中读取
     private static final Map<String, Object> defaultSettings = new HashMap<String, Object>() {{
         put("stt", new HashMap<String, Object>() {{
-            put("engine", "whisper");
+            put("engine", "dolphin");
             put("language", "zh-CN");
-            put("sensitivity", 0.5);
         }});
         put("nlu", new HashMap<String, Object>() {{
             put("engine", "fine_tuned_bert");
-            put("confidence_threshold", 0.7);
+            put("confidence_threshold", 300);
         }});
         put("tts", new HashMap<String, Object>() {{
             put("enabled", true);

@@ -18,9 +18,9 @@ echo This may take a few minutes depending on your internet connection...
 
 echo Attempting standard installation...
 pip install -U openai-whisper
-pip install -U dataoceanai-dolphin
 pip install -U huggingface_hub
 pip install -r requirements.txt
+pip install -U dataoceanai-dolphin
 
 if %errorlevel% neq 0 (
     echo.
