@@ -579,10 +579,10 @@ if __name__ == '__main__':
     target_local_model_directory = nlu_dir / "model" / "fine_tuned_nlu_bert"
 
     config_for_testing = {
-        "local_model_target_dir": str(target_local_model_directory), # <--- 指定本地目标目录
-        "model_hub_id": "LIUWJ/fine-tuned-home-bert", # <--- 你的Hub模型ID
+        "local_model_target_dir": str(target_local_model_directory), # 本地目标目录
+        "model_hub_id": "LIUWJ/fine-tuned-home-bert", # Hub模型ID
         "device": "cpu",
-        # "force_download": True # <--- 如果你想强制重新下载，取消这行注释
+        # "force_download": True # 强制重新下载则取消这行注释
     }
 
     async def main_test():
