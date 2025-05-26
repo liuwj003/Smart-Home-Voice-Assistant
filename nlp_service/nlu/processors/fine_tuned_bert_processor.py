@@ -283,7 +283,11 @@ class BertNLUProcessor(NLUInterface):
         num_val = self._chinese_num_to_arabic_internal(numeric_part_for_conversion)
 
         if num_val is not None:
-            return num_val / 100.0 if is_percent else num_val
+            num_val = num_val / 100.0 if is_percent else num_val
+            
+            if num_val.is_integer():
+                return str(int(num_val))
+            return str(num_val)
         
         # 如果经过上述处理，num_val 仍为 None，说明无法转为数值
         # 此时，我们应该返回原始未经修改的参数文本，因为它可能是状态词等
@@ -435,6 +439,16 @@ class BertNLUProcessor(NLUInterface):
                                 "增" in combined_text_for_direction or \
                                 "加" in combined_text_for_direction # "加"也可能表示增加
 
+        def format_number_as_str(num):
+            """将数值转为字符串，如果是整数则去掉小数点和尾零"""
+            try:
+                float_val = float(num)
+                if float_val.is_integer():
+                    return str(int(float_val))
+                return str(float_val)
+            except (ValueError, TypeError):
+                return str(num)
+
         if action_text_raw:
             cleaned_action_text = "".join(action_text_raw.split())
             
@@ -447,19 +461,19 @@ class BertNLUProcessor(NLUInterface):
                 final_parameter = raw_param_text 
             elif "开" in cleaned_action_text or "启" in cleaned_action_text or "亮" in cleaned_action_text:
                 final_action_english = "turn_on"
-                final_parameter = 0.0 
+                final_parameter = "0"  
             elif "关" in cleaned_action_text or "闭" in cleaned_action_text or "熄" in cleaned_action_text:
                 final_action_english = "turn_off"
-                final_parameter = 0.0 
+                final_parameter = "0" # 
             elif "查" in cleaned_action_text or "询" in cleaned_action_text or "状态" in cleaned_action_text or "情况" in cleaned_action_text or "多少" in cleaned_action_text or "看" in cleaned_action_text or "问" in cleaned_action_text:
                 final_action_english = "query"
-                final_parameter = raw_param_text 
+                final_parameter = raw_param_text
             elif "上" in cleaned_action_text or "合" in cleaned_action_text or "关" in cleaned_action_text or "拉" in cleaned_action_text:
                 final_action_english = "close_curtain" 
-                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (None if raw_param_text is None else raw_param_text)
+                final_parameter = normalized_param_from_slot
             elif "开" in cleaned_action_text:
                 final_action_english = "open_curtain"
-                final_parameter = normalized_param_from_slot if isinstance(normalized_param_from_slot, float) else (None if raw_param_text is None else raw_param_text)
+                final_parameter = normalized_param_from_slot
             
             # 处理 modify 类动作
             # (如果上面的条件都不满足，但包含调节类核心词，则认为是modify)
@@ -467,34 +481,43 @@ class BertNLUProcessor(NLUInterface):
             elif "调" in cleaned_action_text or "变" in cleaned_action_text or \
                  "设" in cleaned_action_text or "整" in cleaned_action_text or \
                  "到" in cleaned_action_text or is_negative_direction or is_positive_direction or \
-                 (raw_param_text and not final_action_english): # 如果有参数但前面没匹配到动作
+                 (raw_param_text and not final_action_english):
                 
                 final_action_english = "modify"
                 final_parameter = normalized_param_from_slot # 默认使用参数槽的值
 
-                if isinstance(final_parameter, float): # 如果参数是数值
-                    if is_negative_direction and final_parameter > 0: # 例如 "调低2度", param=2.0 -> -2.0
-                        final_parameter = -final_parameter
-                    elif is_positive_direction and final_parameter < 0: # 例如 "调高-2度", param=-2.0 -> 2.0
-                        final_parameter = abs(final_parameter) 
-                    # 如果方向和参数符号一致，则不处理，例如 "调高2度" (param=2.0)
-                
-                elif raw_param_text and raw_param_text in ["一点", "一些", "一点点"]: # 参数是相对词
-                    if is_positive_direction: final_parameter = "+0.1" 
-                    elif is_negative_direction: final_parameter = "-0.1"
-                    else: final_parameter = raw_param_text # 保留 "一点" 如果没有明确方向
-                
-                elif raw_param_text: # 参数是其他文本，如 "制冷模式"
-                    final_parameter = raw_param_text # 已经被 normalized_param_from_slot 赋值，这里是确保
-                
-                else: # 参数槽为空，但动作是调节类（例如，只说了 "调高"）
-                    if is_positive_direction: final_parameter = "+1" 
-                    elif is_negative_direction: final_parameter = "-1"
-                    # 可以像下面这样有特殊的动作指定添加
-                    # elif "加热" in cleaned_action_text: final_parameter = "heat_on" # 特殊动作词
-                    else:
-                        logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
-                        final_parameter = None 
+                try:
+                    param_float = float(normalized_param_from_slot) if normalized_param_from_slot is not None else None
+                    if param_float is not None:
+                        # 无论参数符号与方向是否一致，都添加符号
+                        abs_val_str = format_number_as_str(abs(param_float)) # 使用辅助函数处理整数值
+                        if is_negative_direction:
+                            if param_float > 0:  # 例如 "调低2度", param=2.0 -> "-2"
+                                final_parameter = f"-{abs_val_str}"
+                            else:  # 例如 "调低-2度"
+                                final_parameter = f"-{abs_val_str}"
+                        elif is_positive_direction:
+                            if param_float < 0:  # 例如 "调高-2度"
+                                final_parameter = f"+{abs_val_str}"
+                            else:  # 例如 "调高2度", param=2.0 -> "+2"
+                                final_parameter = f"+{abs_val_str}"
+                        else:
+                            # 没有明确方向，保留原始值但转为字符串
+                            final_parameter = format_number_as_str(param_float)
+                except (ValueError, TypeError):
+                    # 参数不是数值，处理相对词或者其他文本
+                    if raw_param_text and raw_param_text in ["一点", "一些", "一点点"]:  # 参数是相对词
+                        if is_positive_direction: final_parameter = "+0.1"
+                        elif is_negative_direction: final_parameter = "-0.1"
+                        else: final_parameter = raw_param_text  # 保留 "一点" 如果没有明确方向
+                    elif raw_param_text:  # 参数是其他文本，如 "制冷模式"
+                        final_parameter = raw_param_text
+                    else:  # 参数槽为空，但动作是调节类（例如，只说了 "调高"）
+                        if is_positive_direction: final_parameter = "+1"
+                        elif is_negative_direction: final_parameter = "-1"
+                        else:
+                            logger.warning(f"动作是 '{final_action_english}' 但未提取或推断出任何参数，文本: '{text}'")
+                            final_parameter = None
             else: # 如果经过以上所有判断都没有匹配到标准动作
                 if not final_action_english: 
                     logger.warning(f"未知的中文动作实体 (最终判断): '{cleaned_action_text}'，无法映射。")
@@ -503,18 +526,36 @@ class BertNLUProcessor(NLUInterface):
         # 如果没有提取出ACTION实体，但有设备和参数
         elif not final_action_english and device_type and raw_param_text:
             final_action_english = "modify" # 默认为修改参数
-            final_parameter = normalized_param_from_slot # 使用已标准化的参数
-            # 如果 normalized_param_from_slot 不是数值，且 combined_text_for_direction 有方向
-            if not isinstance(final_parameter, float):
+            
+            try:
+                # 处理浮点数参数，添加正负号
+                param_float = float(normalized_param_from_slot) if normalized_param_from_slot is not None else None
+                if param_float is not None:
+                    # 如果是数值且有方向，添加符号
+                    abs_val_str = format_number_as_str(abs(param_float)) 
+                    if is_positive_direction:
+                        final_parameter = f"+{abs_val_str}" 
+                    elif is_negative_direction:
+                        final_parameter = f"-{abs_val_str}"
+                    else:
+                        # 没有明确方向，保留原始值但转为字符串
+                        final_parameter = format_number_as_str(param_float)
+                else:
+                    # 不是数值类型
+                    if is_positive_direction: final_parameter = "+1" 
+                    elif is_negative_direction: final_parameter = "-1"
+                    else: final_parameter = normalized_param_from_slot  # 非数值参数
+            except (ValueError, TypeError):
+                # 无法转换为浮点数
                 if is_positive_direction: final_parameter = "+1"
                 elif is_negative_direction: final_parameter = "-1"
-                # 否则保留文本参数，如 "空调红色" -> ACTION:modify, PARAM:红色
+                else: final_parameter = normalized_param_from_slot  # 原始值
+                
             logger.info(f"无显式ACTION，但有设备和参数，推断为modify: {text}")
-
 
         # 再次检查开关动作的默认参数
         if final_action_english in ["turn_on", "turn_off"] and final_parameter is None:
-            final_parameter = 0.0
+            final_parameter = "0"
 
         final_result = {
             "DEVICE_TYPE": device_type,
@@ -553,22 +594,22 @@ if __name__ == '__main__':
             return
 
         test_cases = [
-            "空调温度调低两度",         # Expected ACTION: modify, PARAMETER: -2.0
-            "把卧室灯的亮度调高一些",   # Expected ACTION: modify, PARAMETER: "+0.1" (或 "+1")
+            "空调温度调低两度",         # Expected ACTION: modify, PARAMETER: "-2.0"
+            "把卧室灯的亮度调高一些",   # Expected ACTION: modify, PARAMETER:  "+1"
             "帮我加热一下微波炉",       # Expected ACTION: modify
-            "客厅空调，温度二十二",     # Expected ACTION: modify, PARAMETER: 22.0
-            "将风扇风速设为三档",       # ACTION: modify, PARAMETER: 3.0
+            "客厅空调，温度二十二",     # Expected ACTION: modify, PARAMETER: "22.0"
+            "将风扇风速设为三档",       # ACTION: modify, PARAMETER: "3.0"
             "把灯光调成红色",           # ACTION: modify, PARAMETER: "红色"
             "音量增大",                 # ACTION: modify, PARAMETER: "+1"
             "移除第二个摄像头",         # ACTION: delete, DEVICE_ID: "1"
             "添加一个叫书房夜灯的新灯到书房", # ACTION: add, PARAMETER: "书房夜灯"
-            "将客厅的空调温度调低两度",   # ACTION: modify, PARAMETER: -2.0
-            "客厅灯调到百分之五",        # ACTION: modify, PARAMETER: 0.05
+            "将客厅的空调温度调低两度",   # ACTION: modify, PARAMETER: "-2.0"
+            "客厅灯调到百分之五",        # ACTION: modify, PARAMETER: "0.05"
             "打开三号卧室的灯",           # ACTION: turn_on, DEVICE_ID: "3"
             "温度调高",                 # ACTION: modify, PARAMETER: "+1"
-            "湿度降低百分之十",         # ACTION: modify, PARAMETER: -0.1
+            "湿度降低百分之十",         # ACTION: modify, PARAMETER: "-0.1"
             "把灯亮度调暗一点点",        # ACTION: modify, PARAMETER: "-0.1"
-            "空调低2度",
+            "空调低2度",                # ACTION: modify, PARAMETER: "-2.0"
             "加热烤箱",
             "热一下烤箱",
             "拉窗帘"
