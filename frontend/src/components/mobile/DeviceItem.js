@@ -7,7 +7,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
  * 
  * @param {Object} props
  * @param {Object} props.device - 设备数据对象
- * @param {Boolean} props.useSpecialIcon - 是否使用特殊图标（如智能助手金色图标）
+ * @param {Boolean} props.useSpecialIcon - 是否使用特殊图标
  * @param {Function} props.onClick - 点击设备的处理函数
  * @returns {JSX.Element}
  */
@@ -21,11 +21,11 @@ const DeviceItem = ({ device, useSpecialIcon = false, onClick }) => {
       <Box 
         className="ios-card-icon" 
         sx={useSpecialIcon ? {
-          backgroundColor: 'rgba(255, 215, 0, 0.2)' // 金色背景
+          backgroundColor: 'rgba(255, 215, 0, 0.2)' 
         } : {}}
       >
         {useSpecialIcon ? 
-          <SmartToyIcon sx={{ color: 'gold' }} /> : // 特殊图标
+          <SmartToyIcon sx={{ color: 'gold' }} /> : 
           device.icon
         }
       </Box>

@@ -24,7 +24,7 @@ const FavoritesList = ({ favoriteDevices, onDeviceClick }) => {
           <DeviceItem 
             key={device.id}
             device={device}
-            useSpecialIcon={index === 1} // 第二个项目使用特殊图标
+            useSpecialIcon={index === 1}
             onClick={onDeviceClick ? () => onDeviceClick(device) : undefined}
           />
         ))}
