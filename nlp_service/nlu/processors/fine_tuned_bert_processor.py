@@ -8,17 +8,6 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification
 import re
 from huggingface_hub import snapshot_download
 
-# --- NLUInterface Definition (if not properly imported) ---
-logger = logging.getLogger(__name__)
-try:
-    from interfaces.nlu_interface import NLUInterface
-except ImportError:
-    logger.warning("NLUInterface not found from 'interfaces.nlu_interface'. Using a dummy interface for testing.")
-    class NLUInterface: # type: ignore
-        async def understand(self, text: str) -> Dict:
-            raise NotImplementedError
-# -----------------------------------------------------------
-
 class BertNLUProcessor(NLUInterface):
     """
     Pretrained Bert, then fine-tuned for slot filling.
