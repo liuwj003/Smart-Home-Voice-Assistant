@@ -482,7 +482,7 @@ const handleCommandResult = useCallback((result) => {
 ```
 浏览器麦克风(PCM流) → 前端WebM/Opus编码 → HTTP传输 → 
 Spring后端接收(不转换格式) → 直接以WebM格式转发 → 
-NLP服务将WebM直接保存为临时文件（保存为.wav格式） → Whisper模型直接读取 → 
+NLP服务将WebM直接保存为临时文件（保存为.wav格式） → STT模型直接读取 → 
 STT识别 → 文本 → NLU处理 → 响应文本 → 
 TTS生成(WAV/MP3) → Base64编码 → 返回至Spring后端 → 
 返回至前端 → 解码播放
