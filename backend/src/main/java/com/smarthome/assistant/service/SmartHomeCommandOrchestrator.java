@@ -20,7 +20,7 @@ import java.util.Map;
 public class SmartHomeCommandOrchestrator {
 
     private final NlpServiceClient nlpServiceClient;
-    private final DeviceService deviceService;
+    private final CommandForwardService commandForwardService;
     private final ObjectMapper objectMapper;
 
     /**
@@ -47,6 +47,9 @@ public class SmartHomeCommandOrchestrator {
             
             // 调用NLP服务进行音频处理
             Map<String, Object> nlpResponse = nlpServiceClient.callProcessAudio(audioFile, settings);
+            
+            // 转发命令到外部服务
+            commandForwardService.forwardCommand(nlpResponse);
             
             // 如果响应包含错误标志，则返回错误信息
             if (nlpResponse.containsKey("error") && (Boolean)nlpResponse.get("error")) {
@@ -111,6 +114,9 @@ public class SmartHomeCommandOrchestrator {
             
             // 调用NLP服务进行文本处理
             Map<String, Object> nlpResponse = nlpServiceClient.callProcessText(textInput, settings);
+            
+            // 转发命令到外部服务
+            commandForwardService.forwardCommand(nlpResponse);
             
             // 如果响应包含错误标志，则返回错误信息
             if (nlpResponse.containsKey("error") && (Boolean)nlpResponse.get("error")) {
@@ -191,8 +197,8 @@ public class SmartHomeCommandOrchestrator {
                     .confidence(confidence)
                     .build();
             
-            // 设备控制，传递deviceId和parameter
-            String deviceFeedback = deviceService.updateDeviceState(entity, location, action, deviceId, parameter);
+            // // 设备控制，传递deviceId和parameter
+            // String deviceFeedback = deviceService.updateDeviceState(entity, location, action, deviceId, parameter);
             
             // 提取NLP服务的响应消息
             String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", null);
@@ -202,7 +208,7 @@ public class SmartHomeCommandOrchestrator {
                     .commandSuccess(true)
                     .sttText((String) nlpResponse.getOrDefault("transcribed_text", null))
                     .nluResult(nluDisplayDto)
-                    .deviceActionFeedback(deviceFeedback)
+                    // .deviceActionFeedback(deviceFeedback)
                     .responseMessageForTts(responseMessageForTts)
                     .ttsOutputReference((String) nlpResponse.getOrDefault("tts_output_reference", null))
                     .build();

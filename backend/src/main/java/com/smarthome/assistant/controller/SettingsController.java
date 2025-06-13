@@ -19,14 +19,14 @@ import java.util.Map;
 @CrossOrigin
 public class SettingsController {
 
-    // 默认设置，实际项目中应从数据库或配置文件中读取
+    // 默认设置
     private static final Map<String, Object> defaultSettings = new HashMap<String, Object>() {{
         put("stt", new HashMap<String, Object>() {{
             put("engine", "dolphin");
             put("language", "zh-CN");
         }});
         put("nlu", new HashMap<String, Object>() {{
-            put("engine", "fine_tuned_bert");
+            put("engine", "nlu_orchestrator");
             put("confidence_threshold", 300);
         }});
         put("tts", new HashMap<String, Object>() {{

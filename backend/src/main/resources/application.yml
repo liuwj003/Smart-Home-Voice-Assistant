@@ -44,4 +44,4 @@ voice:
   stt:
     engine-type: dolphin
   nlu:
-    engine-type: fine_tuned_bert 
+    engine-type: nlu_orchestrator

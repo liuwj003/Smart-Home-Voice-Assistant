@@ -12,7 +12,7 @@ const defaultSettings = {
     language: 'zh-CN'
   },
   nlu: {
-    engine: 'fine_tuned_bert',
+    engine: 'nlu_orchestrator',
     confidence_threshold: 300
   },
   tts: {

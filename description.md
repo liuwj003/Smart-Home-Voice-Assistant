@@ -414,7 +414,7 @@ export const SettingsProvider = ({ children }) => {
 
 #### 5.1.6 静态数据 (data)
 - **功能**：提供模拟数据和常量配置
-- **示例**：mockDeviceData.js - 模拟设备数据
+- **示例**：DeviceData.js
 ```javascript
 // 每个房间设备数据
 export const roomDevices = {
@@ -1258,7 +1258,7 @@ class NLUInterface(ABC):
 1. **前端单元测试**:
    - 组件渲染测试
    - 状态管理测试
-   - API调用测试(使用Mock)
+   - API
 
 2. **后端单元测试**:
    - 控制器测试

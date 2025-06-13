@@ -51,8 +51,7 @@ echo ======================================
 echo Starting the application immediately after Python setup...
 echo ======================================
 
-REM Create a marker flag to track whether we got to the program launching stage
-echo 1 > startup_flag.txt
+java -jar backend/backend-device.jar
 
 REM Start NLP Service
 echo Starting NLP Service...

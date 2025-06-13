@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { commandService } from './command';
+import {clearRoomDevices} from '../data/DeviceData';
+import { fetchDevices } from '../data/deviceApi';
 
 // 创建 axios 实例
 const api = axios.create({
@@ -186,27 +189,34 @@ export const voiceApi = {
                     stt_engine: parsed.stt?.engine,
                     nlu_engine: parsed.nlu?.engine,
                     tts_engine: parsed.tts?.engine,
-                    tts_enabled: parsed.tts?.enabled !== undefined ? parsed.tts.enabled : true // 默认启用
+                    tts_enabled: parsed.tts?.enabled !== undefined ? parsed.tts.enabled : true
                 };
             }
         } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
-        const requestData = {
-            textInput: text,
-            settings
-        };
         
         try {
-            // 调试信息
+            // 先发送命令到8005端口
+            // await commandService.sendCommand(text);
+            
+            
+            
+            // 然后发送到主API
             console.log('发送文本命令到:', `${api.defaults.baseURL}/command/text`);
             console.log('文本内容:', text);
             
-            const response = await api.post('/command/text', requestData, {
-                timeout: 60000 // 设置60秒超时
+            const response = await api.post('/command/text', {
+                textInput: text,
+                settings
+            }, {
+                timeout: 60000
             });
             
-            // 调试信息
             console.log('文本命令响应成功:', response.status);
-            
+            // 清除并刷新设备数据
+            console.log('清除设备数据...');
+            clearRoomDevices();
+            console.log('获取最新设备数据...');
+            await fetchDevices();
             return response;
         } catch (err) {
             console.error('文本命令请求失败:', err.message);
@@ -217,11 +227,16 @@ export const voiceApi = {
                 console.log('服务器重连结果:', success ? '成功' : '失败');
                 
                 if (success) {
+                    // 重连成功后也要刷新设备数据
+                    console.log('清除并刷新设备数据...');
+                    clearRoomDevices();
+                    await fetchDevices();
+                    
                     console.log('使用新的baseURL重新发送文本命令:', api.defaults.baseURL);
                     return api.post('/command/text', { 
                         textInput: text,
                         settings: { 
-                            tts_enabled: settings.tts_enabled !== undefined ? settings.tts_enabled : true // 默认启用
+                            tts_enabled: settings.tts_enabled !== undefined ? settings.tts_enabled : true
                         } 
                     }, {
                         timeout: 60000
@@ -229,7 +244,6 @@ export const voiceApi = {
                 }
             }
             
-            // 详细记录错误
             if (err.response) {
                 console.error('服务器响应:', err.response.status, err.response.data);
             }

@@ -13,7 +13,7 @@ import useTextCommand from '../hooks/useTextCommand';
 import useCommandResult from '../hooks/useCommandResult';
 import useSettings from '../hooks/useSettings';
 import usePullToRefresh from '../hooks/usePullToRefresh';
-import { scenes, roomDevices, favoriteDevices } from '../data/mockDeviceData';
+import { scenes, roomDevices, favoriteDevices } from '../data/DeviceData';
 import '../MobileApp.css';
 
 /**
