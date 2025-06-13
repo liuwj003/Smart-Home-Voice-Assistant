@@ -420,7 +420,7 @@ class BertNLUProcessor(NLUInterface):
         
         normalized_param_from_slot = self._normalize_parameter(raw_param_text) # 参数槽的标准化值
 
-        # 整合 action_text_raw 和 raw_param_text 以及原始文本来判断方向
+        # 增强判断方向: 同时考虑action、参数和原始文本
         combined_text_for_direction = (action_text_raw or "") + (raw_param_text or "") + text
         
         is_negative_direction = "低" in combined_text_for_direction or \
@@ -434,7 +434,7 @@ class BertNLUProcessor(NLUInterface):
                                 "亮" in combined_text_for_direction or \
                                 "大" in combined_text_for_direction or \
                                 "增" in combined_text_for_direction or \
-                                "加" in combined_text_for_direction # "加"也可能表示增加
+                                "加" in combined_text_for_direction
 
         def format_number_as_str(num):
             """将数值转为字符串，如果是整数则去掉小数点和尾零"""
@@ -549,12 +549,28 @@ class BertNLUProcessor(NLUInterface):
                 else: final_parameter = normalized_param_from_slot  # 原始值
                 
             logger.info(f"无显式ACTION，但有设备和参数，推断为modify: {text}")
+            
+        # 没有ACTION实体也没参数，但有设备类型且有方向性指示
+        elif not final_action_english and device_type and (is_positive_direction or is_negative_direction):
+            final_action_english = "modify"
+            if is_positive_direction:
+                final_parameter = "+1"
+            else:
+                final_parameter = "-1"
 
         # 再次检查开关动作的默认参数
         if final_action_english in ["turn_on", "turn_off"] and final_parameter is None:
             final_parameter = "0"
-            
-        if final_parameter is None and final_action_english == "modify":
+        
+        if final_action_english == "modify" and final_parameter is None:
+            if is_positive_direction:
+                final_parameter = "+1"
+            elif is_negative_direction:
+                final_parameter = "-1"
+        
+        # 如果有设备类型但没有动作，并且检测到方向性词，默认为modify
+        if device_type and final_action_english is None and (is_positive_direction or is_negative_direction):
+            final_action_english = "modify"
             if is_positive_direction:
                 final_parameter = "+1"
             elif is_negative_direction:
