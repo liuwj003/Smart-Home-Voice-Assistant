@@ -547,8 +547,6 @@ class BertNLUProcessor(NLUInterface):
                 if is_positive_direction: final_parameter = "+1"
                 elif is_negative_direction: final_parameter = "-1"
                 else: final_parameter = normalized_param_from_slot  # 原始值
-                
-            logger.info(f"无显式ACTION，但有设备和参数，推断为modify: {text}")
             
         # 没有ACTION实体也没参数，但有设备类型且有方向性指示
         elif not final_action_english and device_type and (is_positive_direction or is_negative_direction):
