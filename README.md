@@ -1,5 +1,5 @@
 # 智能家居语音助手
-# 最新修改/更新记录看UPDATELOG.md文件，及时查看是否更新，并且更新之后可以在UPDATELOG.md里进行记录
+## 最新修改/更新记录看UPDATELOG.md文件
 
 这是一个使用Maven Java后端和React前端的智能家居语音助手项目。Python语音模块作为service被Java后端调用。
 
