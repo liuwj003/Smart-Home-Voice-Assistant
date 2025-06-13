@@ -81,7 +81,7 @@ public class VoiceCommandController {
      */
     @PostMapping("/text")
     public ResponseEntity<FrontendResponseDto> processTextCommand(@RequestBody TextCommandRequestDto request) {
-        log.info("接收到文本命令请求: {}", request.getTextInput());
+        log.info("Received text command request: {}", request.getTextInput());
         
         try {
             // 处理文本命令
@@ -89,7 +89,7 @@ public class VoiceCommandController {
                     request.getTextInput(), request.getSettings());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("处理文本命令失败", e);
+            log.error("Failed to process text command", e);
             FrontendResponseDto errorResponse = FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理文本命令时出错: " + e.getMessage())

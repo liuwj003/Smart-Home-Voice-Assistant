@@ -43,12 +43,11 @@ public class SettingsController {
         }});
     }};
 
-    // 存储当前设置的变量，实际项目中应使用数据库
     private static Map<String, Object> currentSettings = new HashMap<>(defaultSettings);
     
     @PostConstruct
     public void init() {
-        log.info("初始化SettingsController，设置API路径为 /api/voice/settings");
+        log.info("Initializing SettingsController, API path: /api/voice/settings");
     }
 
     /**
@@ -58,7 +57,7 @@ public class SettingsController {
      */
     @GetMapping("/settings")
     public ApiResponse<Map<String, Object>> getVoiceSettings() {
-        log.info("接收到获取语音设置请求");
+        log.info("Received request to get voice settings");
         return ApiResponse.success(currentSettings);
     }
 

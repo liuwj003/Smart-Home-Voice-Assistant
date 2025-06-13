@@ -14,7 +14,7 @@ mvn spring-boot:run
 
 #### 设备API
 
-backend-device.jar是用mybatis构建好的数据库交互模块，在8005端口上运行。
+DeviceControl.jar是用于设备控制的独立模块，在8005端口上运行。这个JAR包封装了所有与数据库设备控制相关的逻辑，后端通过HTTP API调用来与之通信，而不是直接在Java代码中实现设备控制功能。
 
 #### 语音API
 
@@ -43,8 +43,9 @@ nlp:
 2. 控制器调用`SmartHomeCommandOrchestrator`进行处理
 3. 编排器通过`NlpServiceClient`与NLP服务通信
 4. NLP服务处理后返回结果
-5. 编排器处理结果并可能执行设备控制
-6. 控制器将结果封装为`FrontendResponseDto`返回给前端
+5. 编排器处理结果并通过`CommandForwardService`将控制命令转发至DeviceControl.jar
+6. DeviceControl.jar处理设备控制逻辑并更新数据库中的设备状态
+7. 控制器将结果封装为`FrontendResponseDto`返回给前端
 
 ### 音频处理数据格式
 
@@ -110,6 +111,11 @@ nlp:
      - `orchestrateAudioCommand()`: 编排音频命令处理流程
      - `orchestrateTextCommand()`: 编排文本命令处理流程
      - `processNlpResponse()`: 处理NLP服务响应
+
+3. **CommandForwardService.java**
+   - 负责将命令转发至DeviceControl.jar
+   - 方法：
+     - `forwardCommand()`: 将NLP处理结果转发至设备控制服务
 
 #### 3. 数据传输对象 (DTO)
 

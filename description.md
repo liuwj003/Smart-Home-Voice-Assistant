@@ -140,8 +140,8 @@ nlp_service/
                                          v   |
                                     +-------------+
                                     |             |
-                                    |  设备服务层   |
-                                    |             |
+                                    | DeviceControl|
+                                    |    (JAR)    |
                                     +-------------+
 ```
 
@@ -151,19 +151,19 @@ nlp_service/
    ```
    用户 → 语音输入(VoiceInput.js) → 音频数据 → VoiceCommandController → SmartHomeCommandOrchestrator 
    → NlpServiceClient → NLP服务(orchestrator.py) → STT处理 → NLU处理 → TTS处理 
-   → 处理结果返回 → DeviceService(设备状态更新) → 前端UI更新 → 用户
+   → 处理结果返回 → CommandForwardService → DeviceControl.jar(设备状态更新) → 前端UI更新 → 用户
    ```
 
 2. **文本命令处理流程**:
    ```
    用户 → 文本输入 → VoiceCommandController → SmartHomeCommandOrchestrator 
    → NlpServiceClient → NLP服务(orchestrator.py) → NLU处理 → TTS处理 
-   → 处理结果返回 → DeviceService(设备状态更新) → 前端UI更新 → 用户
+   → 处理结果返回 → CommandForwardService → DeviceControl.jar(设备状态更新) → 前端UI更新 → 用户
    ```
 
 3. **设备控制流程**:
    ```
-   用户 → 设备控制UI → DeviceController → DeviceService → 设备状态更新 → 前端UI更新 → 用户
+   用户 → 设备控制UI → DeviceController → CommandForwardService → DeviceControl.jar(设备状态更新) → 前端UI更新 → 用户
    ```
 
 ## 3. 系统设计图

@@ -62,24 +62,23 @@ public class NlpServiceClient {
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
             String url = nlpServiceBaseUrl + "/process_audio";
             
-            log.info("发送音频处理请求到: {}, 文件大小: {} bytes, 内容类型: {}", 
+            log.info("Sending audio processing request to: {}, file size: {} bytes, content type: {}", 
                    url, audioFile.getSize(), audioFile.getContentType());
                    
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.info("NLP服务成功处理音频请求");
+                log.info("Audio request successfully processed by NLP service");
                 return response.getBody();
             } else {
-                log.error("NLP服务音频处理失败，状态码: {}", response.getStatusCode());
-                throw new Exception("NLP服务音频处理失败");
+                log.error("NLP service audio processing failed, status code: {}", response.getStatusCode());
+                throw new Exception("NLP service audio processing failed");
             }
         } catch (Exception e) {
-            log.error("调用NLP服务音频处理API失败: {}", e.getMessage(), e);
-            // 创建一个更详细的错误结果
+            log.error("Failed to call NLP service audio processing API: {}", e.getMessage(), e);
             Map<String, Object> errorResult = new HashMap<>();
             errorResult.put("error", true);
-            errorResult.put("errorMessage", "调用NLP服务失败: " + e.getMessage());
+            errorResult.put("errorMessage", "Failed to call NLP service: " + e.getMessage());
             errorResult.put("sttText", "");
             errorResult.put("nluResult", createEmptyNluResult());
             return errorResult;
@@ -104,21 +103,20 @@ public class NlpServiceClient {
             // 发送请求
             String url = nlpServiceBaseUrl + "/process_text";
             
-            log.info("发送文本处理请求到: {}, 文本: {}", url, textInput);
+            log.info("Sending text processing request to: {}, text: {}", url, textInput);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestBody, Map.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return response.getBody();
             } else {
-                log.error("NLP服务文本处理失败，状态码: {}", response.getStatusCode());
-                throw new Exception("NLP服务文本处理失败");
+                log.error("NLP service text processing failed, status code: {}", response.getStatusCode());
+                throw new Exception("NLP service text processing failed");
             }
         } catch (Exception e) {
-            log.error("调用NLP服务文本处理API失败: {}", e.getMessage(), e);
-            // 创建一个更详细的错误结果
+            log.error("Failed to call NLP service text processing API: {}", e.getMessage(), e);
             Map<String, Object> errorResult = new HashMap<>();
             errorResult.put("error", true);
-            errorResult.put("errorMessage", "调用NLP服务失败: " + e.getMessage());
+            errorResult.put("errorMessage", "Failed to call NLP service: " + e.getMessage());
             errorResult.put("sttText", textInput);
             errorResult.put("nluResult", createEmptyNluResult());
             return errorResult;
@@ -136,7 +134,6 @@ public class NlpServiceClient {
         nluResult.put("location", "");
         nluResult.put("device_id", "0");
         nluResult.put("parameter", null);
-        nluResult.put("confidence", 0.0);
         return nluResult;
     }
     
@@ -150,7 +147,7 @@ public class NlpServiceClient {
             ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
-            log.error("NLP服务健康检查失败: {}", e.getMessage());
+            log.error("NLP service health check failed: {}", e.getMessage());
             return false;
         }
     }

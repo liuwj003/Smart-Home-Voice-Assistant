@@ -90,9 +90,6 @@ echo Backend API will run on http://localhost:8080/api
 echo Frontend will run on http://localhost:3000
 echo ======================================
 
-REM Remove the startup flag
-del startup_flag.txt
-
 echo.
 echo Press any key to stop all services...
 pause > nul

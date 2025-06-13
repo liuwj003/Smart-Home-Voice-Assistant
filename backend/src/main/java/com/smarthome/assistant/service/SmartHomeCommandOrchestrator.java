@@ -34,7 +34,7 @@ public class SmartHomeCommandOrchestrator {
         try {
             // 首先检查NLP服务是否健康
             if (!nlpServiceClient.isNlpServiceHealthy()) {
-                log.error("NLP服务不可用，无法处理音频命令");
+                log.error("NLP service unavailable, cannot process audio command");
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage("NLP服务不可用，请确保NLP服务已启动")
@@ -59,7 +59,7 @@ public class SmartHomeCommandOrchestrator {
                 // 获取response_message_for_tts，如果没有则使用默认值
                 String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", "抱歉，我没能理解您的意思");
                 
-                log.error("NLP服务返回错误: {}", errorMsg);
+                log.error("NLP service returned error: {}", errorMsg);
                 
                 // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
                 if (nlpResponse.containsKey("nluResult")) {
@@ -83,7 +83,7 @@ public class SmartHomeCommandOrchestrator {
             
             return processNlpResponse(nlpResponse);
         } catch (Exception e) {
-            log.error("处理音频命令时出错", e);
+            log.error("Error processing audio command", e);
             return FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理音频命令时出错: " + e.getMessage())
@@ -103,7 +103,7 @@ public class SmartHomeCommandOrchestrator {
         try {
             // 首先检查NLP服务是否健康
             if (!nlpServiceClient.isNlpServiceHealthy()) {
-                log.error("NLP服务不可用，无法处理文本命令");
+                log.error("NLP service unavailable, cannot process text command");
                 return FrontendResponseDto.builder()
                         .commandSuccess(false)
                         .errorMessage("NLP服务不可用，请确保NLP服务已启动")
@@ -121,12 +121,12 @@ public class SmartHomeCommandOrchestrator {
             // 如果响应包含错误标志，则返回错误信息
             if (nlpResponse.containsKey("error") && (Boolean)nlpResponse.get("error")) {
                 String errorMsg = nlpResponse.containsKey("errorMessage") ? 
-                        (String)nlpResponse.get("errorMessage") : "处理文本时出错";
+                        (String)nlpResponse.get("errorMessage") : "Error processing text";
                 
                 // 获取response_message_for_tts，如果没有则使用默认值
                 String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", "抱歉，我没能理解您的意思");
                 
-                log.error("NLP服务返回错误: {}", errorMsg);
+                log.error("NLP service returned error: {}", errorMsg);
                 
                 // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
                 if (nlpResponse.containsKey("nluResult")) {
@@ -151,7 +151,7 @@ public class SmartHomeCommandOrchestrator {
             
             return processNlpResponse(nlpResponse);
         } catch (Exception e) {
-            log.error("处理文本命令时出错", e);
+            log.error("Error processing text command", e);
             return FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理文本命令时出错: " + e.getMessage())
@@ -213,7 +213,7 @@ public class SmartHomeCommandOrchestrator {
                     .ttsOutputReference((String) nlpResponse.getOrDefault("tts_output_reference", null))
                     .build();
         } catch (Exception e) {
-            log.error("处理NLP服务响应时出错", e);
+            log.error("Error processing NLP service response", e);
             return FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理NLP服务响应时出错: " + e.getMessage())
