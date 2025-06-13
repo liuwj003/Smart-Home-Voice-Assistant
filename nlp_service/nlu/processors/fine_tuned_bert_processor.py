@@ -7,6 +7,14 @@ import numpy as np
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 import re
 from huggingface_hub import snapshot_download
+logger = logging.getLogger(__name__)
+try:
+    from interfaces.nlu_interface import NLUInterface
+except ImportError:
+    logger.warning("NLUInterface not found from 'interfaces.nlu_interface'. Using a dummy interface for testing.")
+    class NLUInterface: # type: ignore
+        async def understand(self, text: str) -> Dict:
+            raise NotImplementedError
 
 class BertNLUProcessor(NLUInterface):
     """
@@ -412,8 +420,8 @@ class BertNLUProcessor(NLUInterface):
         
         normalized_param_from_slot = self._normalize_parameter(raw_param_text) # 参数槽的标准化值
 
-        # 整合 action_text_raw 和 raw_param_text 来判断方向
-        combined_text_for_direction = (action_text_raw or "") + (raw_param_text or "")
+        # 整合 action_text_raw 和 raw_param_text 以及原始文本来判断方向
+        combined_text_for_direction = (action_text_raw or "") + (raw_param_text or "") + text
         
         is_negative_direction = "低" in combined_text_for_direction or \
                                 "冷" in combined_text_for_direction or \
@@ -545,6 +553,12 @@ class BertNLUProcessor(NLUInterface):
         # 再次检查开关动作的默认参数
         if final_action_english in ["turn_on", "turn_off"] and final_parameter is None:
             final_parameter = "0"
+            
+        if final_parameter is None and final_action_english == "modify":
+            if is_positive_direction:
+                final_parameter = "+1"
+            elif is_negative_direction:
+                final_parameter = "-1"
 
         final_result = {
             "DEVICE_TYPE": device_type,
@@ -595,7 +609,7 @@ if __name__ == '__main__':
             "将客厅的空调温度调低两度",   # ACTION: modify, PARAMETER: "-2.0"
             "客厅灯调到百分之五",        # ACTION: modify, PARAMETER: "0.05"
             "打开三号卧室的灯",           # ACTION: turn_on, DEVICE_ID: "3"
-            "温度调高",                 # ACTION: modify, PARAMETER: "+1"
+            "客厅空调温度调高",                 # ACTION: modify, PARAMETER: "+1"
             "湿度降低百分之十",         # ACTION: modify, PARAMETER: "-0.1"
             "把灯亮度调暗一点点",        # ACTION: modify, PARAMETER: "-0.1"
             "空调低2度",                # ACTION: modify, PARAMETER: "-2.0"
