@@ -71,23 +71,18 @@ backend/
 │   │   │       └── smarthome/
 │   │   │           └── assistant/
 │   │   │               ├── controller/              # REST API控制器
-│   │   │               │   ├── DeviceController.java       # 设备控制接口
 │   │   │               │   ├── SettingsController.java     # 设置接口
 │   │   │               │   ├── VoiceCommandController.java # 语音命令接口
 │   │   │               │   └── VoiceController.java        # 语音处理接口
 │   │   │               ├── service/                 # 业务逻辑服务
-│   │   │               │   ├── DeviceService.java         # 设备服务接口
-│   │   │               │   ├── DeviceServiceImpl.java     # 设备服务实现
 │   │   │               │   ├── NlpServiceClient.java      # NLP服务客户端
 │   │   │               │   ├── SmartHomeCommandOrchestrator.java # 命令编排服务
-│   │   │               │   └── impl/                      # 其他服务实现
 │   │   │               ├── model/                   # 领域模型
 │   │   │               ├── entity/                  # 数据库实体
 │   │   │               ├── repository/              # 数据访问层
 │   │   │               ├── dto/                     # 数据传输对象
 │   │   │               ├── config/                  # 配置类
 │   │   │               ├── exception/               # 异常处理
-│   │   │               ├── util/                    # 工具类
 │   │   │               └── SmartHomeApplication.java # 应用入口类
 │   │   └── resources/                 # 配置资源
 │   └── test/                          # 测试代码
