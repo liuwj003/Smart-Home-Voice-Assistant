@@ -51,7 +51,7 @@ echo ======================================
 echo Starting the application immediately after Python setup...
 echo ======================================
 
-java -jar backend/backend-device.jar
+java -jar backend/DeviceControl.jar
 
 REM Start NLP Service
 echo Starting NLP Service...
@@ -85,6 +85,7 @@ start "Frontend" cmd /k "cd %~dp0frontend && npm install && npm start"
 echo ======================================
 echo Application started successfully!
 echo NLP Service will run on http://localhost:8010
+echo Device Data will run on http://localhost:8005
 echo Backend API will run on http://localhost:8080/api
 echo Frontend will run on http://localhost:3000
 echo ======================================
