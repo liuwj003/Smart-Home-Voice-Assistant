@@ -1,7 +1,6 @@
 # 智能家居语音助手 - 后端
 
 这是智能家居语音助手的后端服务，使用Spring Boot构建。
-backend-device.jar是用mybatis构建好的数据库交互模块，在8005端口上运行。
 
 ### 构建和运行
 
@@ -15,7 +14,7 @@ mvn spring-boot:run
 
 #### 设备API
 
-//TO DO
+backend-device.jar是用mybatis构建好的数据库交互模块，在8005端口上运行。
 
 #### 语音API
 
