@@ -51,7 +51,7 @@ echo ======================================
 echo Starting the application immediately after Python setup...
 echo ======================================
 
-java -jar backend/DeviceControl.jar
+start "Backend-Jar" cmd /k "cd %~dp0backend && java -jar DeviceControl.jar"
 
 REM Start NLP Service
 echo Starting NLP Service...
