@@ -425,7 +425,6 @@ class BertNLUProcessor(NLUInterface):
         
         is_negative_direction = "低" in combined_text_for_direction or \
                                 "冷" in combined_text_for_direction or \
-                                "暗" in combined_text_for_direction or \
                                 "小" in combined_text_for_direction or \
                                 "减" in combined_text_for_direction 
                                 
@@ -629,7 +628,8 @@ if __name__ == '__main__':
             "空调低2度",                # ACTION: modify, PARAMETER: "-2.0"
             "加热烤箱",
             "热一下烤箱",
-            "拉窗帘"
+            "拉窗帘",
+            "浴室灯亮一下"
         ]
 
         for text_case in test_cases:
