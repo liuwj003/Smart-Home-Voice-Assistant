@@ -132,7 +132,7 @@ const Home = () => {
                 border: '1px solid #e0e0e0'
               }}
             >
-              <Typography variant="body2" sx={{ color: '#5f6368' }}>你</Typography>
+              <Typography variant="body2" sx={{ color: '#5f6368' }}>用户</Typography>
             </Avatar>
             <Box>
               {animationState === 'input' && (

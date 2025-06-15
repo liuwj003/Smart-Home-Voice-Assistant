@@ -63,8 +63,7 @@ async def process_audio(
         # 解析设置
         settings = json.loads(settings_json)
         logger.info(f"收到 settings: {settings}")
-        print("收到 settings:", settings)
-        
+
         # 读取音频文件内容
         audio_data = await audio_file.read()
         
@@ -116,6 +115,5 @@ async def health_check():
         "version": "1.0.0"
     }
 
-# 如果直接运行此文件，则启动应用
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8010, reload=True) 

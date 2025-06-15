@@ -113,7 +113,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                         if original_direct_id != "0" and (rag_predefined_id == "0" or not rag_predefined_id) :
                             rag_nlu_output["DEVICE_ID"] = original_direct_id
                         
-                        # Ensure all 5 fields are present, defaulting if necessary
                         for key_field in ["DEVICE_TYPE", "DEVICE_ID", "LOCATION", "ACTION", "PARAMETER"]:
                             if key_field not in rag_nlu_output:
                                 rag_nlu_output[key_field] = None if key_field != "DEVICE_ID" else "0"
@@ -183,7 +182,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                     "LOCATION": None,
                     "PARAMETER": None}
 
-# --- 主程序/测试部分 ---
 if __name__ == '__main__':
     if not logger.hasHandlers():
         logging.basicConfig(level=logging.DEBUG,

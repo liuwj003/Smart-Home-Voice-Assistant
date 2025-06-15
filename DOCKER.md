@@ -81,13 +81,6 @@ docker-compose down
 docker-compose down -v
 ```
 
-## 重新构建
-
-如果你修改了代码，需要重新构建：
-
-```bash
-docker-compose up -d --build
-```
 
 ## 生产环境部署
 

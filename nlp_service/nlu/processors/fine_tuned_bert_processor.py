@@ -401,7 +401,7 @@ class BertNLUProcessor(NLUInterface):
         extracted_raw_entities = self._extract_entities_from_bio(active_tokens, active_bio_tags)
         logger.debug(f"从BIO标签提取的原始实体: {extracted_raw_entities}")
         
-        # --- 获取初步提取的槽位值 ---
+        # 获取初步提取的槽位值 
         device_type = ",".join(extracted_raw_entities.get("DEVICE_TYPE", [])) or None
         device_id_str_list = extracted_raw_entities.get("DEVICE_ID")
         location = ",".join(extracted_raw_entities.get("LOCATION", [])) or None
@@ -412,7 +412,6 @@ class BertNLUProcessor(NLUInterface):
         parameter_text_list = extracted_raw_entities.get("PARAMETER", [])
         raw_param_text = ",".join(parameter_text_list) if parameter_text_list else None
 
-        # --- 标准化 ACTION, PARAMETER, DEVICE_ID ---
         final_action_english: Optional[str] = None
         final_parameter: Any = None
         
@@ -583,7 +582,6 @@ class BertNLUProcessor(NLUInterface):
         logger.info(f"NLU 理解结果 for '{text}': {final_result}")
         return final_result
         
-# --- 主程序/测试部分 ---
 if __name__ == '__main__':
     import asyncio
     if not logger.hasHandlers():

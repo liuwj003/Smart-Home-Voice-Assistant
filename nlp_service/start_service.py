@@ -34,6 +34,6 @@ if __name__ == "__main__":
         port=port,
         reload=True,
         log_level="info",
-        log_config=None,  # 使用我们已经配置的日志设置
+        log_config=None,  
         access_log=True
     ) 

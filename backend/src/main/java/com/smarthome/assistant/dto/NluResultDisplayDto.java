@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 简化的NLU结果数据对象，用于前端展示
+ * NLU结果数据对象，用于前端展示
  */
 @Data
 @Builder

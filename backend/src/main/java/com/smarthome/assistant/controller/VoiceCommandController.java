@@ -92,7 +92,7 @@ public class VoiceCommandController {
             log.error("Failed to process text command", e);
             FrontendResponseDto errorResponse = FrontendResponseDto.builder()
                     .commandSuccess(false)
-                    .errorMessage("处理文本命令时出错: " + e.getMessage())
+                    .errorMessage("Failed to process text command: " + e.getMessage())
                     .build();
             return ResponseEntity.status(500).body(errorResponse);
         }
