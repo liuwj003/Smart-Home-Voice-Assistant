@@ -23,7 +23,8 @@ class NLUFactory:
         self.engines = {
             "placeholder": "nlu.processors.placeholder_processor.PlaceholderNLUProcessor",
             "fine_tuned_bert": "nlu.processors.fine_tuned_bert_processor.BertNLUProcessor",
-            "nlu_orchestrator": "nlu.processors.nlu_orchestrator.SmartHomeNLUOrchestrator"
+            "nlu_orchestrator": "nlu.processors.nlu_orchestrator.SmartHomeNLUOrchestrator",
+            "deepseek": "nlu.processors.deepseek_processor.DeepSeekNLUProcessor"
             # 可以在这里添加其他NLU引擎
         }
     
@@ -49,7 +50,6 @@ class NLUFactory:
         engine_class_path = self.engines[engine_type]
         
         try:
-            # 动态导入引擎类
             module_path, class_name = engine_class_path.rsplit('.', 1)
             module = importlib.import_module(module_path)
             engine_class = getattr(module, class_name)

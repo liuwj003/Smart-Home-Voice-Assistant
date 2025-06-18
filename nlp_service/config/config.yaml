@@ -8,7 +8,7 @@ stt:
 
 # NLU引擎配置
 nlu:
-  engine: nlu_orchestrator    # fine_tuned_bert, nlu_orchestrator
+  engine: nlu_orchestrator    # fine_tuned_bert, nlu_orchestrator, deepseek
   local_model_target_dir: "nlp_service/nlu/model/fine_tuned_nlu_bert"
 
 
@@ -17,6 +17,14 @@ bert_nlu_config:
   local_model_target_dir: "nlp_service/nlu/model/fine_tuned_nlu_bert"
   model_hub_id: "LIUWJ/fine-tuned-home-bert"
   device: "auto"        # 自动检测可用设备
+
+# deepseek专用配置
+deepseek_config:
+  api_key: "sk-070151a6fcd14bed867ac165a2fce23a"  # 请替换为您的API密钥
+  base_url: "https://api.deepseek.com"
+  temperature: 0.7
+  model: "deepseek-chat"
+  model_path: "nlp_service/nlu/model/fine_tuned_nlu_bert"  # 用于BIO标记的BERT模型路径
 
 # nlu_orchestrator专用配置
 rag_data_jsonl_path: "nlp_service/nlu/model/dataset/rag_knowledge.jsonl"

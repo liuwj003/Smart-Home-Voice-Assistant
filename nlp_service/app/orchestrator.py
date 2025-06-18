@@ -124,6 +124,12 @@ class NLPServiceOrchestrator:
                 nlu_config['rag_data_jsonl_path'] = self.config.get('rag_data_jsonl_path')
                 nlu_config['rag_embedding_config'] = self.config.get('rag_embedding_config', {})
                 nlu_config['rag_similarity_threshold'] = self.config.get('rag_similarity_threshold', 250)
+            elif nlu_config.get('engine') == 'deepseek':
+                # 合并deepseek配置
+                deepseek_config = self.config.get('deepseek_config', {})
+                for key, value in deepseek_config.items():
+                    if key not in nlu_config:
+                        nlu_config[key] = value
             nlu_factory = NLUFactory()
             return nlu_factory.create_engine(nlu_config)
         except Exception as e:

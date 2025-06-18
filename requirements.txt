@@ -27,6 +27,8 @@ langchain==0.1.16
 langchain_community==0.0.34
 langchain-core>=0.1.35
 chromadb==0.4.24
+langchain_openai
+langchain_core
 
 # TTS依赖
 edge-tts==7.0.2
