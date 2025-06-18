@@ -14,25 +14,22 @@ const useCommandResult = () => {
 
   // 格式化NLP五元组结果
   const formatNlpQuintuple = (result) => {
-    // 检查两种可能的响应格式
-    // 1. 直接包含nluResult的格式
+
     if (result && result.nluResult) {
       const nluResult = result.nluResult;
       const formattedQuintuple = {
-        action: nluResult.action || "未识别",
-        object: nluResult.entity || "未识别",
-        location: nluResult.location || "未指定",
+        action: nluResult.action,
+        object: nluResult.entity,
+        location: nluResult.location,
         deviceId: nluResult.deviceId || "0",
         parameter: nluResult.parameter,
       };
       
-      // 根据用户需求，简化判断逻辑：仅当ACTION和DEVICE_TYPE（entity）中有一个为None/null/空时，认为理解失败
+      // 仅当ACTION和DEVICE中有一个为空时，认为理解失败
       const isSuccess = 
         formattedQuintuple.action && 
-        formattedQuintuple.action !== "未识别" &&
         formattedQuintuple.action !== "" &&
         formattedQuintuple.object && 
-        formattedQuintuple.object !== "未识别" && 
         formattedQuintuple.object !== "";
       
       return {
@@ -68,10 +65,8 @@ const useCommandResult = () => {
     const isSuccess = 
       nlpQuintuple && 
       nlpQuintuple.action && 
-      nlpQuintuple.action !== "未识别" && 
       nlpQuintuple.action !== "" &&
       nlpQuintuple.object && 
-      nlpQuintuple.object !== "未识别" && 
       nlpQuintuple.object !== "";
     
     // 同步设置所有相关状态，避免状态更新不一致

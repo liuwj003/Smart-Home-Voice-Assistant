@@ -35,7 +35,7 @@ public class SettingsController {
             put("voice", "female");
             put("speed", 1.0);
             put("pitch", 1.0);
-            put("volume", 1.0);  // 音量设置，适用于pyttsx3引擎
+            put("volume", 1.0);  
         }});
         put("ui", new HashMap<String, Object>() {{
             put("theme", "light");
@@ -69,7 +69,7 @@ public class SettingsController {
      */
     @PostMapping("/settings")
     public ApiResponse<String> updateVoiceSettings(@RequestBody Map<String, Object> settings) {
-        log.info("接收到更新语音设置请求: {}", settings);
+        log.info("Received request to update voice settings: {}", settings);
         
         try {
             // 合并设置
@@ -77,10 +77,10 @@ public class SettingsController {
                 currentSettings.putAll(settings);
             }
             
-            return ApiResponse.success("设置已更新");
+            return ApiResponse.success("Settings have been updated");
         } catch (Exception e) {
-            log.error("更新设置失败", e);
-            return ApiResponse.error("更新设置失败: " + e.getMessage());
+            log.error("Failed to update settings", e);
+            return ApiResponse.error("Failed to update settings: " + e.getMessage());
         }
     }
 
@@ -91,9 +91,9 @@ public class SettingsController {
      */
     @PostMapping("/settings/reset")
     public ApiResponse<String> resetSettings() {
-        log.info("接收到重置设置请求");
+        log.info("Received request to reset settings");
         
         currentSettings = new HashMap<>(defaultSettings);
-        return ApiResponse.success("设置已重置为默认值");
+        return ApiResponse.success("Settings have been reset to default values");
     }
 } 

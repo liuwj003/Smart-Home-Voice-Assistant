@@ -44,14 +44,12 @@ class Pyttsx3TTSEngine(TTSInterface):
         # 设置语速
         if 'speed' in config:
             # pyttsx3的rate是words per minute, 默认是200
-            # 我们的配置是乘数(0.5-2.0)
             default_rate = 200
             rate = int(default_rate * config.get('speed', 1.0))
             self.engine.setProperty('rate', rate)
             
         # 设置音量
         if 'volume' in config:
-            # 音量范围是0.0到1.0
             self.engine.setProperty('volume', config.get('volume', 1.0))
         
         # 创建临时音频文件目录

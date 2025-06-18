@@ -93,7 +93,7 @@ const useVoiceCommand = (onResultReceived, onCommandStart) => {
       // 开始录音
       mediaRecorder.start();
       
-      // 3秒后停止（模拟实际语音助手）
+      // 3秒后停止
       setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') {
           mediaRecorder.stop();

@@ -199,7 +199,7 @@ class NLPServiceOrchestrator:
                 'DEVICE_ID': "0",
                 'LOCATION': None,
                 'PARAMETER': None,
-                'response_message_for_tts': '对不起，我无法理解您的请求'
+                'response_message_for_tts': '抱歉，我没能理解您的意思'
             }
     
     def _convert_file_to_base64(self, file_path: str) -> Optional[str]:
@@ -292,7 +292,7 @@ class NLPServiceOrchestrator:
             "query": "查询",
             "open_curtain": "拉开",
             "close_curtain": "拉上",
-            # 可继续补充...
+            # ...
         }
         action = nlu_result.get("ACTION")
         device_type = nlu_result.get("DEVICE_TYPE")
@@ -350,7 +350,7 @@ class NLPServiceOrchestrator:
             transcribed_text = await self._perform_stt(audio_data)
             logger.info(f"STT结果: {transcribed_text}")
             
-            # 执行NLU（现在会返回带有response_message_for_tts的结果）
+            # 执行NLU（返回带有response_message_for_tts的结果）
             nlu_result = await self._perform_nlu(transcribed_text)
             logger.info(f"NLU结果: {nlu_result}")
             
@@ -376,7 +376,7 @@ class NLPServiceOrchestrator:
             return {
                 'input_type': 'audio',
                 'transcribed_text': transcribed_text,
-                'nlu_result': five_tuple,  # 五元组格式化
+                'nlu_result': five_tuple,  
                 'response_message_for_tts': response_message,
                 'tts_output_reference': tts_output_reference,
                 'status': 'success',
@@ -418,7 +418,7 @@ class NLPServiceOrchestrator:
             tts_enabled = settings.get('tts_enabled', True)
             logger.info(f"TTS启用状态: {tts_enabled}")
             
-            # 执行NLU（现在会返回带有response_message_for_tts的结果）
+            # 执行NLU
             nlu_result = await self._perform_nlu(text_input)
             logger.info(f"NLU结果: {nlu_result}")
             
@@ -431,7 +431,6 @@ class NLPServiceOrchestrator:
             else:
                 logger.info("TTS已禁用，跳过语音生成")
             
-            # 准备前端需要的五元组格式
             five_tuple = {
                 "action": nlu_result.get("ACTION"),
                 "entity": nlu_result.get("DEVICE_TYPE"),
@@ -443,7 +442,7 @@ class NLPServiceOrchestrator:
             return {
                 'input_type': 'text',
                 'transcribed_text': text_input,
-                'nlu_result': five_tuple,  # 五元组格式化
+                'nlu_result': five_tuple,  
                 'response_message_for_tts': response_message,
                 'tts_output_reference': tts_output_reference,
                 'status': 'success',

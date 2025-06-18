@@ -1,5 +1,8 @@
 # UPDATELOG
 
+## 6.18 (Version 1)
+* 添加deepseek，更智能的服务。
+
 * 实时分工调整在`docs/member_summary.md`下记录
 * 可以把整个项目克隆下来，然后`run.bat`试试效果。
 
@@ -19,33 +22,6 @@
 <img src="imgs/Apple-Style-v0.1.png" alt="alt text" width="100%"/>
 
 ## 5.18 （Version 0）
-* 写文档、画图的同学可以根据这些实时进度来理解代码结构：
-* 其中更详细的软件设计讲解在`docs/design.md`
-
-#### 数据流
-```
-[前端]
-   |
-   | 语音/文本输入
-   v
-[Spring Boot 后端 Controller]
-   |
-   | 通过 HTTP 调用
-   v
-[nlp_service FastAPI 服务]
-   |
-   | 返回结构化结果（transcribed_text, nlu_result, tts_output_reference, ...）
-   v
-[Spring Boot 后端 Service]
-   |
-   | 设备控制/业务逻辑
-   v
-[前端]
-   |
-   | 显示结果/反馈
-   v
-[用户]
-```
 
 * 目前已完成的：
 ### 便于理解的版本
@@ -95,112 +71,13 @@
   - 适合老年人的大字设计界面
   - ...
 * 大的网页界面也只有一些基本的组件，还需要后续设计与完善
-* 目前的代码组织如下，需要**前端的同学继续完善**：
-  - 主要在frontend/src下，完善各种网页组件、网页视图
-```
-frontend/
-├── node_modules/      # 第三方依赖库，自动生成
-├── public/            # 静态资源
-│   ├── index.html     # 应用入口 HTML
-│   └── manifest.json  # PWA 配置
-├── src/               # 应用源代码
-│   ├── components/    # 可复用 UI 组件
-│   │   ├── Layout.js        # 整体布局
-│   │   └── VoiceInput.js    # 语音输入核心
-│   ├── pages/         # 页面级组件
-│   │   ├── Home.js          # 主页
-│   │   ├── PhoneView.js     # 手机视图/控制
-│   │   ├── Settings.js      # 设置页
-│   │   ├── Weather.js       # 天气页
-│   │   └── 还需要手机设置页，手机天气页...等
-│   ├── services/      # API 调用与服务
-│   │   └── api.js         # 后端接口封装
-│   ├── App.js           # 根组件 (路由、全局配置)
-│   ├── index.css        # 全局样式
-│   ├── index.js         # React 应用入口
-│   └── MobileApp.css    # 移动端特定样式
-├── package-lock.json  # 依赖版本锁定
-├── package.json       # 项目配置与依赖
-└── README.md          # 项目说明
-```
+
 ## 5.19 (Version 0.1)
-* 使用AI重构了一个更好看的前端
 * 能保证设置的修改被保存，并及时更改后台 语音服务处理的引擎。
 
 <img src="imgs/frontend_v0.1.png" alt="alt text" width="100%"/>
 <img src="imgs/frontend_v0.1_1.png" alt="alt text" width="100%"/>
 <img src="imgs/frontend_v0.1_2.png" alt="alt text" width="100%"/>
-
-#### 后端
-* 主要实现`backend/src`下的代码（详细结构看下面），`backend/target`是自动生成的。
-* Spring Boot 后端做“转发+业务编排”，语音/文本理解、TTS 可以交给 nlp_service 负责。spring boot后端也可以加上自己的STT,TTS业务。
-* Spring Boot 后端需要**实现一个“设备控制”的逻辑，这个逻辑需要根据nlp_service返回的结构化数据进行业务处理。还需接入数据库**。
-* 当前：
-1. NlpServiceClient.java
-   - 只负责和 Python 的 nlp_service 服务（FastAPI）进行 HTTP 通信。
-   - 发送音频或文本到 /process_audio、/process_text。
-   - 解析并返回原始 JSON 结果（如 nlu_result、transcribed_text、tts_output_reference 等）。
-   - 本质：是一个“远程服务客户端/适配器”，不做业务逻辑，只做“请求-响应”转发。
-2. SmartHomeCommandOrchestrator.java
-   - 负责“业务编排”，即把前端的请求（音频/文本）转发给 NlpServiceClient，拿到结果后，结合设备服务做进一步处理。
-   - 调用 NlpServiceClient 获取 NLP 结果。
-   - 解析 nlu_result，调用 DeviceService 控制设备。
-   - 组装最终要返回给前端的结构（如 deviceActionFeedback、tts_output_reference 等）。
-```
-Controller
-   ↓
-SmartHomeCommandOrchestrator
-   ↓
-NlpServiceClient  <——>  nlp_service (Python)
-   ↓
-DeviceService
-```
-3. Controller 层
-   - 语音/文本接口只需负责接收前端请求，调用 Orchestrator，返回结构化响应即可。
-4. 数据结构
-   - 和nlp_service保持一致。
-
-* 代码结构：
-```
-main/
-├── java/com/smarthome/assistant/
-│   ├── controller/                        # 控制器层，REST接口入口
-│   │   ├── DeviceController.java              # 设备相关接口
-│   │   ├── SettingsController.java            # 语音/系统设置接口
-│   │   ├── VoiceCommandController.java        # 语音命令（文本）接口
-│   │   └── VoiceController.java               # 语音相关接口（如语音命令、转文本）
-│   ├── dto/                              # 数据传输对象（前后端/服务间结构）
-│   │   ├── ApiResponse.java                  # 通用API响应封装
-│   │   ├── FrontendResponseDto.java          # 返回前端的统一响应
-│   │   ├── NluResultDisplayDto.java          # NLU结果展示结构
-│   │   ├── TextCommandRequestDto.java        # 文本命令请求结构
-│   │   └── VoiceResponse.java                # 语音命令响应结构
-│   ├── entity/                           # 实体类
-│   │   └── Result.java                        # 通用结果实体
-│   ├── exception/                        # 全局异常处理
-│   │   └── GlobalExceptionHandler.java        # 全局异常处理
-│   ├── model/                            # 业务数据模型
-│   │   ├── Device.java                        # 设备数据模型
-│   │   └── VoiceCommand.java                  # 语音命令数据模型
-│   ├── repository/                         # JPA数据库操作接口
-│   │   └── DeviceRepository.java              # 设备数据库操作
-│   ├── service/                          # 业务逻辑层
-│   │   ├── DeviceService.java                 # 设备服务接口
-│   │   ├── DeviceServiceImpl.java             # 设备服务实现（连接MySQL）
-│   │   ├── NlpServiceClient.java              # NLP服务HTTP客户端
-│   │   ├── SmartHomeCommandOrchestrator.java  # 核心业务编排
-
-│   ├── config/                            # 配置相关
-│   │   └── AppConfig.java                      # Spring Boot 配置类
-│   ├── util/                              # 工具类
-│   │   └── GetFileContentAsBase64.java         # 文件转Base64等工具
-│   └── SmartHomeApplication.java           # Spring Boot 应用入口
-├── resources/
-│   └── application.yml                     # Spring Boot 配置文件，以及mysql配置
-```
-
-
----
 
 ## 5.14-5.16 
 * 重新梳理了语音服务逻辑，修改为nlp_service模块，tts与stt都应是可选的 
@@ -225,7 +102,6 @@ main/
 * 点击 移动视图，可以看到暂时的APP结果：
 <img src="imgs/image_4.png" alt="alt text" width="50%"/>
 <img src="imgs/image_5.png" alt="alt text" width="50%"/>
-
 
 ---
 ## 5.12

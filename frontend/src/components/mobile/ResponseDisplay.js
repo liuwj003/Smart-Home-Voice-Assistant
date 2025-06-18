@@ -43,8 +43,8 @@ const ResponseDisplay = ({
               width: 32,
               height: 32,
               backgroundColor: isSuccess 
-                ? 'rgba(75, 181, 67, 0.6)' // 成功理解用绿色
-                : 'rgba(255, 255, 255, 0.2)' // 未理解用灰色
+                ? 'rgba(75, 181, 67, 0.6)' 
+                : 'rgba(255, 255, 255, 0.2)' 
             }}
           >
             {isProcessing ? (
@@ -75,9 +75,9 @@ const ResponseDisplay = ({
                   }}
                 >
                   <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-                    {nlpResult.action !== "未识别" && nlpResult.action !== "" ? `${nlpResult.action} ` : ""} 
-                    {nlpResult.object !== "未识别" && nlpResult.object !== "" ? nlpResult.object : ""} 
-                    {nlpResult.location && nlpResult.location !== "未指定" ? ` (${nlpResult.location})` : ""}
+                    {nlpResult.action !== "" ? `${nlpResult.action} ` : ""} 
+                    {nlpResult.object !== "" ? nlpResult.object : ""} 
+                    {nlpResult.location ? ` (${nlpResult.location})` : ""}
                   </Typography>
                 </Box>
               )}

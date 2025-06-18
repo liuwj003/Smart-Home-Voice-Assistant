@@ -39,8 +39,6 @@ class PlaceholderSTTEngine(STTInterface):
         """
         logger.info(f"PlaceholderSTTEngine.transcribe 被调用，音频大小: {len(audio_data)} 字节")
         
-        # 在实际实现中，这里应该调用实际的STT引擎
-        # 这里简单返回一个固定文本
         return "打开客厅的灯"
     
     def get_supported_formats(self) -> list:

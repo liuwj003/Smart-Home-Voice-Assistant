@@ -54,9 +54,6 @@ const MobileWeather = () => {
     }
 
     try {
-      // 实际项目中应调用API获取数据
-      // const response = await api.getWeatherData();
-      // setWeatherData(response.data);
       
       // 模拟网络请求延迟
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -109,7 +106,6 @@ const MobileWeather = () => {
       });
     } catch (error) {
       console.error("获取天气数据失败:", error);
-      // 可以添加错误提示
     } finally {
       setLoading(false);
       setRefreshing(false);

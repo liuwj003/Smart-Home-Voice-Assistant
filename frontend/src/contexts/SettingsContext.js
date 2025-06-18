@@ -60,7 +60,6 @@ export const SettingsProvider = ({ children }) => {
     try {
       await settingsApi.updateVoiceSettings(newSettings);
     } catch (e) {
-      // 可加全局错误提示
       console.error('同步设置到后端失败', e);
     }
   }, []);

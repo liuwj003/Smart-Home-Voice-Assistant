@@ -1,5 +1,4 @@
 # 智能家居语音助手
-## 最新修改/更新记录看UPDATELOG.md文件
 
 这是一个使用Maven Java后端和React前端的智能家居语音助手项目。Python语音模块作为service被Java后端调用。
 
@@ -37,15 +36,6 @@ conda install -c conda-forge ffmpeg
 run.bat
 ```
 
-## 配置
-
-在 `backend/src/main/resources/application.yml` 中可以配置语音处理模块。
-以及各种confiig
-
-
-## 语音模块接口
-
-语音模块通过Python子进程方式被Java后端调用，处理语音命令并返回结构化数据。
 
 ## 1. 项目描述
 * 一个智能家居语音交互助手系统，目的是提高家居生活的便捷性和智能化程度。
@@ -63,138 +53,81 @@ run.bat
 ## 功能特点
 
 - 实时语音识别和控制
-- 支持多种设备类型（灯光、空调、电视、窗帘等）
-- 基于规则的意图识别
-- 设备状态实时显示和控制
+- 支持多种设备类型（灯光、空调等）
+- 意图识别
+- 设备状态实时显示
 - 美观的移动应用界面
 - 可配置的系统设置
 
-## 3. 系统要求
-
-### 后端服务
-- Python 3.8+
-- PyAudio
-- OpenAI Whisper
-- Springboot
-- 其他依赖见 `requirements.txt`
-
-### 移动应用
-- Node.js 14+
-- React Native 0.72+
-- 其他依赖见 `backend/package.json`
-
-## 4. 安装说明
-
-
-
-
-
-## 5. 项目结构
+## 3. 仓库目录结构
 
 ```
 SmartHomeVoiceAssistant/
-├── frontend/                      # 前端Web界面（模拟控制面板）
-│   ├── public/
-│   ├── src/
-│   │   ├── components/            # 控件组件（开关、温控、显示卡片等）
-│   │   ├── pages/                 # 主界面（首页/天气/设置）
-│   │   ├── services/              # 与后端交互的API
-│   │   ├── package.json
-│   │   └── README.md
-
-├── backend/                       # 后端服务（API接口 + 仿真设备状态管理）
-│   ├── src/
-│   │   ├── controllers/           # 接收API请求（如 /device/on /weather）
-│   │   ├── models/                # 模拟设备状态对象（如 Light, AC）
-│   │   ├── services/              # 核心逻辑（如状态变更、天气获取）
-│   │   └── config/                # 配置项（如设备列表、天气API密钥等）
-│   └── README.md
-
-├── nlu_service/                  # 语音处理模块
-│   ├── src/
-│   │   ├── __init__.py
-│   │   ├── base.py            # 基础类和接口
-│   │   ├── config.py          # 配置文件
-│   │   ├── recognizer.py      # 语音识别器
-│   │   ├── stt.py            # 语音转文本实现
-│   │   ├── nlu.py            # 自然语言理解实现
-│   │   ├── tts.py            # 文本转语音实现
-│   │   └── utils.py          # 工具函数
-│   └── README.md
-
-├── docs/                   # 项目文档
-│   ├── img/                       # 用在文档里的各种图片（如UML图）
-│   ├── requirement.md             # 需求分析文档
-│   ├── design.md                  # 软件设计文档
-│   ├── test_plan.md               # 测试计划
-│   ├── project_plan.md            # 项目计划与进度
-│   └── member_summary.md          # 成员分工与个人总结
-
-├── tests/                  # 集成测试
-│   ├── integration/               # 接口集成测试
-│   └── test_report.md             # 测试用例与结果说明
-
-├── demo/                          # 运行截图或演示视频
-│   ├── video/
-│   └── screenshots/
-
-├── requirements.txt        # 项目依赖
-├── INSTALL_CN.md                  # 中文安装说明
-├── INSTALL_EN.md                  # 英文安装说明
-├── LICENSE.md                     # 许可证
-├── CHANGELOG.md                   # 项目更新日志
-└── README.md              # 项目说明文档
-
+├── frontend/                 # React前端应用
+│   ├── public/               # 静态资源
+│   ├── src/                  # 源代码
+│   ├── package.json          # 依赖配置
+│   └── README.md             # 前端文档
+│
+├── backend/                  # Java Maven后端
+│   ├── src/                  # 源代码
+│   │   ├── main/java/        # Java代码
+│   │   └── main/resources/   # 配置资源
+│   ├── pom.xml               # Maven配置
+│   └── README.md             # 后端文档
+│
+├── nlp_service/              # 自然语言处理服务
+│   ├── app/                  # 主应用代码
+│   ├── config/               # 配置文件
+│   ├── interfaces/           # 接口定义
+│   ├── nlu/                  # 自然语言理解组件
+│   │   ├── processors/       # 处理器（包括deepseek、BERT等）
+│   │   └── model/            # 模型文件
+│   ├── stt/                  # 语音转文本组件
+│   ├── tts/                  # 文本转语音组件
+│   ├── data/                 # 数据文件
+│   ├── start_service.py      # 服务启动脚本
+│   └── README.md             # NLP服务文档
+│
+├── docs/                     # 项目文档
+│   ├── design.md             # 设计文档
+│   ├── requirement.md        # 需求文档
+│   └── member_summary.md     # 成员工作总结
+│
+├── run.bat                   # 一键启动脚本
+├── requirements.txt          # Python依赖
+├── docker-compose.yml        # Docker配置
+├── Dockerfile                # Docker构建文件
+├── INSTALL_CN.md             # 中文安装指南
+├── INSTALL_EN.md             # 英文安装指南
+├── UPDATELOG.md              # 更新日志
+└── README.md                 # 项目主文档
 ```
 
-### 支持的语音命令
+## 4. 技术栈
 
+### 前端
+- React.js
+- Material-UI
+- WebSocket API
 
-## 7. 开发说明
+### 后端
+- Java 
+- Spring Boot
+- Maven
+- RESTful API
 
+### NLP服务
+- Python 3.9
+- FastAPI
+- Transformer (BERT)
+- LangChain
+- DeepSeek (大模型支持)
 
-## 8. 测试
+## 5. 许可证
+```
+Copyright (c) 2025 Sun Yat-sen University, School of Computer Science and Engineering, Guangzhou, China.
 
-
-## 9. 贡献指南
-
-1. Fork 项目
-2. 创建特性分支
-3. 提交更改
-4. 推送到分支
-5. 创建 Pull Request
-
-## 10. 许可证
-
-My License
-
-## 语音模块功能
-
-### 语音识别 (STT)
-  - OpenAI Whisper
-
-### 自然语言理解 (NLU)
-- 支持多种语言和方言：
-  - 简体中文
-  - 繁体中文
-  - 英语
-  - 日语
-  - 韩语
-- 提供2种NLU实现：
-  - 基于Transformer的NLU（高准确度、支持多语言）
-  - 基于deepseek
-- 自动语言检测
-- 意图识别和实体提取
-- 支持自定义规则和模型
-
-### 文本转语音 (TTS)
-- 支持多种TTS引擎：
-  - pyttsx3（离线、轻量级）
-  - Microsoft Edge TTS（在线、高质量）
-- 支持多种语言和声音
-- 支持语速和音量调节
-- 支持保存语音到文件
-- 设备状态语音报告
-
-### 示例用法
+All rights reserved.
+```
 

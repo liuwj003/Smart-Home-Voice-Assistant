@@ -17,11 +17,9 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- 1. 定义常量和配置 ---
 MODEL_NAME = "hfl/chinese-bert-wwm-ext"  # 预训练BERT模型
 MAX_SEQ_LENGTH = 128                     # 最大序列长度
 
-# --- 路径配置 ---
 # SCRIPT_PATH 指向当前脚本 (train_nlu_model.py)
 SCRIPT_PATH = Path(__file__).resolve()
 # TRAIN_DIR 指向 .../nlu/model/train/
@@ -36,7 +34,7 @@ DATA_FILE_PATH = DATASET_DIR / "data.jsonl"
 OUTPUT_MODEL_DIR = MODEL_DIR / "fine_tuned_nlu_bert"
 
 
-# 定义词槽标签列表 (必须与数据标注时一致)
+# 定义词槽标签列表 
 slot_labels_list = [
     "O", "B-DEVICE_TYPE", "I-DEVICE_TYPE", "B-DEVICE_ID", "I-DEVICE_ID",
     "B-LOCATION", "I-LOCATION", "B-ACTION", "I-ACTION",
@@ -46,10 +44,9 @@ slot2id = {label: i for i, label in enumerate(slot_labels_list)}
 id2slot = {i: label for i, label in enumerate(slot_labels_list)}
 NUM_SLOTS = len(slot_labels_list)
 
-# --- 2. 加载和预处理数据 ---
+# 加载和预处理数据 
 logger.info(f"尝试从 {DATA_FILE_PATH} 加载数据...")
 if not DATA_FILE_PATH.exists():
-    logger.error(f"数据文件 {DATA_FILE_PATH} 未找到！请确保它存在于 'nlu/model/dataset/' 目录下并且名为 'data.jsonl' (或修改脚本中的文件名)。")
     exit()
 
 try:
@@ -78,7 +75,6 @@ try:
     raw_dataset = Dataset.from_pandas(df_cleaned[['text', 'labels']])
     
     if len(raw_dataset) == 0:
-        logger.error("数据文件已加载，但经过校验后内容为空。请检查数据文件。") # 理论上不会到这里，因为上面已经检查了valid_data
         exit()
 
     logger.info(f"成功加载并校验了 {len(raw_dataset)} 条有效数据。")
@@ -159,13 +155,13 @@ except Exception as e:
     logger.error(f"Tokenization或标签对齐失败: {e}", exc_info=True)
     exit()
     
-# --- 3. 定义模型 ---
+# 定义模型 
 logger.info(f"加载预训练模型: {MODEL_NAME} for Token Classification...")
 try:
     model = AutoModelForTokenClassification.from_pretrained(
         MODEL_NAME,
         num_labels=NUM_SLOTS,
-        id2label=id2slot, # 保存映射到模型配置
+        id2label=id2slot, 
         label2id=slot2id  # 保存映射到模型配置
     )
 except Exception as e:
@@ -206,13 +202,13 @@ def compute_metrics(eval_prediction):
         "f1": f1,
     }
 
-# --- 5. 定义训练参数 ---
+# 定义训练参数
 # 检查是否有可用的评估集
 do_eval = tokenized_datasets.get('eval') is not None and len(tokenized_datasets['eval']) > 0
 
 num_train_samples = len(tokenized_datasets['train']) if tokenized_datasets.get('train') else 0
-batch_size_train = 8 # 可根据GPU显存调整
-num_epochs = 15 if num_train_samples < 200 else (10 if num_train_samples < 1000 else 5) # 小数据集多跑几轮
+batch_size_train = 8 
+num_epochs = 15 if num_train_samples < 200 else (10 if num_train_samples < 1000 else 5)
 warmup_ratio = 0.1
 # 确保 total_train_steps > 0 
 if num_train_samples > 0 and batch_size_train > 0 and num_epochs > 0 :
@@ -243,7 +239,7 @@ training_args = TrainingArguments(
     # fp16=torch.cuda.is_available(), # 如果有GPU且支持，可以开启FP16加速训练，但可能需要调整其他参数
 )
 
-# --- 6. 初始化Trainer并开始训练 ---
+# 初始化Trainer并开始训练 
 trainer = Trainer(
     model=model,
     args=training_args,

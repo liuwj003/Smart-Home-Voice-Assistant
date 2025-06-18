@@ -240,25 +240,23 @@ if __name__ == '__main__':
     data_path = model_dir / "dataset" / "rag_knowledge.jsonl" 
 
     # 2. RAG Embedding 模型配置
-    # 您希望 embedding 模型下载/存放到项目内的特定目录
-    embedding_model_hub_id_for_rag = "shibing624/text2vec-base-chinese" # <--- 您指定的Hub ID
+    embedding_model_hub_id_for_rag = "shibing624/text2vec-base-chinese" 
     safe_model_name_for_path = embedding_model_hub_id_for_rag.replace("/", "-")
     target_local_embedding_model_dir = model_dir/safe_model_name_for_path
 
     rag_config_test = {
-        "local_embedding_target_dir": str(target_local_embedding_model_dir), # <--- 指定本地目标目录
-        "embedding_model_hub_id": embedding_model_hub_id_for_rag,             # <--- 您的Hub模型ID
-        "force_download_embedding": False,  # 设为True可强制重新下载
-        # "device" 参数现在直接传递给 StandardCommandRetriever 的构造函数
+        "local_embedding_target_dir": str(target_local_embedding_model_dir), # 指定本地目标目录
+        "embedding_model_hub_id": embedding_model_hub_id_for_rag,             # Hub模型ID
+        "force_download_embedding": False,  
     }
 
     # 3. 初始化和测试 StandardCommandRetriever
-    retriever = None # 初始化为None
+    retriever = None 
     try:
-        retriever = StandardCommandRetriever( # 或者您之前的类名 KnowledgeGraphRAG / SimilarityRetriever
-            knowledge_base_path=str(data_path), # 使用虚拟数据进行单元测试
-            config=rag_config_test, # 传递配置字典
-            device="cpu" # 指定embedding模型运行的设备
+        retriever = StandardCommandRetriever( 
+            knowledge_base_path=str(data_path),
+            config=rag_config_test, 
+            device="auto" 
         )
     except Exception as e:
         logger.error(f"初始化 StandardCommandRetriever 失败: {e}", exc_info=True)

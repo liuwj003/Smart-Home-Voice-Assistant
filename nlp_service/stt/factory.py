@@ -69,7 +69,6 @@ class STTFactory:
             return engine
         except Exception as e:
             logger.error(f"创建STT引擎 '{engine_type}' 失败: {str(e)}")
-            # 如果创建失败，尝试使用模拟引擎
             if engine_type != 'placeholder':
                 logger.info("尝试使用placeholder引擎")
                 return self.create_engine({'engine': 'placeholder'})

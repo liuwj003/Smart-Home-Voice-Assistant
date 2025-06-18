@@ -142,6 +142,7 @@ nlp:
    - `placeholder`: 占位引擎，用于测试
    - `fine_tuned_bert`: 使用微调过的BERT模型
    - `nlu_orchestrator`: NLU编排器，整合多种处理方式
+   - `deepseek`: 使用DeepSeek的NLU模型
 
 3. **TTS引擎选项** (`tts_engine`):
    - `placeholder`: 占位引擎，用于测试

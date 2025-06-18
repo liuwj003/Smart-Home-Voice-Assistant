@@ -22,13 +22,11 @@ import { voiceApi } from '../services/api';
 import TypingAnimation from '../components/TypingAnimation';
 
 const Home = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
-  const [animationState, setAnimationState] = useState('input'); // 'input', 'processing', 'response'
+  const [animationState, setAnimationState] = useState('input'); 
   const [showResponseText, setShowResponseText] = useState(false);
   const animationRef = useRef(null);
 
-  // Start the animation loop
   useEffect(() => {
     startAnimationSequence();
     
@@ -40,25 +38,25 @@ const Home = () => {
   }, []);
 
   const startAnimationSequence = () => {
-    // Reset animation state
+    // 重置动画状态
     setAnimationState('input');
     setShowResponseText(false);
     
-    // Start animation cycle again after completion
+    // 完成动画后再次开始动画循环
     animationRef.current = setTimeout(() => {
       startAnimationSequence();
-    }, 15000); // Restart every 15 seconds
+    }, 10000); // 每10秒重启一次
   };
 
   const handleInputComplete = () => {
     setAnimationState('processing');
     setTimeout(() => {
       setAnimationState('response');
-    }, 1200); // Simulate processing delay
+    }, 1200); // 模拟处理延迟
   };
 
   const handleResponseComplete = () => {
-    // Animation completed, wait before restarting
+    // 动画完成，等待重启
   };
 
   const handleDirectExperience = () => {
@@ -66,8 +64,7 @@ const Home = () => {
   };
 
   const handleDeepseekService = () => {
-    // This would integrate with the future deepseek API
-    alert('DeepSeek服务尚未开放，敬请期待！');
+    alert('DeepSeek服务已开放，可以在设置里进行选择');
   };
 
   return (
@@ -143,7 +140,7 @@ const Home = () => {
                 />
               )}
               {animationState !== 'input' && (
-                <Typography variant="body1">客厅太冷了。</Typography>
+                <Typography variant="body1">客厅太热了。</Typography>
               )}
               {animationState === 'processing' && (
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
@@ -175,7 +172,7 @@ const Home = () => {
               </Avatar>
               <Box>
                 <TypingAnimation 
-                  text="好的，正在为您调低客厅空调温度。" 
+                  text="好的，正在为您调低空调温度。" 
                   onComplete={handleResponseComplete}
                   variant="body1"
                 />

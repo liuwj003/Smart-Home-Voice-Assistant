@@ -18,7 +18,6 @@ public class VoiceController {
 
     @PostMapping("/test-audio")
     public Map<String, Object> testAudio(@RequestParam("audio") MultipartFile audioFile) throws Exception {
-        // 这里可以传递空设置或自定义设置
         Map<String, Object> settings = new HashMap<>();
         return nlpServiceClient.callProcessAudio(audioFile, settings);
     }

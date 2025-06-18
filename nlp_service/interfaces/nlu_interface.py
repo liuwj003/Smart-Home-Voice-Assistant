@@ -15,6 +15,6 @@ class NLUInterface(ABC):
             text: 输入文本
             
         Returns:
-            包含理解结果的字典，例如 {'action': 'TURN_ON', 'entity': 'light', 'location': '客厅'}
+            包含理解结果的字典
         """
         pass 

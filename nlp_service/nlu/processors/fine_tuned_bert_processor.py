@@ -58,14 +58,13 @@ class BertNLUProcessor(NLUInterface):
             raise ValueError("配置中必须提供 'local_model_target_dir'，用于存放或加载模型文件。")
         
         self.local_model_path = Path(local_model_target_dir_str).resolve()
-        # 确保目标目录存在，如果不存在则创建
+        # 确保目标目录存在
         self.local_model_path.mkdir(parents=True, exist_ok=True)
 
         model_hub_id_to_download = config.get("model_hub_id", self.DEFAULT_MODEL_HUB_ID)
         tokenizer_hub_id_to_download = config.get("tokenizer_hub_id", model_hub_id_to_download)
         force_download = config.get("force_download", False)
 
-        # --- 模型下载和加载逻辑 ---
         # 检查本地目标目录是否已包含必要的模型文件
         # 通过检查 config.json 和权重文件（pytorch_model.bin 或 model.safetensors）来判断
         config_file = self.local_model_path / "config.json"
@@ -155,17 +154,14 @@ class BertNLUProcessor(NLUInterface):
         logger.info(f"BertNLUProcessor 已成功初始化 (模型来源: '{model_load_path_str}')")
 
     def _convert_chinese_int_segment(self, cn_int_str: str) -> Optional[int]:
-        """转换常见的中文整数片段 (万以下简单版)"""
+        """转换常见的中文整数片段"""
         if not cn_int_str: return 0
-        try: return int(cn_int_str) # 如果已经是阿拉伯数字
+        try: return int(cn_int_str)
         except ValueError: pass
 
         if cn_int_str == "零": return 0
         
         num_map = self.CH_NUM_MAP
-        # 单位处理
-        units = {'十': 10, '百': 100, '千': 1000}
-        # 移除不参与数值计算的单位词，例如温度的"度"或序数的"号"
         cleaned_str = cn_int_str.replace("度", "").replace("号","").replace("个","")
 
         if not cleaned_str: return None
@@ -173,8 +169,6 @@ class BertNLUProcessor(NLUInterface):
         if cleaned_str == "十": return 10 # "十"本身
 
         total_value = 0
-        current_section_value = 0 # 处理如 "一百零五" 中的 "一百" 和 "五"
-        current_digit_value = 0 # 当前数字的值，如 "二" (在 "二百" 中)
         
         # 简单从左到右解析，处理 "二百三十五", "二十三", "十三", "一百零五" 这种结构
         # 对于更复杂的 "一千二百三十四万五千六百七十八" 需要完整算法
@@ -287,7 +281,7 @@ class BertNLUProcessor(NLUInterface):
             return str(num_val)
         
         # 如果经过上述处理，num_val 仍为 None，说明无法转为数值
-        # 此时，我们应该返回原始未经修改的参数文本，因为它可能是状态词等
+        # 返回原始未经修改的参数文本
         logger.debug(f"参数 '{param_str_orig}' 未能标准化为数值，将返回原始字符串。")
         return param_str_orig
 
@@ -315,7 +309,7 @@ class BertNLUProcessor(NLUInterface):
         arabic_num = self._chinese_num_to_arabic_internal(cleaned_id_text)
 
         if arabic_num is not None:
-            arabic_num_int = int(arabic_num) # 中文数字转换后通常是整数
+            arabic_num_int = int(arabic_num) 
             if is_ordinal and arabic_num_int > 0:
                 return str(arabic_num_int - 1) 
             return str(arabic_num_int)
@@ -419,7 +413,7 @@ class BertNLUProcessor(NLUInterface):
         
         normalized_param_from_slot = self._normalize_parameter(raw_param_text) # 参数槽的标准化值
 
-        # 增强判断方向: 同时考虑action、参数和原始文本
+        # 同时考虑action、参数和原始文本
         combined_text_for_direction = (action_text_raw or "") + (raw_param_text or "") + text
         
         is_negative_direction = "低" in combined_text_for_direction or \
@@ -553,8 +547,7 @@ class BertNLUProcessor(NLUInterface):
                 final_parameter = "+1"
             else:
                 final_parameter = "-1"
-
-        # 再次检查开关动作的默认参数
+                
         if final_action_english in ["turn_on", "turn_off"] and final_parameter is None:
             final_parameter = "0"
         

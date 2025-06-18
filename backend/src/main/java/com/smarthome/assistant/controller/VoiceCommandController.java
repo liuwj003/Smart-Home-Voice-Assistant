@@ -35,7 +35,7 @@ public class VoiceCommandController {
         MultipartFile actualAudioFile = audioFile != null ? audioFile : audioFallback;
         
         if (actualAudioFile == null) {
-            log.error("未提供音频文件 (audio_file 或 audio 参数)");
+            log.error("No audio file provided");
             return ResponseEntity.badRequest().body(
                 FrontendResponseDto.builder()
                     .commandSuccess(false)
@@ -44,13 +44,13 @@ public class VoiceCommandController {
             );
         }
         
-        log.info("接收到音频命令请求，文件名: {}, 大小: {} bytes, 内容类型: {}", 
+        log.info("Received audio command request, file name: {}, size: {} bytes, content type: {}", 
                 actualAudioFile.getOriginalFilename(), actualAudioFile.getSize(), actualAudioFile.getContentType());
         
         try {
             // 检查文件是否为空
             if (actualAudioFile.isEmpty()) {
-                log.error("上传的音频文件为空");
+                log.error("The uploaded audio file is empty");
                 return ResponseEntity.badRequest().body(
                     FrontendResponseDto.builder()
                         .commandSuccess(false)
@@ -61,10 +61,10 @@ public class VoiceCommandController {
             
             // 处理音频命令
             FrontendResponseDto response = orchestrator.orchestrateAudioCommand(actualAudioFile, settingsJson);
-            log.info("音频命令处理成功: {}", response);
+            log.info("Audio command processed successfully: {}", response);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("处理音频命令失败: {}", e.getMessage(), e);
+            log.error("Failed to process audio command", e.getMessage(), e);
             FrontendResponseDto errorResponse = FrontendResponseDto.builder()
                     .commandSuccess(false)
                     .errorMessage("处理音频命令时出错: " + e.getMessage())
@@ -92,7 +92,7 @@ public class VoiceCommandController {
             log.error("Failed to process text command", e);
             FrontendResponseDto errorResponse = FrontendResponseDto.builder()
                     .commandSuccess(false)
-                    .errorMessage("Failed to process text command: " + e.getMessage())
+                    .errorMessage("处理文本命令时出错 " + e.getMessage())
                     .build();
             return ResponseEntity.status(500).body(errorResponse);
         }

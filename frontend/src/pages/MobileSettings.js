@@ -199,7 +199,9 @@ const MobileSettings = () => {
       
       <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
         <Typography variant="body2" color="text.secondary">
-          提示: 如果您希望更自然化的体验，请选择NLU-Orchestrator。如果您能确保说出较明确的家居指令(指定动作与要操作的家居)，可以选Fine-tuned-BERT。DeepSeek提供大模型支持，能更灵活地理解复杂指令。
+          提示: 如果您希望更自然化的体验，请选择NLU-Orchestrator。
+          如果您能确保说出较明确的家居指令(指定动作与要操作的家居)，可以选Fine-tuned-BERT。
+          已提供DeepSeek大模型支持，能更灵活地理解复杂指令。
         </Typography>
       </Box>
     </>

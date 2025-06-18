@@ -54,7 +54,6 @@ NLP（自然语言处理）服务是智能家居语音助手的核心组件，�
 - **NLU模块**: 自然语言理解，负责意图识别、实体抽取和语义解析
 - **STT模块**: 语音转文本，将语音输入转换为文本
 - **TTS模块**: 文本转语音，将响应文本转换为语音输出
-- **接口模块**: 提供RESTful API接口，连接前端和后端服务
 
 ### 1.1 目录结构
 
@@ -83,7 +82,7 @@ nlp_service/
 实际系统调用流程如下：
 
 ```
-前端 → Spring后端 → Python NLP服务 → Spring后端处理结果 → 前端展示/执行动作
+前端 → Spring后端 → Python NLP服务 → Spring后端处理结果 → 前端展示执行动作
 ```
 
 ## 2. 接口规格
@@ -204,13 +203,6 @@ Content-Type: multipart/form-data
   "PARAMETER": null
 }
 ```
-
-NLU引擎中的`parameter`字段可以是以下几种类型：
-- `null`：没有参数值
-- 数值型（如`24.0`）：表示温度、亮度等具体数值
-- 字符串型（如`"红色"`）：表示颜色、模式等非数值参数
-- 特殊格式字符串（如`"+1"`或`"-1"`）：表示相对调整量
-
 #### 响应示例
 
 ```json
@@ -304,198 +296,3 @@ Content-Type: application/json
   "version": "1.0.0"
 }
 ```
-
-## 6. 后端集成
-
-Spring后端通过RestTemplate调用NLP服务：
-
-```java
-// 后端NLP服务客户端实现
-@Service
-public class NlpServiceClient {
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-
-    @Value("${nlp.service.baseurl:http://localhost:8010}")
-    private String nlpServiceBaseUrl;
-    
-    public Map<String, Object> callProcessAudio(MultipartFile audioFile, Map<String, Object> settings) throws Exception {
-        // 配置请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        // 构建表单数据
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        ByteArrayResource fileResource = new ByteArrayResource(audioFile.getBytes()) {
-            @Override
-            public String getFilename() {
-                return audioFile.getOriginalFilename();
-            }
-        };
-        body.add("audio_file", fileResource);
-        body.add("settings_json", objectMapper.writeValueAsString(settings));
-
-        // 发送请求
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-        String url = nlpServiceBaseUrl + "/process_audio";
-        
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
-        return response.getBody();
-    }
-    
-    public Map<String, Object> callProcessText(String textInput, Map<String, Object> settings) throws Exception {
-        // 构建请求体
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("text_input", textInput);
-        requestBody.put("settings", settings);
-
-        // 发送请求
-        String url = nlpServiceBaseUrl + "/process_text";
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestBody, Map.class);
-        return response.getBody();
-    }
-}
-```
-
-## 7. 前端集成
-
-前端通过API服务调用后端接口：
-
-```javascript
-// frontend/src/services/api.js
-export const voiceApi = {
-    // 发送语音命令
-    sendVoiceCommand: async (formData) => {
-        // 读取本地 voice_settings
-        let settings = {};
-        try {
-            const localSettings = localStorage.getItem('voice_settings');
-            if (localSettings) {
-                const parsed = JSON.parse(localSettings);
-                settings = {
-                    stt_engine: parsed.stt?.engine,
-                    nlu_engine: parsed.nlu?.engine,
-                    tts_engine: parsed.tts?.engine,
-                    tts_enabled: parsed.tts?.enabled !== undefined ? parsed.tts.enabled : true
-                };
-            }
-        } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
-        formData.append('settingsJson', JSON.stringify(settings));
-        
-        // 调用Spring后端
-        return api.post('/command/audio', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 60000
-        });
-    },
-    
-    // 发送文本命令
-    sendTextCommand: async (text) => {
-        let settings = {};
-        try {
-            const localSettings = localStorage.getItem('voice_settings');
-            if (localSettings) {
-                const parsed = JSON.parse(localSettings);
-                settings = {
-                    stt_engine: parsed.stt?.engine,
-                    nlu_engine: parsed.nlu?.engine,
-                    tts_engine: parsed.tts?.engine,
-                    tts_enabled: parsed.tts?.enabled !== undefined ? parsed.tts.enabled : true
-                };
-            }
-        } catch (e) { console.warn('读取本地 voice_settings 失败', e); }
-        const requestData = {
-            textInput: text,
-            settings
-        };
-        
-        // 调用Spring后端
-        return api.post('/command/text', requestData, {
-            timeout: 60000
-        });
-    }
-};
-```
-
-## 8. 五元组字段说明
-
-NLP服务的核心输出是五元组，用于表示用户意图和需求。五元组内部格式与API响应格式有所不同：
-
-### 8.1 内部五元组格式
-
-```json
-{
-  "ACTION": "turn_on",          // 动作，如开启、关闭、调整等
-  "DEVICE_TYPE": "light",       // 设备类型，如灯、空调等
-  "DEVICE_ID": "1",             // 设备ID
-  "LOCATION": "bedroom",        // 位置，如卧室、客厅等
-  "PARAMETER": null,            // 参数值
-  "response_message_for_tts": "好的，正在打开卧室灯" // TTS回复消息
-}
-```
-
-### 8.2 五元组字段详解
-
-| 字段名 | 类型 | 说明 |
-|-------|------|------|
-| ACTION | String | 标准化的英文动作，如"turn_on", "turn_off", "modify", "query", "add", "delete" |
-| DEVICE_TYPE | String | 设备类型，如"灯", "窗帘" |
-| DEVICE_ID | String | 设备ID，默认为"0"，表示未指定具体设备 |
-| LOCATION | String | 位置名称，如"客厅", "卧室" |
-| PARAMETER | Any | 参数值，可能是NULL、数值、字符串或特殊格式字符串 |
-
-### 8.3 PARAMETER字段类型说明
-
-PARAMETER字段是最复杂的字段，可以包含多种类型的值：
-
-- `null`：无参数
-- 浮点数值（如`24.0`）：表示具体的数值设置，如温度、亮度等
-- 字符串（如`"红色"`）：表示颜色、模式等非数值参数
-- 特殊字符串：
-  - `"+1"`, `"-1"`：相对调整值，用于"增加一点"、"减少一点"等场景
-  - 百分比：表示为浮点数，如`0.5`表示50%
-
-### 8.4 ACTION字段可能的值
-
-| 值 | 说明 | 示例 |
-|---|-----|-----|
-| turn_on | 开启设备 | 打开灯 |
-| turn_off | 关闭设备 | 关闭空调 |
-| modify | 调整设备参数 | 调高温度、调暗亮度 |
-| query | 查询设备状态 | 查询温度怎么样 |
-| add | 添加设备 | 添加一个新灯 |
-| delete | 删除设备 | 删除客厅灯 |
-| open_curtain | 打开窗帘 | 拉开窗帘 |
-| close_curtain | 关闭窗帘 | 拉上窗帘 |
-
-* 注：根据实际处理，turn_on也可能对应拉开窗帘的动作。
-## 9. NLP服务启动方法
-
-### 9.1 启动服务
-
-通过`start_service.py`脚本启动NLP服务：
-
-```bash
-# 进入nlp_service目录
-cd nlp_service
-
-# 启动服务
-python start_service.py
-```
-
-### 9.2 配置环境变量
-
-可以通过环境变量配置服务主机和端口：
-
-| 环境变量 | 说明 | 默认值 |
-|---------|-----|---------|
-| NLP_SERVICE_HOST | 服务监听主机 | 0.0.0.0 |
-| NLP_SERVICE_PORT | 服务监听端口 | 8010 |
-
-## 10. 注意事项
-
-1. NLP服务通过Spring后端调用
-2. 音频文件需要以`audio_file`为字段名上传
-3. 设置参数需要以JSON字符串形式传递
-4. STT、NLU、TTS引擎可以通过设置参数动态切换
-5. 五元组内部使用大写键名，API响应使用小写键名

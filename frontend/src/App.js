@@ -15,12 +15,12 @@ function App() {
     <SettingsProvider>
       <ThemeProvider>
         <Routes>
-          {/* Main layout */}
+          {/* 主页 */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
           </Route>
           
-          {/* Mobile phone view */}
+          {/* 手机视图 */}
           <Route path="/phone" element={
             <Bezel>
               <MobileOnboarding />

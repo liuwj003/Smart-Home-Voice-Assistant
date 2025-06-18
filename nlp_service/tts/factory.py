@@ -53,11 +53,9 @@ class TTSFactory:
             module = importlib.import_module(module_path)
             engine_class = getattr(module, class_name)
             
-            # 创建引擎实例
             return engine_class(config)
         except (ImportError, AttributeError) as e:
             logger.error(f"加载TTS引擎 '{engine_type}' 失败: {str(e)}")
-            # 如果加载失败，尝试加载placeholder引擎
             if engine_type != 'placeholder':
                 logger.info("尝试加载placeholder引擎")
                 return self.create_engine({'engine': 'placeholder'})

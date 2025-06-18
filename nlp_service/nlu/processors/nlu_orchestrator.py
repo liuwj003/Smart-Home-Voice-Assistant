@@ -20,7 +20,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                  bert_nlu_config: Dict, 
                  rag_data_jsonl_path: Optional[str] = None, 
                  rag_embedding_config: Optional[Dict] = None,
-                 # rag_device is now part of rag_embedding_config if needed by SimilarityRetriever
                  rag_similarity_threshold: float = 250): # Chroma L2 distance, lower is better
         
         logger.info("Initializing SmartHomeNLUOrchestrator...")
@@ -32,7 +31,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
         if rag_data_jsonl_path and Path(rag_data_jsonl_path).exists() and rag_embedding_config:
             try:
                 current_rag_module_config = rag_embedding_config.copy()
-                # The 'device' for RAG's embedding model should be part of rag_embedding_config
                 rag_device_for_retriever = current_rag_module_config.get("device", "cpu")
 
                 self.rag_system = StandardCommandRetriever(
@@ -62,16 +60,14 @@ class SmartHomeNLUOrchestrator(NLUInterface):
 
         if action and device_type: # e.g., "turn_on" "light"
             return True
-        # For add/delete, the device name might be in PARAMETER, and DEVICE_TYPE might be generic like "设备" or None
-        if action in ["add", "delete"] and isinstance(parameter, str) and parameter: # Parameter is the device name
+        if action in ["add", "delete"] and isinstance(parameter, str) and parameter: 
             return True
-        # If action implies a device type (e.g. "close_curtain")
         if action in ["open_curtain", "close_curtain"]:
             return True
             
         return False
 
-    async def understand(self, text: str) -> Dict[str, Any]: # Signature matches NLUInterface
+    async def understand(self, text: str) -> Dict[str, Any]: 
         logger.info(f"Orchestrator received text: '{text}'")
         
         direct_nlu_output = await self.bert_nlu_processor.understand(text)
@@ -83,7 +79,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
         
         logger.info("Direct NLU result insufficient (missing ACTION or DEVICE_TYPE), attempting RAG...")
         if self.rag_system and self.rag_system.vector_store and self.rag_system.embedding_model:
-            # Retrieve top 2 similar standard command texts and their original records
             retrieved_commands_with_scores = self.rag_system.retrieve_similar_commands(text, top_k=2)
 
             if retrieved_commands_with_scores:
@@ -98,13 +93,11 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                 if rag_score <= self.rag_similarity_threshold: 
                     logger.info(f"RAG result score {rag_score:.4f} <= threshold {self.rag_similarity_threshold}, attempting NLU on this standard command.")
                     
-                    # Option 1: Use predefined NLU output if available in the RAG knowledge base
                     if "predefined_nlu_output" in original_rag_kb_record and \
                        isinstance(original_rag_kb_record["predefined_nlu_output"], dict):
                         logger.info("Using RAG's predefined NLU output.")
                         rag_nlu_output = original_rag_kb_record["predefined_nlu_output"].copy()
                         
-                        # Merge potentially useful entities from original direct_nlu_output
                         if direct_nlu_output.get("LOCATION") and not rag_nlu_output.get("LOCATION"):
                             rag_nlu_output["LOCATION"] = direct_nlu_output.get("LOCATION")
                         
@@ -122,7 +115,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
 
                         return rag_nlu_output
 
-                    # Option 2: Re-run NLU on the standard command text from RAG
                     logger.info(f"Re-running NLU on RAG standard command: '{best_standard_command_text}'")
                     rag_refined_nlu_output = await self.bert_nlu_processor.understand(best_standard_command_text)
                     logger.debug(f"NLU output for RAG's standard command: {rag_refined_nlu_output}")
@@ -131,7 +123,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                         logger.info("Using RAG-assisted NLU result.")
                         final_output = rag_refined_nlu_output.copy()
                         
-                        # Merge entities from the original fuzzy query if RAG's command didn't capture them
                         if direct_nlu_output.get("LOCATION") and not final_output.get("LOCATION"):
                             final_output["LOCATION"] = direct_nlu_output.get("LOCATION")
                         
@@ -141,9 +132,6 @@ class SmartHomeNLUOrchestrator(NLUInterface):
                            (rag_refined_id_for_merge == "0" or not rag_refined_id_for_merge) :
                             final_output["DEVICE_ID"] = original_direct_id_for_merge
                         
-                        # If RAG's standard command was generic (e.g., "turn on the light")
-                        # and the original query had a more specific device type captured by direct NLU,
-                        # we might prefer the direct NLU's device type if RAG's is too generic or None.
                         if direct_nlu_output.get("DEVICE_TYPE") and not final_output.get("DEVICE_TYPE"):
                              final_output["DEVICE_TYPE"] = direct_nlu_output.get("DEVICE_TYPE")
                         
@@ -198,12 +186,10 @@ if __name__ == '__main__':
     }
     if not _fine_tuned_bert_model_path_main.exists():
         logger.error(f"ERROR: BertNLUProcessor model path '{_fine_tuned_bert_model_path_main}' does not exist. Orchestrator test will fail for BertNLUProcessor.")
-        # For testing purposes, we might allow it to continue to test RAG part if BertNLUProcessor init fails gracefully
-        # However, BertNLUProcessor in this version raises FileNotFoundError.
 
-    _rag_kb_file_path_main = _nlu_dir_main / "model" / "dataset" / "rag_knowledge.jsonl" # This should be RAG specific
+    _rag_kb_file_path_main = _nlu_dir_main / "model" / "dataset" / "rag_knowledge.jsonl"
     
-    _rag_embedding_model_local_path = _nlu_dir_main / "model" / "shibing624-text2vec-base-chinese/" # Example local storage
+    _rag_embedding_model_local_path = _nlu_dir_main / "model" / "shibing624-text2vec-base-chinese/" 
     rag_embedding_config_test = {
         "local_embedding_target_dir": str(_rag_embedding_model_local_path),
         "embedding_model_hub_id": "shibing624/text2vec-base-chinese",
@@ -212,7 +198,6 @@ if __name__ == '__main__':
     }
 
     async def main_run():
-        # Ensure BertNLUProcessor can be initialized
         if not _fine_tuned_bert_model_path_main.exists():
             logger.error("BertNLUProcessor model path does not exist. Cannot run test.")
             return
@@ -225,10 +210,10 @@ if __name__ == '__main__':
         )
 
         test_utterances = [
-            "我感觉特别冷",                 # Expect RAG -> predefined output
-            "这屋里太黑了，我在书房",     # Expect RAG -> standard_command -> NLU, merge location
-            "打开客厅的灯",              # Expect direct NLU
-            "空调温度调到二十五度",     # Expect direct NLU
+            "我感觉特别冷",                 
+            "这屋里太黑了，我在书房",     
+            "打开客厅的灯",              
+            "空调温度调到二十五度",     
             "关一下卧室、客厅、浴室的空调",        
             "肘击微波炉" 
         ]

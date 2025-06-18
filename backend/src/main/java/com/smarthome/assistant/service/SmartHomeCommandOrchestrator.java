@@ -61,7 +61,7 @@ public class SmartHomeCommandOrchestrator {
                 
                 log.error("NLP service returned error: {}", errorMsg);
                 
-                // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
+                // 如果存在NLU结果（即使是空的），仍然可以构建部分响应
                 if (nlpResponse.containsKey("nluResult")) {
                     // 构建带有错误信息的响应，但包含NLU结果
                     FrontendResponseDto response = processNlpResponse(nlpResponse);
@@ -128,7 +128,7 @@ public class SmartHomeCommandOrchestrator {
                 
                 log.error("NLP service returned error: {}", errorMsg);
                 
-                // 如果存在NLU结果（即使是空的），我们仍然可以构建部分响应
+                // 如果存在NLU结果（即使是空的），仍然可以构建部分响应
                 if (nlpResponse.containsKey("nluResult")) {
                     // 构建带有错误信息的响应，但包含NLU结果
                     FrontendResponseDto response = processNlpResponse(nlpResponse);
@@ -196,9 +196,6 @@ public class SmartHomeCommandOrchestrator {
                     .parameter(parameter)
                     .confidence(confidence)
                     .build();
-            
-            // // 设备控制，传递deviceId和parameter
-            // String deviceFeedback = deviceService.updateDeviceState(entity, location, action, deviceId, parameter);
             
             // 提取NLP服务的响应消息
             String responseMessageForTts = (String) nlpResponse.getOrDefault("response_message_for_tts", null);

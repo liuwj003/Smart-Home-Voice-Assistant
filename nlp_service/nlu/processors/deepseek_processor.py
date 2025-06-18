@@ -174,7 +174,6 @@ class DeepSeekNLUProcessor(NLUInterface):
             entity_text = entity["text"]
             
             if entity_type == "ACTION":
-                # 将中文动作分类转换为英文动作
                 action_class = self._classify_action(entity_text)
                 if action_class == 0:
                     result["ACTION"] = "turn_on"
@@ -183,9 +182,9 @@ class DeepSeekNLUProcessor(NLUInterface):
                 elif action_class == 2:
                     result["ACTION"] = "modify"
                 elif action_class == 3:
-                    result["ACTION"] = "modify"  # 调高也是修改
+                    result["ACTION"] = "modify"  
                 elif action_class == 4:
-                    result["ACTION"] = "modify"  # 调低也是修改
+                    result["ACTION"] = "modify"  
                 else:
                     result["ACTION"] = "unknown"
             elif entity_type == "DEVICE_TYPE":
@@ -237,13 +236,13 @@ class DeepSeekNLUProcessor(NLUInterface):
                     five_tuple_result["ACTION"] = "modify"
                 
                 # 尝试提取设备类型
-                device_types = ["灯", "电灯", "空调", "风扇", "窗帘", "电视", "音响", "门锁", "加湿器", "净化器"]
+                device_types = ["灯", "空调", "风扇", "窗帘", "电视", "加湿器"]
                 for device in device_types:
                     if device in operation_text:
                         five_tuple_result["DEVICE_TYPE"] = device
                         break
             
-            # 保留原始DeepSeek输出以供参考
+            # 保留原始DeepSeek输出
             five_tuple_result["deepseek_output"] = deepseek_result.get("output", "")
             five_tuple_result["deepseek_operation"] = operation_text
             
@@ -261,12 +260,8 @@ class DeepSeekNLUProcessor(NLUInterface):
                 "error": str(e)
             }
 
-# 用于测试的入口点
 if __name__ == "__main__":
-    # 设置日志
     logging.basicConfig(level=logging.INFO)
-    
-    # 测试代码
     import asyncio
     
     async def test():
