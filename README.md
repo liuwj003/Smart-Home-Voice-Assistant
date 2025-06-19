@@ -15,7 +15,7 @@
 1. 确保已安装Java JDK 17+
 2. 确保已安装Maven
 3. 确保已安装Node.js和npm
-4. 安装一下`Microsoft Visual C++ Build Tools`（参考链接：https://blog.csdn.net/nk1610099/article/details/141504899），确保安装了组件：
+4. 安装一下`Microsoft Visual C++ Build Tools`（参考链接：https://blog.csdn.net/nk1610099/article/details/141504899   ），确保安装了组件：
 - `MSVC v143 - VS 2022 C++ x64/x86 build tools`
 - `Windows 10 SDK`（如果你使用的是 Windows 10，具体版本根据你的需求选择）
 - `C++ CMake tools for Windows`
